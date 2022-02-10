@@ -18,7 +18,7 @@ const (
 var (
 	// Create our little application :)
 	r  *mux.Router = mux.NewRouter()
-	db *sql.DB
+	db *sql.DB     = ConnectDb()
 )
 
 // ConnectDb returns a new connection to the database
@@ -47,7 +47,7 @@ type M map[string]interface{}
 // Queries the database and returns a list of maps
 func QueryDb(query string, one bool, args ...interface{}) []M {
 	rv := make([]M, 0)
-	rows, _ := db.Query(query, args)
+	rows, _ := db.Query(query, args...)
 	cols, _ := rows.Columns()
 	for rows.Next() {
 		// Solution for storing results in map adapted from: https://kylewbanks.com/blog/query-result-to-map-in-golang
@@ -69,10 +69,10 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 		rv = append(rv, row)
 	}
 
-	if rv[0] == nil {
+	if len(rv) == 0 {
 		return nil
 	} else if one {
-		return rv[:0]
+		return rv[:1]
 	} else {
 		return rv
 	}
@@ -83,8 +83,6 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	InitDb()
-
 	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
