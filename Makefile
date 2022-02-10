@@ -14,6 +14,9 @@ test:
 	make build && \
 	docker run --name minitwit-tests minitwit/tests:latest
 
+clean:
+	docker rm $(docker ps -a -q -f "name=minitwit")
+
 python-init:
 	python -c"from minitwit import init_db; init_db()"
 
