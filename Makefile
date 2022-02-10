@@ -1,6 +1,6 @@
 build:
-	docker build -t minitwit/webserver --target development . && \
-	docker build -t minitwit/tests --target test .
+	docker build -f docker/webserver.Dockerfile -t minitwit/webserver --target development . && \
+	docker build -f docker/webserver.Dockerfile -t minitwit/tests --target test .
 
 start:
 	make build && \
@@ -15,7 +15,8 @@ test:
 	docker run --name minitwit-tests minitwit/tests:latest
 
 clean:
-	./clean.sh
+	make stop && \
+	scripts/clean.sh
 
 python-init:
 	python -c"from minitwit import init_db; init_db()"
