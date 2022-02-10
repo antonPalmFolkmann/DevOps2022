@@ -40,9 +40,42 @@ func InitDb() {
 	tx.Commit()
 }
 
-// Queries the database and returns a list of maps
-func QueryDb(query string, one bool, args ...interface{}) {
+// Hack for an array of maps in golang:
+// https://stackoverflow.com/questions/47130003/how-can-i-declare-list-of-maps-in-golang
+type M map[string]interface{}
 
+// Queries the database and returns a list of maps
+func QueryDb(query string, one bool, args ...interface{}) []M {
+	rv := make([]M, 0)
+	rows, _ := db.Query(query, args)
+	cols, _ := rows.Columns()
+	for rows.Next() {
+		// Solution for storing results in map adapted from: https://kylewbanks.com/blog/query-result-to-map-in-golang
+		columns := make([]interface{}, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		_ = rows.Scan(columnPointers...)
+
+		row := make(M)
+		for i, colName := range cols {
+			val := columnPointers[i].(*interface{})
+			row[colName] = *val
+		}
+
+		rv = append(rv, row)
+	}
+
+	if rv[0] == nil {
+		return nil
+	} else if one {
+		return rv[:0]
+	} else {
+		return rv
+	}
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +83,8 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	InitDb()
+
 	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
