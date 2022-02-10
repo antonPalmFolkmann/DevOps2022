@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -9,19 +10,46 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Configuration
+const (
+	DATABASE = "../minitwit.db"
+)
+
+var (
+	// Create our little application :)
+	r  *mux.Router = mux.NewRouter()
+	db *sql.DB
+)
+
+// ConnectDb returns a new connection to the database
+func ConnectDb() *sql.DB {
+	db, _ := sql.Open("sqlite3", DATABASE)
+	return db
+}
+
+// InitDb creates the database tables
+func InitDb() {
+	db := ConnectDb()
+	defer db.Close()
+
+	query, _ := ioutil.ReadFile("../schema.sql")
+
+	tx, _ := db.Begin()
+	stmt, _ := tx.Prepare(string(query))
+	stmt.Exec()
+	tx.Commit()
+}
+
+// Queries the database and returns a list of maps
+func QueryDb(query string, one bool, args ...interface{}) {
+
+}
+
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Gorilla!\n"))
 }
 
-const dbFile = "../minitwit.db"
-
 func main() {
-	_, err := sql.Open("sqlite3", dbFile)
-	if err != nil {
-		log.Fatalf("Failed to connect to the database with error: %v", err)
-	}
-
-	r := mux.NewRouter()
 	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
