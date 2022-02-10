@@ -2,6 +2,7 @@
 FROM golang:bullseye as base
 WORKDIR /src
 COPY ./go/ ./
+RUN go mod tidy
 RUN go mod download
 
 FROM base as test
