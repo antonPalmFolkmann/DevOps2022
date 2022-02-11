@@ -78,6 +78,16 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
+// Registers a new message for the user.
+func AddMessage(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// Convenience method to look up the id for a username.
+func GetUserid(username string) {
+
+}
+
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Gorilla!\n"))
 }
