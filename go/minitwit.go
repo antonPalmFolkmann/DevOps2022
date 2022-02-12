@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"encoding/hex"
+	"strings"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
@@ -87,4 +90,10 @@ func main() {
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+func gravatar_url(email string, size int) string {
+	// Return the gravatar image for the given email address.	
+	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", 
+		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
 }
