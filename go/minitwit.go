@@ -2,25 +2,27 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Configuration
-const (
-	DATABASE = "../minitwit.db"
-)
-
 var (
+	// Configuration
+	DATABASE = "../minitwit.db"
+
 	// Create our little application :)
-	r  *mux.Router = mux.NewRouter()
-	db *sql.DB     = ConnectDb()
+	r       *mux.Router       = mux.NewRouter()
+	db      *sql.DB           = ConnectDb()
+	user    interface{}       = nil
+	session map[string]string = make(map[string]string, 0)
 )
 
 // ConnectDb returns a new connection to the database
@@ -80,47 +82,78 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
+// Make sure that we are connected to teh database each request and look up the current user to that we know they're
+// there
+func BeforeRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db = ConnectDb()
+		user = nil
+		if _, found := session["user_id"]; found {
+			user = QueryDb("select * from user where user id = %s", true, session["user_id"])[0]
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Closes the database again at the end of the request
+func AfterRequest() {
+	db.Close()
+}
+
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
-	if !user.LoggedIn() {
+	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
-	if request.FormIsText {
-		insertMessageSQL := db.Query("INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)")
+
+	r.ParseForm()
+	if _, found := r.Form["text"]; found {
+		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (%s,%s,%s,0)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		_, err = statement.Exec(user_id, text, time.Now)
+		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		return redirect(url(timeline))
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 	}
 }
 
 // Convenience method to look up the id for a username.
-func GetUserid(username string) (int, error) {
+func GetUserId(username string) (*int, error) {
 	var usernameResult int
 	// Query for a value based on a single row.
-	if err := db.QueryRow("SELECT user_id from user where id = ?",
-		username).Scan(&username); err != nil {
+	if err := db.QueryRow("SELECT user_id from user where id = ?", username).Scan(&username); err != nil {
 		if err == sql.ErrNoRows {
-			return -1, fmt.Errorf("GetUserId %d: unknown username", username)
+			return nil, fmt.Errorf("GetUserId %s: unknown username", username)
 		}
-		return -1, fmt.Errorf("GetUserId %d: %v", username)
+		return nil, fmt.Errorf("GetUserId %s failed", username)
 	}
-	return usernameResult, nil
+	return &usernameResult, nil
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	w.Write([]byte("Gorilla!\n"))
 }
 
 func main() {
+	r.Use(BeforeRequest)
+
 	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+// Return the gravatar image for the given email address.
+// Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
+// Converting bytes to hexadecimal string: https://pkg.go.dev/encoding/hex#EncodeToString
+func GravatarUrl(email string, size int) string {
+	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
+		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
 }
