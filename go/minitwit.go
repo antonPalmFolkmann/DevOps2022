@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
@@ -80,12 +82,36 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
+	if !user.LoggedIn() {
+		log.Fatalln("Abort 401")
+	}
+	if request.FormIsText {
+		insertMessageSQL := db.Query("INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)")
+		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec(user_id, text, time.Now)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+	}
 }
 
 // Convenience method to look up the id for a username.
-func GetUserid(username string) {
-
+func GetUserid(username string) (int, error) {
+	var usernameResult int
+	// Query for a value based on a single row.
+	if err := db.QueryRow("SELECT user_id from user where id = ?",
+		username).Scan(&username); err != nil {
+		if err == sql.ErrNoRows {
+			return -1, fmt.Errorf("GetUserId %d: unknown username", username)
+		}
+		return -1, fmt.Errorf("GetUserId %d: %v", username)
+	}
+	return usernameResult, nil
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
