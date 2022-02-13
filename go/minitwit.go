@@ -99,22 +99,21 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		return redirect(url(timeline))
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 	}
 }
 
 // Convenience method to look up the id for a username.
-func GetUserid(username string) (int, error) {
+func GetUserId(username string) (*int, error) {
 	var usernameResult int
 	// Query for a value based on a single row.
-	if err := db.QueryRow("SELECT user_id from user where id = ?",
-		username).Scan(&username); err != nil {
+	if err := db.QueryRow("SELECT user_id from user where id = ?", username).Scan(&username); err != nil {
 		if err == sql.ErrNoRows {
-			return -1, fmt.Errorf("GetUserId %d: unknown username", username)
+			return nil, fmt.Errorf("GetUserId %s: unknown username", username)
 		}
-		return -1, fmt.Errorf("GetUserId %d: %v", username)
+		return nil, fmt.Errorf("GetUserId %s failed", username)
 	}
-	return usernameResult, nil
+	return &usernameResult, nil
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
