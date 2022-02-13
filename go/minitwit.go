@@ -2,12 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"encoding/hex"
 	"strings"
-	"fmt"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
@@ -20,8 +21,9 @@ const (
 
 var (
 	// Create our little application :)
-	r  *mux.Router = mux.NewRouter()
-	db *sql.DB     = ConnectDb()
+	r       *mux.Router = mux.NewRouter()
+	db      *sql.DB     = ConnectDb()
+	session map[string]string
 )
 
 // ConnectDb returns a new connection to the database
@@ -81,6 +83,41 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
+// Registers a new message for the user.
+func AddMessage(w http.ResponseWriter, r *http.Request) {
+	if _, found := session["user_id"]; !found {
+		log.Fatalln("Abort 401")
+	}
+
+	r.ParseForm()
+	if _, found := r.Form["text"]; found {
+		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (%s,%s,%s,0)"
+		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+	}
+}
+
+// Convenience method to look up the id for a username.
+func GetUserId(username string) (*int, error) {
+	var usernameResult int
+	// Query for a value based on a single row.
+	if err := db.QueryRow("SELECT user_id from user where id = ?", username).Scan(&username); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("GetUserId %s: unknown username", username)
+		}
+		return nil, fmt.Errorf("GetUserId %s failed", username)
+	}
+	return &usernameResult, nil
+}
+
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Gorilla!\n"))
 }
@@ -93,9 +130,9 @@ func main() {
 }
 
 // Return the gravatar image for the given email address.
-// Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang 
-// Converting bytes to hexadecimal string: https://pkg.go.dev/encoding/hex#EncodeToString 
+// Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
+// Converting bytes to hexadecimal string: https://pkg.go.dev/encoding/hex#EncodeToString
 func GravatarUrl(email string, size int) string {
-	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", 
+	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
 		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
 }
