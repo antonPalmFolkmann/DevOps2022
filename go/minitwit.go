@@ -120,17 +120,40 @@ func GetUserId(username string) (*int, error) {
 }
 
 type timelineData struct {
-	request *http.Request
+	Title    string
+	Request  *http.Request
+	Messages []M
+	UserId   string
+	PerPage  int
 }
 
 func timeline(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.New("timeline").ParseFiles("templates/timeline.html"))
-
-	err := tmpl.Execute(w, timelineData{request: r})
-	if err != nil {
-		log.Fatalf("Failed to render the template with err: %v", err)
+	data := timelineData{
+		Title:    "Public Timeline",
+		Request:  r,
+		Messages: QueryDb("select * from message limit 50", false),
+		UserId:   "123123",
+		PerPage:  30,
 	}
 
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+func parseTemplate(file string) *template.Template {
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Printf("Failed to read the template contents: %v", err)
+	}
+
+	tmpl, err := template.New("timeline").Parse(string(contents))
+	if err != nil {
+		log.Printf("Failed to parse the template: %v", err)
+	}
+	return tmpl
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +162,7 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	r.HandleFunc("/", YourHandler)
+	r.HandleFunc("/timeline", timeline)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
