@@ -14,12 +14,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Configuration
-const (
-	DATABASE = "../minitwit.db"
-)
-
 var (
+	// Configuration
+	DATABASE = "../minitwit.db"
+
 	// Create our little application :)
 	r       *mux.Router       = mux.NewRouter()
 	db      *sql.DB           = ConnectDb()
