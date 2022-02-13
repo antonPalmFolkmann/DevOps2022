@@ -21,9 +21,10 @@ const (
 
 var (
 	// Create our little application :)
-	r       *mux.Router = mux.NewRouter()
-	db      *sql.DB     = ConnectDb()
-	session map[string]string
+	r       *mux.Router       = mux.NewRouter()
+	db      *sql.DB           = ConnectDb()
+	user    interface{}       = nil
+	session map[string]string = make(map[string]string, 0)
 )
 
 // ConnectDb returns a new connection to the database
@@ -83,6 +84,25 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
+// Make sure that we are connected to teh database each request and look up the current user to that we know they're
+// there
+func BeforeRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db = ConnectDb()
+		user = nil
+		if _, found := session["user_id"]; found {
+			user = QueryDb("select * from user where user id = %s", true, session["user_id"])[0]
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Closes the database again at the end of the request
+func AfterRequest() {
+	db.Close()
+}
+
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
@@ -119,10 +139,13 @@ func GetUserId(username string) (*int, error) {
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	w.Write([]byte("Gorilla!\n"))
 }
 
 func main() {
+	r.Use(BeforeRequest)
+
 	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
