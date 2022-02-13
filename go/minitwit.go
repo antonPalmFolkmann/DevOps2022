@@ -18,6 +18,7 @@ import (
 // Configuration
 const (
 	DATABASE = "../minitwit.db"
+	PER_PAGE = 30
 )
 
 var (
@@ -120,20 +121,59 @@ func GetUserId(username string) (*int, error) {
 }
 
 type timelineData struct {
-	Title    string
-	Request  *http.Request
-	Messages []M
-	UserId   string
-	PerPage  int
+	Title       string
+	Request     *http.Request
+	Messages    []M
+	UserId      string
+	User        M
+	Followed    bool
+	ProfileUser M
+	PerPage     int
 }
 
 func timeline(w http.ResponseWriter, r *http.Request) {
 	data := timelineData{
 		Title:    "Public Timeline",
 		Request:  r,
-		Messages: QueryDb("select * from message limit 50", false),
+		Messages: QueryDb("select * from message", false),
 		UserId:   "123123",
 		PerPage:  30,
+	}
+
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+func userTimeline(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	data := timelineData{
+		Title:       "User Timeline",
+		Request:     r,
+		Messages:    QueryDb("select * from message limit 50", false),
+		ProfileUser: QueryDb("select * from user where username = %s", true, username)[0],
+		UserId:      "123123",
+		PerPage:     30,
+	}
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+func PublicTimeline(w http.ResponseWriter, r *http.Request) {
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
+
+	data := timelineData{
+		Title:    "Public Timeline",
+		Request:  r,
+		Messages: QueryDb(messageQuery, false, PER_PAGE),
+		PerPage:  PER_PAGE,
 	}
 
 	tmpl := parseTemplate("templates/timeline.html")
@@ -149,7 +189,9 @@ func parseTemplate(file string) *template.Template {
 		log.Printf("Failed to read the template contents: %v", err)
 	}
 
-	tmpl, err := template.New("timeline").Parse(string(contents))
+	tmpl, err := template.New("timeline").Funcs(template.FuncMap{
+		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
+	}).Parse(string(contents))
 	if err != nil {
 		log.Printf("Failed to parse the template: %v", err)
 	}
@@ -163,6 +205,8 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	r.HandleFunc("/", YourHandler)
 	r.HandleFunc("/timeline", timeline)
+	r.HandleFunc("/public_timeline", PublicTimeline)
+	// r.HandleFunc("/{username}", userTimeline)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))

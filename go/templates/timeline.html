@@ -1,10 +1,39 @@
 {{ block "title" . }}
-{{ if (eq .Request.URL.String "/public_timeline")}}
-  <h1>Public Timeline</h1>
-{{ else }}
-  <h1>Not Public Timeline</h1>
-{{ end }}
+  <!-- FIXME: Change to be meta-data for the HTML head -->
+  {{ if (eq .Request.URL.String "/public_timeline") }}
+    <h1>Public Timeline</h1>
+  {{ else if (eq .Request.URL.String "/user_timeline") }}
+    <h1>User Timeline</h1>
+  {{ else }}
+    <h1>My Timeline</h1>
+  {{ end }}
 {{ end }}
 {{ block "body" . }}
   <h2>{{ .Title }}</h2>
+  {{ if .User }}
+    {{ if (eq .Request.URL.String "/user_timeline")}}
+      <div class=followstatus>
+        {{ if (eq .User.user_id .ProfileUser.user_id) }}
+          <p> This is you! <p>
+        {{ else if followed }}
+        {{ end }}  
+      </div>
+    {{ end }}
+  {{ end }}
+
+  <ul class=messages>
+    {{ range .Messages }}
+      <li>
+        <img src="{{ index . "email" | gravatar 48 }}" >
+        <p>
+          <strong><a href="/user_timeline/{{ index . "username" }}">{{ index . "username" }}</a></strong>
+          {{ index . "text" }}
+          {{/* TODO: Pipe "pub_date" into a datetimeformat */}}
+          <small> &mdash; {{ index . "pub_date" }}</small>
+        </p>
+      </li>
+    {{ else }}
+      <li><em>There's no message so far.</em></li>
+    {{ end }}
+  </ul>
 {{ end }}
