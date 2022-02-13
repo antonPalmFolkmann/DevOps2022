@@ -96,7 +96,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-
+		return redirect(url(timeline))
 	}
 }
 
