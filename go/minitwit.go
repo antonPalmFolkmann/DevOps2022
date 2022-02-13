@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -116,6 +117,20 @@ func GetUserId(username string) (*int, error) {
 		return nil, fmt.Errorf("GetUserId %s failed", username)
 	}
 	return &usernameResult, nil
+}
+
+type timelineData struct {
+	request *http.Request
+}
+
+func timeline(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.New("timeline").ParseFiles("templates/timeline.html"))
+
+	err := tmpl.Execute(w, timelineData{request: r})
+	if err != nil {
+		log.Fatalf("Failed to render the template with err: %v", err)
+	}
+
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
