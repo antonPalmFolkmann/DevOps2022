@@ -19,8 +19,9 @@ const (
 
 var (
 	// Create our little application :)
-	r  *mux.Router = mux.NewRouter()
-	db *sql.DB     = ConnectDb()
+	r       *mux.Router = mux.NewRouter()
+	db      *sql.DB     = ConnectDb()
+	session map[string]string
 )
 
 // ConnectDb returns a new connection to the database
@@ -82,17 +83,19 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
-	if !user.LoggedIn() {
+	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
-	if request.FormIsText {
-		insertMessageSQL := db.Query("INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)")
+
+	r.ParseForm()
+	if _, found := r.Form["text"]; found {
+		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (%s,%s,%s,0)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		_, err = statement.Exec(user_id, text, time.Now)
+		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
