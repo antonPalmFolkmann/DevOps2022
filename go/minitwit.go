@@ -2,10 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -125,4 +127,12 @@ func main() {
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+// Return the gravatar image for the given email address.
+// Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
+// Converting bytes to hexadecimal string: https://pkg.go.dev/encoding/hex#EncodeToString
+func GravatarUrl(email string, size int) string {
+	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
+		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
 }
