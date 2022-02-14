@@ -162,7 +162,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session["user_id"] = "None"
+	delete(session, "user_id")
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
 }
 
@@ -197,9 +197,9 @@ type timelineData struct {
 func Timeline(w http.ResponseWriter, r *http.Request) {
 	log.Printf("We got a vistor from %s", r.RemoteAddr)
 
-	redirectToPublic := true
-	if redirectToPublic {
+	if user == nil {
 		http.Redirect(w, r, "/public", http.StatusMultipleChoices)
+		return
 	}
 
 	_ = r.URL.Query().Get("offset")
@@ -295,8 +295,8 @@ func main() {
 	r.Use(BeforeRequest)
 
 	r.HandleFunc("/", Timeline)
-	r.HandleFunc("/{username}", UserTimeline)
 	r.HandleFunc("/public", PublicTimeline)
+	r.HandleFunc("/{username}", UserTimeline)
 
 	r.HandleFunc("/", YourHandler)
 
