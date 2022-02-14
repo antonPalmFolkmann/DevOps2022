@@ -296,7 +296,7 @@ func main() {
 
 	r.HandleFunc("/", Timeline)
 	r.HandleFunc("/public", PublicTimeline)
-	r.HandleFunc("/{username}", UserTimeline)
+	r.HandleFunc("/user/{username}", UserTimeline)
 
 	r.HandleFunc("/", YourHandler)
 

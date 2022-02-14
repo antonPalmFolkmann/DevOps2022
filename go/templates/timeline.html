@@ -10,10 +10,10 @@
 {{ end }}
 {{ block "body" . }}
   <h2>{{ .Title }}</h2>
-  {{ if (ne .User nil) }}
+  {{ if (eq (len .User) 0) }}
     {{ if (eq .Request.URL.String "/user_timeline")}}
       <div class=followstatus>
-        {{ if (eq {{ index .User "user_id" }} {{ index .ProfileUser "user_id"}}) }}
+        {{ if (eq (index .User "user_id") (index .ProfileUser "user_id")) }}
           <p> This is you! <p>
         {{ else if .Followed }}
           You are currently following this user.
@@ -25,11 +25,10 @@
           }}/follow">Follow user</a>.
         {{ end }}
       </div>
-    {{ end }}
     {{ else if (eq .Request.URL.String "/timeline") }}
       <div class=twitbox>
         <h3>What's on your mind {{ .User.username }}?</h3>
-        <form action="{{ url_for('add_message') }}" method=post>
+        <form action="/add_messsage" method=post>
           <p><input type=text name=text size=60><!--
           --><input type=submit value="Share">
         </form>
