@@ -154,6 +154,42 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "http:localhost:8080/login", http.StatusNotFound)
 }
 
+func Register(w http.ResponseWriter, r *http.Request) {
+	registerError := "Registration failed."
+	if _, found := session["user_id"]; !found {
+		log.Fatalln("Abort 401")
+	}
+
+	if r.Method == "POST" {
+		if _, found := r.Form["username"]; !found {
+			registerError = "Please enter a username"
+		} else if _, found := r.Form["email"]; !found {
+			registerError = "Please enter a valid e-mail address"
+		} else if !strings.Contains(r.Form["email"][0], "@") {
+			registerError = "Please enter a valid e-mail address"
+		} else if _, found := r.Form["password"]; !found {
+			registerError = "Please enter a password"
+		} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
+			registerError = "Username already taken"
+		} else {
+			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
+			statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			_, err = statement.Exec(r.Form["user_id"], r.Form["text"], time.Now)
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		}
+	}
+	fmt.Print(registerError)
+	//TO-DO: We need a proper address for errors
+	http.Redirect(w, r, "http:localhost:8080/register", http.StatusNotFound)
+}
+
 func Logout(w http.ResponseWriter, r *http.Request) {
 	session["user_id"] = "None"
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
@@ -162,7 +198,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func FollowUser(w http.ResponseWriter, r *http.Request) {
 	//TO-DO: This check needs to be changed in all methods using it.
 	if _, found := session["user_id"]; !found {
-		log.Fatalln("Abort 401")	
+		log.Fatalln("Abort 401")
 	}
 
 	r.ParseForm()
@@ -186,9 +222,9 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
-		log.Fatalln("Abort 401")	
+		log.Fatalln("Abort 401")
 	}
-	
+
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
 		//TO-DO: Again, from where are these variables piped
@@ -207,35 +243,6 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
 	}
 }
-
-/* @app.route('/<username>/follow')
-def follow_user(username):
-    """Adds the current user as follower of the given user."""
-    if not g.user:
-        abort(401)
-    whom_id = get_user_id(username)
-    if whom_id is None:
-        abort(404)
-    g.db.execute('insert into follower (who_id, whom_id) values (?, ?)',
-                [session['user_id'], whom_id])
-    g.db.commit()
-    flash('You are now following "%s"' % username)
-    return redirect(url_for('user_timeline', username=username))
-
-
-@app.route('/<username>/unfollow')
-def unfollow_user(username):
-    """Removes the current user as follower of the given user."""
-    if not g.user:
-        abort(401)
-    whom_id = get_user_id(username)
-    if whom_id is None:
-        abort(404)
-    g.db.execute('delete from follower where who_id=? and whom_id=?',
-                [session['user_id'], whom_id])
-    g.db.commit()
-    flash('You are no longer following "%s"' % username)
-    return redirect(url_for('user_timeline', username=username)) */
 
 // Convenience method to look up the id for a username.
 func GetUserId(username string) (*int, error) {
