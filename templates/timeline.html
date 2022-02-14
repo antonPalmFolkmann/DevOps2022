@@ -10,8 +10,8 @@
 {{ endblock }}
 {{ block body }}
   <h2>{{ self.title() }}</h2>
-  {{ if .g.user }}
-    {{ if .request.URL == 'user_timeline' }}
+  {{ if g.user }}
+    {{ if request.URL == 'user_timeline' }}
       <div class=followstatus>
       {{ if g.user.user_id == profile_user.user_id }}
         This is you!

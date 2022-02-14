@@ -25,6 +25,7 @@ var (
 	// Create our little application :)
 	r       *mux.Router = mux.NewRouter()
 	db      *sql.DB     = ConnectDb()
+	user    M
 	session map[string]string
 )
 
@@ -137,7 +138,7 @@ type timelineData struct {
 func Timeline(w http.ResponseWriter, r *http.Request) {
 	log.Printf("We got a vistor from %s", r.RemoteAddr)
 
-	redirectToPublic := false
+	redirectToPublic := true
 	if redirectToPublic {
 		http.Redirect(w, r, "/public", http.StatusMultipleChoices)
 	}
@@ -184,12 +185,24 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
+	ProfileUser := QueryDb("select * from user where username = %s", true, username)[0]
+	if ProfileUser == nil {
+		w.Write([]byte("404 Not Found"))
+	}
+
+	followed := false
+	if user != nil {
+		followed = QueryDb("select 1 from follower where follower.who_id = %s and follower.whom_id = %s", true, session["user_id"], ProfileUser["user_id"])[0] != nil
+	}
+
 	data := timelineData{
 		Title:       "User Timeline",
 		Request:     r,
 		Messages:    QueryDb("select * from message limit 50", false),
-		ProfileUser: QueryDb("select * from user where username = %s", true, username)[0],
+		ProfileUser: ProfileUser,
+		Followed:    followed,
 		PerPage:     PER_PAGE,
+		User:        user,
 	}
 
 	tmpl := parseTemplate("templates/timeline.html")
