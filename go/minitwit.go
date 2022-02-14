@@ -131,13 +131,27 @@ type timelineData struct {
 	PerPage     int
 }
 
-func timeline(w http.ResponseWriter, r *http.Request) {
+// Shows a users timeline or if no user is logged in it will
+// redirect to the public timeline.  This timeline shows the user's
+// messages as well as all the messages of followed users.
+func Timeline(w http.ResponseWriter, r *http.Request) {
+	log.Printf("We got a vistor from %s", r.RemoteAddr)
+
+	redirectToPublic := false
+	if redirectToPublic {
+		http.Redirect(w, r, "/public", http.StatusMultipleChoices)
+	}
+
+	_ = r.URL.Query().Get("offset")
+
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = %s or user.user_id in (select whom_id from follower where who_id = %s)) order by message.pub_date desc limit %s"
+
 	data := timelineData{
 		Title:    "Public Timeline",
 		Request:  r,
-		Messages: QueryDb("select * from message", false),
+		Messages: QueryDb(messageQuery, false, session["user_id"], session["user_id"], PER_PAGE),
 		UserId:   "123123",
-		PerPage:  30,
+		PerPage:  PER_PAGE,
 	}
 
 	tmpl := parseTemplate("templates/timeline.html")
@@ -147,25 +161,7 @@ func timeline(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func userTimeline(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	username := vars["username"]
-
-	data := timelineData{
-		Title:       "User Timeline",
-		Request:     r,
-		Messages:    QueryDb("select * from message limit 50", false),
-		ProfileUser: QueryDb("select * from user where username = %s", true, username)[0],
-		UserId:      "123123",
-		PerPage:     30,
-	}
-	tmpl := parseTemplate("templates/timeline.html")
-	err := tmpl.Execute(w, data)
-	if err != nil {
-		log.Printf("Failed to render the template with err: %v", err)
-	}
-}
-
+// Displays the latest messages of all users.
 func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
 
@@ -174,6 +170,26 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 		Request:  r,
 		Messages: QueryDb(messageQuery, false, PER_PAGE),
 		PerPage:  PER_PAGE,
+	}
+
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+// Displays a user's tweets
+func UserTimeline(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	data := timelineData{
+		Title:       "User Timeline",
+		Request:     r,
+		Messages:    QueryDb("select * from message limit 50", false),
+		ProfileUser: QueryDb("select * from user where username = %s", true, username)[0],
+		PerPage:     PER_PAGE,
 	}
 
 	tmpl := parseTemplate("templates/timeline.html")
@@ -203,10 +219,9 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	r.HandleFunc("/", YourHandler)
-	r.HandleFunc("/timeline", timeline)
-	r.HandleFunc("/public_timeline", PublicTimeline)
-	// r.HandleFunc("/{username}", userTimeline)
+	r.HandleFunc("/", Timeline)
+	r.HandleFunc("/{username}", UserTimeline)
+	r.HandleFunc("/public", PublicTimeline)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
