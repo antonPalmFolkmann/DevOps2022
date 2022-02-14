@@ -15,13 +15,14 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Configuration
 const (
-	DATABASE = "../minitwit.db"
 	PER_PAGE = 30
 )
 
 var (
+	// Configuration
+	DATABASE = "../minitwit.db"
+
 	// Create our little application :)
 	r       *mux.Router = mux.NewRouter()
 	db      *sql.DB     = ConnectDb()
@@ -86,6 +87,25 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
+// Make sure that we are connected to teh database each request and look up the current user to that we know they're
+// there
+func BeforeRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db = ConnectDb()
+		user = nil
+		if _, found := session["user_id"]; found {
+			user = QueryDb("select * from user where user id = %s", true, session["user_id"])[0]
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Closes the database again at the end of the request
+func AfterRequest() {
+	db.Close()
+}
+
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
@@ -108,6 +128,44 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func Login(w http.ResponseWriter, r *http.Request) {
+	userError := "Error logging in."
+	_, found := session["user_id"]
+	if found {
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseForm()
+
+		if _, found := r.Form["text"]; found {
+			//TO-DO: Where to get variable %s from?
+			getMessageSQL := "SELECT * FROM user WHERE username = '%s'"
+			queryResult := QueryDb(getMessageSQL, true, r.Form["username"])[0]
+
+			if queryResult == nil {
+				userError = "Invalid username"
+
+			} else if queryResult["password"] != r.Form["password"][0] {
+				//TO-DO: The above check needs to be looked at
+				userError = "Invalid password"
+
+			} else {
+				//TO-DO: Actually save the user_id in session
+				http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+				return
+			}
+		}
+	}
+	fmt.Printf(userError)
+	http.Redirect(w, r, "http:localhost:8080/login", http.StatusNotFound)
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	session["user_id"] = "None"
+	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
+}
+
 // Convenience method to look up the id for a username.
 func GetUserId(username string) (*int, error) {
 	var usernameResult int
@@ -118,6 +176,7 @@ func GetUserId(username string) (*int, error) {
 		}
 		return nil, fmt.Errorf("GetUserId %s failed", username)
 	}
+
 	return &usernameResult, nil
 }
 
@@ -228,13 +287,18 @@ func parseTemplate(file string) *template.Template {
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	w.Write([]byte("Gorilla!\n"))
 }
 
 func main() {
+	r.Use(BeforeRequest)
+
 	r.HandleFunc("/", Timeline)
 	r.HandleFunc("/{username}", UserTimeline)
 	r.HandleFunc("/public", PublicTimeline)
+
+	r.HandleFunc("/", YourHandler)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
