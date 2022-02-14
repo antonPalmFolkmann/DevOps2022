@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -123,13 +124,19 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type loginData struct {
+	Request *http.Request
+	User    interface{}
+	Error   string
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
-	userError := "Error logging in."
-	_, found := session["user_id"]
-	if found {
-		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+	if _, found := session["user_id"]; found {
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusMultipleChoices)
 		return
 	}
+
+	userError := ""
 	if r.Method == "POST" {
 		r.ParseForm()
 
@@ -152,13 +159,37 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	fmt.Printf(userError)
-	http.Redirect(w, r, "http:localhost:8080/login", http.StatusNotFound)
+
+	data := loginData{
+		Request: r,
+		User:    user,
+		Error:   userError,
+	}
+
+	templ := parseTemplate("templates/login.html")
+	if err := templ.Execute(w, data); err != nil {
+		log.Printf("Failed to render login template with err: %v", err)
+	}
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	session["user_id"] = "None"
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
+}
+
+func parseTemplate(file string) *template.Template {
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Printf("Failed to read the template contents: %v", err)
+	}
+
+	tmpl, err := template.New("timeline").Funcs(template.FuncMap{
+		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
+	}).Parse(string(contents))
+	if err != nil {
+		log.Printf("Failed to parse the template: %v", err)
+	}
+	return tmpl
 }
 
 // Convenience method to look up the id for a username.
@@ -184,6 +215,7 @@ func main() {
 	r.Use(BeforeRequest)
 
 	r.HandleFunc("/", YourHandler)
+	r.HandleFunc("/login", Login)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
@@ -191,7 +223,7 @@ func main() {
 
 // Return the gravatar image for the given email address.
 // Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
-// Converting bytes to hexadecimal string: https://pkg.go.dev/encoding/hex#EncodeToString
+// Converting bytes to hexadecimal s%}tring: https://pkg.go.dev/encoding/hex#EncodeToString
 func GravatarUrl(email string, size int) string {
 	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
 		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
