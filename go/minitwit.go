@@ -184,7 +184,7 @@ type registerData struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	registerError := "Registration failed."
+	registerError := ""
 	if _, found := session["user_id"]; found {
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 	}
