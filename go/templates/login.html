@@ -1,5 +1,6 @@
-{{ block "title" . }}<h1>Sign In</h1>{{ end }}
-{{ block "body" . }}
+{{ template "layout" . }}
+{{ define "title" }}Sign In{{ end }}
+{{ define "body" }}
   <h2>Sign In</h2>
   {{ if (ne .Error "") }}<div class=error><strong>Error:</strong> {{ .Error }}</div>{{ end }}
   <form action="" method=post>
@@ -9,7 +10,6 @@
       <dt>Password:
       <dd><input type=password name=password size=30>
     </dl>
-    <div class=actions><input type=submit value="Sign In"></div>
+    <div class=actions><input type=submit value="Sign Sign In"></div>
   </form>
 {{ end }}
-

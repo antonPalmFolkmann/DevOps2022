@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -137,42 +135,46 @@ type loginData struct {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	// if _, found := session["user_id"]; found {
-	// 	http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusMultipleChoices)
-	// 	return
-	// }
+	if _, found := session["user_id"]; found {
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusMultipleChoices)
+		return
+	}
 
-	// userError := ""
-	// if r.Method == "POST" {
-	// 	r.ParseForm()
+	userError := ""
+	if r.Method == "POST" {
+		r.ParseForm()
 
-	// 	if _, found := r.Form["text"]; found {
-	// 		//TO-DO: Where to get variable %s from?
-	// 		getMessageSQL := "SELECT * FROM user WHERE username = '%s'"
-	// 		queryResult := QueryDb(getMessageSQL, true, r.Form["username"])[0]
+		if _, found := r.Form["text"]; found {
+			//TO-DO: Where to get variable %s from?
+			getMessageSQL := "SELECT * FROM user WHERE username = '%s'"
+			queryResult := QueryDb(getMessageSQL, true, r.Form["username"])[0]
 
-	// 		if queryResult == nil {
-	// 			userError = "Invalid username"
-	// 		} else if queryResult["password"].(string) != r.Form["password"][0] {
-	// 			userError = "Invalid password"
-	// 		} else {
-	// 			session["user_id"] = queryResult["user_id"].(string)
-	// 			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
-	// 			return
-	// 		}
-	// 	}
-	// }
+			if queryResult == nil {
+				userError = "Invalid username"
+			} else if queryResult["password"].(string) != r.Form["password"][0] {
+				userError = "Invalid password"
+			} else {
+				session["user_id"] = queryResult["user_id"].(string)
+				http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+				return
+			}
+		}
+	}
 
-	// data := loginData{
-	// 	Request: r,
-	// 	User:    user,
-	// 	Error:   userError,
-	// }
+	data := loginData{
+		Request: r,
+		User:    user,
+		Error:   userError,
+	}
 
-	// templ := parseTemplate("login", "templates/login.html")
-	// if err := templ.Execute(w, data); err != nil {
-	// 	log.Printf("Failed to render login template with err: %v", err)
-	// }
+	tmpl, err := initTemplate("login.html").ParseFiles("templates/layout.html", "templates/login.html")
+	if err != nil {
+		log.Printf("Failed to parse login template with err: %v", err)
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Failed to render login template with err: %v", err)
+	}
 }
 
 type registerData struct {
@@ -182,49 +184,52 @@ type registerData struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	log.Println("Register endpoint hit")
+	registerError := "Registration failed."
+	if _, found := session["user_id"]; found {
+		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	}
 
-	// registerError := "Registration failed."
-	// if _, found := session["user_id"]; found {
-	// 	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
-	// }
+	if r.Method == "POST" {
+		if _, found := r.Form["username"]; !found {
+			registerError = "Please enter a username"
+		} else if _, found := r.Form["email"]; !found {
+			registerError = "Please enter a valid e-mail address"
+		} else if !strings.Contains(r.Form["email"][0], "@") {
+			registerError = "Please enter a valid e-mail address"
+		} else if _, found := r.Form["password"]; !found {
+			registerError = "Please enter a password"
+		} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
+			registerError = "Username already taken"
+		} else {
+			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
+			statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
-	// if r.Method == "POST" {
-	// 	if _, found := r.Form["username"]; !found {
-	// 		registerError = "Please enter a username"
-	// 	} else if _, found := r.Form["email"]; !found {
-	// 		registerError = "Please enter a valid e-mail address"
-	// 	} else if !strings.Contains(r.Form["email"][0], "@") {
-	// 		registerError = "Please enter a valid e-mail address"
-	// 	} else if _, found := r.Form["password"]; !found {
-	// 		registerError = "Please enter a password"
-	// 	} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
-	// 		registerError = "Username already taken"
-	// 	} else {
-	// 		insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
-	// 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			_, err = statement.Exec(r.Form["user_id"], r.Form["text"], time.Now)
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		}
+	}
 
-	// 		if err != nil {
-	// 			log.Fatalln(err.Error())
-	// 		}
-	// 		_, err = statement.Exec(r.Form["user_id"], r.Form["text"], time.Now)
-	// 		if err != nil {
-	// 			log.Fatalln(err.Error())
-	// 		}
-	// 		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
-	// 	}
-	// }
+	data := registerData{
+		Request: r,
+		User:    user,
+		Error:   registerError,
+	}
 
-	// data := registerData{
-	// 	Request: r,
-	// 	User:    user,
-	// 	Error:   registerError,
-	// }
+	tmpl, err := initTemplate("register.html").ParseFiles("templates/layout.html", "templates/register.html")
+	if err != nil {
+		log.Printf("Failed to parse the templates with err: %v", err)
+	}
 
-	// templ := parseTemplate("register", "templates/register.html")
-	// if err := templ.Execute(w, data); err != nil {
-	// 	log.Printf("Failed to render login template with err: %v", err)
-	// }
+	err = tmpl.ExecuteTemplate(w, "register.html", data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -330,7 +335,7 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 		PerPage:  PER_PAGE,
 	}
 
-	tmpl, err := parseTemplateDir("templates")
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
 	if err != nil {
 		log.Printf("Failed to parse the templates with err: %v", err)
 	}
@@ -352,7 +357,7 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 		PerPage:  PER_PAGE,
 	}
 
-	tmpl, err := parseTemplateDir("templates")
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
 	if err != nil {
 		log.Printf("Failed to parse the templates with err: %v", err)
 	}
@@ -388,7 +393,7 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 		User:        user,
 	}
 
-	tmpl, err := parseTemplateDir("templates")
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
 	if err != nil {
 		log.Printf("Failed to parse the templates with err: %v", err)
 	}
@@ -399,24 +404,14 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parseTemplateDir(dir string) (*template.Template, error) {
-	var paths []string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			paths = append(paths, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return template.New("").Funcs(template.FuncMap{
+func initTemplate(name string) *template.Template {
+	return template.New(name).Funcs(template.FuncMap{
 		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
-	}).ParseFiles(paths...)
+	})
+}
+
+func ServeCSS(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/style.css")
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
@@ -427,7 +422,8 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	r.Use(BeforeRequest)
 
-	r.HandleFunc("/", Timeline)
+	r.HandleFunc("/static/style.css", ServeCSS)
+
 	r.HandleFunc("/public", PublicTimeline)
 	r.HandleFunc("/user/{username}", UserTimeline)
 
