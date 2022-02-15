@@ -159,6 +159,43 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "http:localhost:8080/login", http.StatusNotFound)
 }
 
+func Register(w http.ResponseWriter, r *http.Request) {
+	registerError := "Registration failed."
+	if _, found := session["user_id"]; !found {
+		log.Fatalln("Abort 401")
+	}
+
+	if r.Method == "POST" {
+		if _, found := r.Form["username"]; !found {
+			registerError = "Please enter a username"
+		} else if _, found := r.Form["email"]; !found {
+			registerError = "Please enter a valid e-mail address"
+		} else if !strings.Contains(r.Form["email"][0], "@") {
+			registerError = "Please enter a valid e-mail address"
+		} else if _, found := r.Form["password"]; !found {
+			registerError = "Please enter a password"
+		} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
+			registerError = "Username already taken"
+		} else {
+			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
+			statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			_, err = statement.Exec(r.Form["user_id"], r.Form["text"], time.Now)
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		}
+	}
+	fmt.Print(registerError)
+	//TO-DO: We need a proper address for errors
+	http.Redirect(w, r, "http:localhost:8080/register", http.StatusNotFound)
+}
+
+
 func Logout(w http.ResponseWriter, r *http.Request) {
 	delete(session, "user_id")
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
@@ -167,7 +204,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func FollowUser(w http.ResponseWriter, r *http.Request) {
 	//TO-DO: This check needs to be changed in all methods using it.
 	if _, found := session["user_id"]; !found {
-		log.Fatalln("Abort 401")	
+		log.Fatalln("Abort 401")
 	}
 
 	r.ParseForm()
@@ -191,6 +228,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
+
 		log.Fatalln("Abort 401")	
 	}
 	
