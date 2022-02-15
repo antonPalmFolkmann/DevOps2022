@@ -1,14 +1,14 @@
-{{ block "title" . }}
-  <!-- FIXME: Change to be meta-data for the HTML head -->
+{{ template "layout" . }}
+{{ define "title" }}
   {{ if (eq .Request.URL.String "/public_timeline") }}
-    <h1>Public Timeline</h1>
+    Public Timeline
   {{ else if (eq .Request.URL.String "/user_timeline") }}
-    <h1>User Timeline</h1>
+    User Timeline
   {{ else }}
-    <h1>My Timeline</h1>
+    My Timeline
   {{ end }}
 {{ end }}
-{{ block "body" . }}
+{{ define "body" }}
   <h2>{{ .Title }}</h2>
   {{ if (eq (len .User) 0) }}
     {{ if (eq .Request.URL.String "/user_timeline")}}
