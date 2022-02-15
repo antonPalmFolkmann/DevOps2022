@@ -140,25 +140,72 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 			if queryResult == nil {
 				userError = "Invalid username"
-
-			} else if queryResult["password"] != r.Form["password"][0] {
-				//TO-DO: The above check needs to be looked at
+			} else if queryResult["password"].(string) != r.Form["password"][0] {
 				userError = "Invalid password"
-
 			} else {
-				//TO-DO: Actually save the user_id in session
+				session["user_id"] = queryResult["user_id"].(string)
 				http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 				return
 			}
 		}
 	}
-	fmt.Printf(userError)
+	fmt.Print(userError)
+	//TO-DO: We need a proper address for errors
 	http.Redirect(w, r, "http:localhost:8080/login", http.StatusNotFound)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	session["user_id"] = "None"
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
+}
+
+func FollowUser(w http.ResponseWriter, r *http.Request) {
+	//TO-DO: This check needs to be changed in all methods using it.
+	if _, found := session["user_id"]; !found {
+		log.Fatalln("Abort 401")	
+	}
+
+	r.ParseForm()
+	if _, found := r.Form["text"]; found {
+		//TO-DO: Again, from where are these variables piped
+		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (%s, %s)"
+		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		//TO-DO: I am imagnining the following url redirects to the followed users timeline
+		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+	}
+}
+
+func UnfollowUser(w http.ResponseWriter, r *http.Request) {
+	if _, found := session["user_id"]; !found {
+		log.Fatalln("Abort 401")	
+	}
+	
+	r.ParseForm()
+	if _, found := r.Form["text"]; found {
+		//TO-DO: Again, from where are these variables piped
+		deleteMessageSQL := "DELETE FROM follower WHERE who_id = %s AND whom_id = %s"
+		statement, err := db.Prepare(deleteMessageSQL) // Avoid SQL injections
+
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		//TO-DO: I am imagnining the following url redirects to the un-followed users timeline
+		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+	}
 }
 
 // Convenience method to look up the id for a username.
