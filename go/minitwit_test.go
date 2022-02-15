@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -71,61 +72,29 @@ func RegisterAndLogin(username string, password string) {
 	login(username, password)
 }
 
-func TestSomething(t *testing.T) {
-	setUp()
+func Handler(w http.ResponseWriter, r *http.Request) {
+	// Tell the client that the API version is 1.3
+	w.Header().Add("API-VERSION", "1.3")
+	w.Write([]byte("ok"))
+}
 
-	assert.True(t, true, "True is true!")
+func TestHandler(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
+	w := httptest.NewRecorder()
+	Handler(w, req)
+	// We should get a good status code
+	want, got := http.StatusOK, w.Result().StatusCode
+
+	assert.Equal(t, want, got)
+
+	// Make sure that the version was 1.3
+	if want, got := "1.3", w.Result().Header.Get("API-VERSION"); want != got {
+		t.Fatalf("expected API-VERSION to be %s, instead got: %s", want, got)
+	}
 }
 
 /*
 
-func setUp(self):
-        """Before each test, set up a blank database"""
-        self.db = tempfile.NamedTemporaryFile()
-        self.app = minitwit.app.test_client()
-        minitwit.DATABASE = self.db.name
-        minitwit.init_db()
-
-# helper functions
-
-def register(self, username, password, password2=None, email=None):
-        """Helper function to register a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        return self.app.post('/register', data={
-            'username':     username,
-            'password':     password,
-            'password2':    password2,
-            'email':        email,
-        }, follow_redirects=True)
-
-def login(self, username, password):
-        """Helper function to login"""
-        return self.app.post('/login', data={
-            'username': username,
-            'password': password
-        }, follow_redirects=True)
-
-def register_and_login(self, username, password):
-        """Registers and logs in in one go"""
-        self.register(username, password)
-        return self.login(username, password)
-
-def logout(self):
-        """Helper function to logout"""
-        return self.app.get('/logout', follow_redirects=True)
-
-def add_message(self, text):
-        """Records a message"""
-        rv = self.app.post('/add_message', data={'text': text},
-                                    follow_redirects=True)
-        if text:
-            assert 'Your message was recorded' in rv.data
-        return rv
-
-*/
 func TestRegister(t *testing.T) {
 	// Make sure registering works
 	rv = Register("user1", "default")
@@ -208,3 +177,5 @@ func TestTimelines(t *testing.T) {
 	assert.Contains(t, "the message by bar", rv.data)
 
 }
+
+*/
