@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,15 +15,19 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const (
+	PER_PAGE = 30
+)
+
 var (
 	// Configuration
 	DATABASE = "../minitwit.db"
 
 	// Create our little application :)
-	r       *mux.Router       = mux.NewRouter()
-	db      *sql.DB           = ConnectDb()
-	user    interface{}       = nil
-	session map[string]string = make(map[string]string, 0)
+	r       *mux.Router = mux.NewRouter()
+	db      *sql.DB     = ConnectDb()
+	user    M
+	session map[string]string
 )
 
 // ConnectDb returns a new connection to the database
@@ -190,8 +195,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "http:localhost:8080/register", http.StatusNotFound)
 }
 
+
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session["user_id"] = "None"
+	delete(session, "user_id")
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
 }
 
@@ -222,9 +228,10 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
-		log.Fatalln("Abort 401")
-	}
 
+		log.Fatalln("Abort 401")	
+	}
+	
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
 		//TO-DO: Again, from where are these variables piped
@@ -258,6 +265,112 @@ func GetUserId(username string) (*int, error) {
 	return &usernameResult, nil
 }
 
+type timelineData struct {
+	Title       string
+	Request     *http.Request
+	Messages    []M
+	UserId      string
+	User        M
+	Followed    bool
+	ProfileUser M
+	PerPage     int
+}
+
+// Shows a users timeline or if no user is logged in it will
+// redirect to the public timeline.  This timeline shows the user's
+// messages as well as all the messages of followed users.
+func Timeline(w http.ResponseWriter, r *http.Request) {
+	log.Printf("We got a vistor from %s", r.RemoteAddr)
+
+	if user == nil {
+		http.Redirect(w, r, "/public", http.StatusMultipleChoices)
+		return
+	}
+
+	_ = r.URL.Query().Get("offset")
+
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = %s or user.user_id in (select whom_id from follower where who_id = %s)) order by message.pub_date desc limit %s"
+
+	data := timelineData{
+		Title:    "Public Timeline",
+		Request:  r,
+		Messages: QueryDb(messageQuery, false, session["user_id"], session["user_id"], PER_PAGE),
+		UserId:   "123123",
+		PerPage:  PER_PAGE,
+	}
+
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+// Displays the latest messages of all users.
+func PublicTimeline(w http.ResponseWriter, r *http.Request) {
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
+
+	data := timelineData{
+		Title:    "Public Timeline",
+		Request:  r,
+		Messages: QueryDb(messageQuery, false, PER_PAGE),
+		PerPage:  PER_PAGE,
+	}
+
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+// Displays a user's tweets
+func UserTimeline(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	ProfileUser := QueryDb("select * from user where username = %s", true, username)[0]
+	if ProfileUser == nil {
+		w.Write([]byte("404 Not Found"))
+	}
+
+	followed := false
+	if user != nil {
+		followed = QueryDb("select 1 from follower where follower.who_id = %s and follower.whom_id = %s", true, session["user_id"], ProfileUser["user_id"])[0] != nil
+	}
+
+	data := timelineData{
+		Title:       "User Timeline",
+		Request:     r,
+		Messages:    QueryDb("select * from message limit 50", false),
+		ProfileUser: ProfileUser,
+		Followed:    followed,
+		PerPage:     PER_PAGE,
+		User:        user,
+	}
+
+	tmpl := parseTemplate("templates/timeline.html")
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
+	}
+}
+
+func parseTemplate(file string) *template.Template {
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Printf("Failed to read the template contents: %v", err)
+	}
+
+	tmpl, err := template.New("timeline").Funcs(template.FuncMap{
+		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
+	}).Parse(string(contents))
+	if err != nil {
+		log.Printf("Failed to parse the template: %v", err)
+	}
+	return tmpl
+}
+
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	defer AfterRequest()
 	w.Write([]byte("Gorilla!\n"))
@@ -265,6 +378,10 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	r.Use(BeforeRequest)
+
+	r.HandleFunc("/", Timeline)
+	r.HandleFunc("/public", PublicTimeline)
+	r.HandleFunc("/user/{username}", UserTimeline)
 
 	r.HandleFunc("/", YourHandler)
 
