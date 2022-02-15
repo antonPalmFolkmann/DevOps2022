@@ -6,7 +6,7 @@
   <form action="" method=post>
     <dl>
       <dt>Username:
-      <dd><input type=text name=username size=30 value="{{ index .Request.Form "username" }}">
+      <dd><input type=text name=username size=30 value="{{ if (ne .Username "") }}{{ .Username }}{{ end }}">
       <dt>Password:
       <dd><input type=password name=password size=30>
     </dl>

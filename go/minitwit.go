@@ -68,7 +68,6 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 		}
 
 		_ = rows.Scan(columnPointers...)
-
 		row := make(M)
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
@@ -129,9 +128,10 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 type loginData struct {
-	Request *http.Request
-	User    interface{}
-	Error   string
+	Request  *http.Request
+	Username string
+	User     interface{}
+	Error    string
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -161,10 +161,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	username := ""
+	if len(r.Form["username"]) != 0 {
+		username = r.Form["username"][0]
+	}
+
 	data := loginData{
-		Request: r,
-		User:    user,
-		Error:   userError,
+		Request:  r,
+		Username: username,
+		User:     user,
+		Error:    userError,
 	}
 
 	tmpl, err := initTemplate("login.html").ParseFiles("templates/layout.html", "templates/login.html")
@@ -178,9 +184,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 type registerData struct {
-	Request *http.Request
-	User    interface{}
-	Error   string
+	Request  *http.Request
+	Username string
+	Email    string
+	User     interface{}
+	Error    string
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -215,10 +223,22 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	username := ""
+	if len(r.Form["username"]) != 0 {
+		username = r.Form["username"][0]
+	}
+
+	email := ""
+	if len(r.Form["email"]) != 0 {
+		email = r.Form["email"][0]
+	}
+
 	data := registerData{
-		Request: r,
-		User:    user,
-		Error:   registerError,
+		Request:  r,
+		User:     user,
+		Username: username,
+		Email:    email,
+		Error:    registerError,
 	}
 
 	tmpl, err := initTemplate("register.html").ParseFiles("templates/layout.html", "templates/register.html")
