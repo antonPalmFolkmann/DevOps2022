@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +30,7 @@ var (
 	r       *mux.Router = mux.NewRouter()
 	db      *sql.DB     = ConnectDb()
 	user    M
-	session map[string]string
+	session map[string]string = make(map[string]string)
 )
 
 // ConnectDb returns a new connection to the database
@@ -148,15 +149,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 
 		if _, found := r.Form["username"]; found {
-			getMessageSQL := "SELECT * FROM user WHERE username = '%s'"
-			queryResult := QueryDb(getMessageSQL, true, r.Form["username"])[0]
+			//We concatenate like this because variable assignment with % doesn't seem to work here
+			getMessageSQL := "SELECT * FROM user WHERE username = '" + r.Form["username"][0] + "'"
+			queryResult := QueryDb(getMessageSQL, true)
+
+			hash := md5.New()
+			io.WriteString(hash, r.Form["password"][0])
+			formPwHash := fmt.Sprintf("%x", hash.Sum(nil))
 
 			if queryResult == nil {
 				userError = "Invalid username"
-			} else if queryResult["pa"] != r.Form["password"][0] {
+			} else if queryResult[0]["pw_hash"].(string) != formPwHash {
 				userError = "Invalid password"
 			} else {
-				session["user_id"] = queryResult["user_id"].(string)
+				queryUserID := queryResult[0]["user_id"].(int64)
+				session["user_id"] = strconv.Itoa(int(queryUserID))
+				user = queryResult[0]
 				http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 				return
 			}
@@ -189,6 +197,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
+		r.ParseForm()
+		log.Printf("%v", r.Form)
 		if _, found := r.Form["username"]; !found {
 			registerError = "Please enter a username"
 		} else if _, found := r.Form["email"]; !found {
@@ -197,22 +207,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			registerError = "Please enter a valid e-mail address"
 		} else if _, found := r.Form["password"]; !found {
 			registerError = "Please enter a password"
-		} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
+		} else if _, err := GetUserId(r.Form["username"][0]); err == nil {
 			registerError = "Username already taken"
 		} else {
 			hash := md5.New()
 			io.WriteString(hash, r.Form["password"][0])
 
-			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
-			statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values ('%s', '%s', '%x')"
 
+			insertMessageSQL = fmt.Sprintf(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
+
+			_, err = db.Exec(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
 			if err != nil {
-				log.Fatalln(err.Error())
+				log.Fatalln(err)
 			}
-			_, err = statement.Exec(r.Form["username"], r.Form["email"], hash)
-			if err != nil {
-				log.Fatalln(err.Error())
-			}
+
 			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 			return
 		}
