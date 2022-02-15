@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -56,6 +58,7 @@ type M map[string]interface{}
 // Queries the database and returns a list of maps
 func QueryDb(query string, one bool, args ...interface{}) []M {
 	rv := make([]M, 0)
+	log.Printf("Attempting query with: "+query, args...)
 	rows, _ := db.Query(query, args...)
 	cols, _ := rows.Columns()
 	for rows.Next() {
@@ -144,14 +147,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
 
-		if _, found := r.Form["text"]; found {
-			//TO-DO: Where to get variable %s from?
+		if _, found := r.Form["username"]; found {
 			getMessageSQL := "SELECT * FROM user WHERE username = '%s'"
 			queryResult := QueryDb(getMessageSQL, true, r.Form["username"])[0]
 
 			if queryResult == nil {
 				userError = "Invalid username"
-			} else if queryResult["password"].(string) != r.Form["password"][0] {
+			} else if queryResult["pa"] != r.Form["password"][0] {
 				userError = "Invalid password"
 			} else {
 				session["user_id"] = queryResult["user_id"].(string)
@@ -180,11 +182,10 @@ type registerData struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	log.Println("Register endpoint hit")
-
+	//Maybe this should be empty for the template to work
 	registerError := "Registration failed."
 	if _, found := session["user_id"]; found {
-		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 	}
 
 	if r.Method == "POST" {
@@ -199,17 +200,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		} else if _, err := GetUserId(r.Form["username"][0]); err != nil {
 			registerError = "Username already taken"
 		} else {
+			hash := md5.New()
+			io.WriteString(hash, r.Form["password"][0])
+
 			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (%s, %s, %s)"
 			statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
-			_, err = statement.Exec(r.Form["user_id"], r.Form["text"], time.Now)
+			_, err = statement.Exec(r.Form["username"], r.Form["email"], hash)
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
 			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+			return
 		}
 	}
 
@@ -342,7 +347,7 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 	data := timelineData{
 		Title:    "Public Timeline",
 		Request:  r,
-		Messages: QueryDb(messageQuery, false, PER_PAGE),
+		Messages: QueryDb(messageQuery, false),
 		PerPage:  PER_PAGE,
 	}
 
