@@ -190,11 +190,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 		}
 	}
-	fmt.Print(registerError)
+	log.Println(registerError)
 	//TO-DO: We need a proper address for errors
 	http.Redirect(w, r, "http:localhost:8080/register", http.StatusNotFound)
 }
-
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	delete(session, "user_id")
@@ -229,9 +228,9 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; !found {
 
-		log.Fatalln("Abort 401")	
+		log.Fatalln("Abort 401")
 	}
-	
+
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
 		//TO-DO: Again, from where are these variables piped
