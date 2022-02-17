@@ -127,6 +127,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
+		log.Printf("SHOULD FLASH: Your message was recorded")
 		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 	}
 }
@@ -162,6 +163,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			} else if queryResult[0]["pw_hash"].(string) != formPwHash {
 				userError = "Invalid password"
 			} else {
+				log.Printf("SHOULD FLASH: You were logged in")
 				queryUserID := queryResult[0]["user_id"].(int64)
 				session["user_id"] = strconv.Itoa(int(queryUserID))
 				user = queryResult[0]
@@ -233,6 +235,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				log.Fatalln(err)
 			}
 
+			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
 			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 			return
 		}
@@ -268,21 +271,23 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+	log.Printf("SHOULD FLASH: You were logged out")
 	delete(session, "user_id")
 	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
 }
 
 func FollowUser(w http.ResponseWriter, r *http.Request) {
-	//TO-DO: This check needs to be changed in all methods using it.
+	vars := mux.Vars(r)
+	username := vars["username"]
+
 	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		//TO-DO: Again, from where are these variables piped
 		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (%s, %s)"
-		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+		statement, err := db.Prepare(insertMessageSQL)
 
 		if err != nil {
 			log.Fatalln(err.Error())
@@ -292,14 +297,18 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
+
+		log.Printf("SHOULD FLASH: You are now following %s", username)
 		//TO-DO: I am imagnining the following url redirects to the followed users timeline
 		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
 	}
 }
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
-	if _, found := session["user_id"]; !found {
+	vars := mux.Vars(r)
+	username := vars["username"]
 
+	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
 
@@ -317,6 +326,8 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
+
+		log.Printf("SHOULD FLASH: You are no longer following %s", username)
 		//TO-DO: I am imagnining the following url redirects to the un-followed users timeline
 		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
 	}
@@ -408,7 +419,7 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	ProfileUser := QueryDb("select * from user where username = %s", true, username)[0]
+	ProfileUser := QueryDb("select * from user where username = '%s'", true, username)[0]
 	if ProfileUser == nil {
 		w.Write([]byte("404 Not Found"))
 	}
@@ -464,6 +475,9 @@ func main() {
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
+
+	r.HandleFunc("/user/{username}/follow", FollowUser)
+	r.HandleFunc("/user/{username}/unfollow", UnfollowUser)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
