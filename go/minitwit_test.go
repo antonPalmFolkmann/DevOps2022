@@ -21,25 +21,29 @@ func setUp() {
 
 // Helper functions Login, Logout, and RegisterAndLogin
 
-func login(username string, password string) {
+func login(username string, password string) string {
 	var jsonData = []byte(`{
 		"username": username,
 		"password": password
 	}`)
-	_, err := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Fatal("fatal")
 	}
+	w := httptest.NewRecorder()
+	return Login(w, req)
 }
 
-func logout() {
-	_, err := http.NewRequest("POST", "/logout", bytes.NewBuffer([]byte{}))
+func logOut() string {
+	req, err := http.NewRequest("POST", "/logout", bytes.NewBuffer([]byte{}))
 	if err != nil {
 		log.Fatal("fatal")
 	}
+	w := httptest.NewRecorder()
+	return LogOut(w, req)
 }
 
-func register(username string, password string, password2 string, email string) {
+func register(username string, password string, password2 string, email string) string {
 	if password2 == "" {
 		password2 = password
 	}
@@ -53,23 +57,29 @@ func register(username string, password string, password2 string, email string) 
 		"password2": password2,
 		"email": email
 	}`)
-	_, err := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Fatal("fatal")
 	}
+	w := httptest.NewRecorder()
+
+	return Register(w, req)
 }
 
-func addMessage(t *testing.T, text string) {
-	rv, err := http.NewRequest("POST", "/add_message", bytes.NewBuffer([]byte(text)))
+func addMessage(text string) string {
+	req, err := http.NewRequest("POST", "/add_message", bytes.NewBuffer([]byte(text)))
 	if err != nil {
 		log.Fatal("fatal")
 	}
-	assert.Equal(t, "Your message was recorded", rv)
+	w := httptest.NewRecorder()
+	return AddMessage(w, req)
 }
 
-func RegisterAndLogin(username string, password string) {
-	register(username, password, "", "")
-	login(username, password)
+func registerAndLogin(username string, password string) []string {
+	var results []string
+	results[0] = register(username, password, "", "")
+	results[1] = login(username, password)
+	return results
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -93,89 +103,104 @@ func TestHandler(t *testing.T) {
 	}
 }
 
-/*
-
 func TestRegister(t *testing.T) {
+	var tests = []struct {
+		name      string
+		username  string
+		password  string
+		password2 string
+		email     string
+		want      string
+	}{
+		{"registerTest_succesful", "user1", "default", "", "", "You were successfully registered and can login now"},
+		{"registerTest_usernameTaken", "user1", "default", "", "", "The username is already taken"},
+		{"registerTest_noUsername", "", "default", "", "", "You have to enter a username"},
+		{"registerTest_noPassword", "meh", "", "", "", "You have to enter a password"},
+		{"registerTest_diffPasswords", "meh", "x", "y", "", "The two passwords do not match"},
+		{"registerTest_invalidEmail", "meh", "foo", "", "broken", "You have to enter a valid email address"},
+	}
+
 	// Make sure registering works
-	rv = Register("user1", "default")
-	assert.Equal(t, "You were successfully registered and can login now", rv.data)
-	rv = Register("user1", "default")
-	assert.Equal(t, "The username is already taken", rv.data)
-	rv = Register("", "default")
-	assert.Equal(t, "You have to enter a username", rv.data)
-	rv = Register("meh", "")
-	assert.Equal(t, "You have to enter a password", rv.data)
-	rv = Register("meh", "x", "y")
-	assert.Equal(t, "The two passwords do not match", rv.data)
-	rv = Register("meh", "foo", email == "broken")
-	assert.Equal(t, "You have to enter a valid email address", rv.data)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := register(tt.username, tt.password, tt.password2, tt.email)
+			if got != tt.want {
+				t.Errorf("register(%s, %s, %s, %s) got %v, want %v", tt.username, tt.password, tt.password2, tt.email, got, tt.want)
+			}
+		})
+	}
 }
 
 func TestLoginLogout(t *testing.T) {
 	// Make sure logging in and logging out works
-	rv = RegisterAndLogin("user1", "default")
-	assert.Equal(t, "You were logged in", rv.data)
-	rv = LogOut()
-	assert.Equal(t, "You were logged out", rv.data)
-	rv = Login("user1", "wrongpassword")
-	assert.Equal(t, "Invalid password", rv.data)
-	rv = Login("user2", "wrongpassword")
-	assert.Equal(t, "Invalid username", rv.data)
+
+	rv1 := registerAndLogin("user1", "default")
+	assert.Equal(t, "You were successfully registered and can login now", rv1[0])
+	assert.Equal(t, "You were logged in", rv1[1])
+
+	rv2 := logOut()
+	assert.Equal(t, "You were logged out", rv2)
+
+	rv3 := login("user1", "wrongpassword")
+	assert.Equal(t, "Invalid password", rv3)
+
+	rv4 := login("user2", "wrongpassword")
+	assert.Equal(t, "Invalid username", rv4)
 }
 
 func TestMessageRecording(t *testing.T) {
-	// heck if adding messages works
-	RegisterAndLogin("foo", "default")
-	AddMessage("test message 1")
-	AddMessage("<test message 2>")
-	rv = get('/')
-	assert.Contains(t, "test message 1", rv.data)
-	assert.Contains(t, "&lt;test message 2&gt;", rv.data)
+	// check if adding messages works
+	_ = registerAndLogin("foo", "default")
+	rv1 := addMessage("test message 1")
+	rv2 := addMessage("<test message 2>")
+	// TODO: GET ALL TWEET MESSAGES IN TEXT TO CHECK THEY WERE UPLOADED rv = get('/')
+	assert.Equal(t, "test message 1", rv1)
+	assert.Equal(t, "&lt;test message 2&gt;", rv2)
 }
 
 func TestTimelines(t *testing.T) {
 	// Make sure that timelines work
-	RegisterAndLogin("foo", "default")
-	AddMessage("the message by foo")
-	LogOut()
-	RegisterAndLogin("bar", "default")
-	AddMessage("the message by bar")
-	rv = get("/public")
+	_ = registerAndLogin("foo", "default")
+	rv1 := addMessage("the message by foo")
+	_ = logOut()
+	_ = registerAndLogin("bar", "default")
+	rv2 := addMessage("the message by bar")
+	// TODO: GET ALL TWEET MESSAGES FROM PUBLIC TIMELINE IN TEXT TO CHECK THEY WERE UPLOADED rv = get("/public") (#67)
 
-	assert.Contains(t, "the message by foo", rv.data)
-	assert.Contains(t, "the message by bar", rv.data)
+	assert.Equal(t, "the message by foo", rv1)
+	assert.Equal(t, "the message by bar", rv2)
 
 	// bar's timeline should just show bar's message
-	rv = get("/")
-	assert.NotContains(t, "the message by foo", rv.data)
-	assert.Contains(t, "the message by bar", rv.data)
+	// TODO: GET TWEETS FROM "bars"'s timeline rv = get("/")
+	// assert.NotContains(t, "the message by foo", rv.data)
+	// assert.Equal(t, "the message by bar", rv2)
 
 	// now let's follow foo
-	rv = get("/foo/follow", follow_redirects == True)
-	assert.Contains(t, "You are now following &#34;foo&#34;", rv.data)
+	// TODO: FOLLOW SPECIFIC PERSON FROM USERNAME rv = get("/foo/follow", follow_redirects == True)
+	// TODO: GET RESPONE MESSAGE FROM FOLLOW PERSON assert.Contains(t, "You are now following &#34;foo&#34;", rv.data)
 
-	// we should now see foo's message
-	rv = get("/")
-	assert.Contains(t, "the message by foo", rv.data)
-	assert.Contains(t, "the message by bar", rv.data)
+	/*
+		// we should now see foo's message
+		rv = get("/")
+		assert.Contains(t, "the message by foo", rv.data)
+		assert.Contains(t, "the message by bar", rv.data)
 
-	// but on the user's page we only want the user's message
-	rv = get("/bar")
-	assert.NotContains(t, "the message by foo", rv.data)
-	assert.Contains(t, "the message by bar", rv.data)
+		// but on the user's page we only want the user's message
+		rv = get("/bar")
+		assert.NotContains(t, "the message by foo", rv.data)
+		assert.Contains(t, "the message by bar", rv.data)
 
-	rv = get("/foo")
-	assert.Contains(t, "the message by foo", rv.data)
-	assert.NotContains(t, "the message by bar", rv.data)
+		rv = get("/foo")
+		assert.Contains(t, "the message by foo", rv.data)
+		assert.NotContains(t, "the message by bar", rv.data)
 
-	// now unfollow and check if that worked
-	rv = get("/foo/unfollow", follow_redirects == True)
-	assert.Contains(t, "You are no longer following &#34;foo&#34;", rv.data)
+		// now unfollow and check if that worked
+		rv = get("/foo/unfollow", follow_redirects == True)
+		assert.Contains(t, "You are no longer following &#34;foo&#34;", rv.data)
 
-	rv = get("/")
-	assert.NotContains(t, "the message by foo", rv.data)
-	assert.Contains(t, "the message by bar", rv.data)
+		rv = get("/")
+		assert.NotContains(t, "the message by foo", rv.data)
+		assert.Contains(t, "the message by bar", rv.data)
+	*/
 
 }
-
-*/
