@@ -462,6 +462,9 @@ func main() {
 	r.HandleFunc("/public", PublicTimeline)
 	r.HandleFunc("/user/{username}", UserTimeline)
 
+	r.HandleFunc("/user/{username}/follow", FollowUser)
+	r.HandleFunc("/user/{username}/unfollow", UnfollowUser)
+
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
 
