@@ -336,6 +336,42 @@ func GetUserId(username string) (*int, error) {
 	return &usernameResult, nil
 }
 
+func GetMessagesFromURL(url string) []M {
+	var getMessageQuery string
+	var resultMap []M
+	split := strings.Split(url, "/")
+
+	if split[1] == "public" {
+		getMessageQuery = "SELECT text from message where message.flagged = 0"
+		resultMap = QueryDb(getMessageQuery, false)
+	} else if split[1] == "" {
+		getMessageQuery = "SELECT text from message"
+		resultMap = QueryDb(getMessageQuery, false)
+	} else if split[1] == "user_timeline" {
+		userID, err := GetUserId(split[2])
+		log.Printf("User id for frick: %v", userID)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		getMessageQuery = "SELECT text from message where message.flagged = 0 AND user_id = %v"
+		resultMap = QueryDb(getMessageQuery, false, userID)
+	}
+
+	/*
+		// loop over elements of slice
+		for _, m := range resultMap {
+
+			// m is a map[string]interface.
+			// loop over keys and values in the map.
+			for k, v := range m {
+				fmt.Println(k, ": ", v)
+			}
+		}
+	*/
+	return resultMap
+}
+
 type timelineData struct {
 	Title       string
 	Request     *http.Request
@@ -464,6 +500,15 @@ func main() {
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
+
+	mapresults1 := GetMessagesFromURL("/")
+	log.Printf("Length of general map: %v", len(mapresults1))
+
+	mapResults2 := GetMessagesFromURL("/public")
+	log.Printf("Length of public map: %v", len(mapResults2))
+
+	mapResults3 := GetMessagesFromURL("/user_timeline/frick")
+	log.Printf("Length of map for user frick: %v", len(mapResults3))
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
