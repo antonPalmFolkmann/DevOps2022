@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -25,6 +26,7 @@ var (
 
 	// Create our little application :)
 	r       *mux.Router = mux.NewRouter()
+	store               = sessions.NewCookieStore([]byte("super-secret"))
 	db      *sql.DB     = ConnectDb()
 	user    M
 	session map[string]string
@@ -108,8 +110,14 @@ func AfterRequest() {
 
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
+	flashes, err := store.New(r, "flashes")
+
+	if err != nil {
+		log.Printf("Failed to create a session for flashes with err: %v", err)
+	}
+
 	if _, found := session["user_id"]; !found {
-		log.Fatalln("Abort 401")
+		log.Println("401 Forbidden")
 	}
 
 	r.ParseForm()
@@ -124,8 +132,11 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		flashes.AddFlash("You message was recorded")
 	}
+
+	flashes.Save(r, w)
+	http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 }
 
 type loginData struct {
