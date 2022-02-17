@@ -223,12 +223,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err := templ.Execute(w, data); err != nil {
 		log.Printf("Failed to render login template with err: %v", err)
 	}
-
-	log.Println(registerError)
-	//TO-DO: We need a proper address for errors
-	http.Redirect(w, r, "http:localhost:8080/register", http.StatusNotFound)
 }
-
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	delete(session, "user_id")

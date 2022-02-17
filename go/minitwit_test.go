@@ -165,7 +165,7 @@ func TestTimelines(t *testing.T) {
 	_ = logOut()
 	_ = registerAndLogin("bar", "default")
 	rv2 := addMessage("the message by bar")
-	// TODO: GET ALL TWEET MESSAGES FROM PUBLIC TIMELINE IN TEXT TO CHECK THEY WERE UPLOADED rv = get("/public")
+	// TODO: GET ALL TWEET MESSAGES FROM PUBLIC TIMELINE IN TEXT TO CHECK THEY WERE UPLOADED rv = get("/public") (#67)
 
 	assert.Equal(t, "the message by foo", rv1)
 	assert.Equal(t, "the message by bar", rv2)
