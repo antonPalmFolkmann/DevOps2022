@@ -298,9 +298,8 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 
-		log.Printf("SHOULD FLASH: You are now following %s", username)
-		//TO-DO: I am imagnining the following url redirects to the followed users timeline
-		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
 
@@ -314,7 +313,6 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		//TO-DO: Again, from where are these variables piped
 		deleteMessageSQL := "DELETE FROM follower WHERE who_id = %s AND whom_id = %s"
 		statement, err := db.Prepare(deleteMessageSQL) // Avoid SQL injections
 
@@ -327,9 +325,9 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 
-		log.Printf("SHOULD FLASH: You are no longer following %s", username)
-		//TO-DO: I am imagnining the following url redirects to the un-followed users timeline
-		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+
+		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
 
@@ -472,6 +470,9 @@ func main() {
 
 	r.HandleFunc("/public", PublicTimeline)
 	r.HandleFunc("/user/{username}", UserTimeline)
+
+	r.HandleFunc("/user/{username}/follow", FollowUser)
+	r.HandleFunc("/user/{username}/unfollow", UnfollowUser)
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
