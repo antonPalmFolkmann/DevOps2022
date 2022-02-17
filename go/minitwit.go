@@ -72,7 +72,6 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 		}
 
 		_ = rows.Scan(columnPointers...)
-
 		row := make(M)
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
@@ -133,9 +132,10 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 type loginData struct {
-	Request *http.Request
-	User    interface{}
-	Error   string
+	Request  *http.Request
+	Username string
+	User     interface{}
+	Error    string
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -171,27 +171,38 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := loginData{
-		Request: r,
-		User:    user,
-		Error:   userError,
+	username := ""
+	if len(r.Form["username"]) != 0 {
+		username = r.Form["username"][0]
 	}
 
-	templ := parseTemplate("login", "templates/login.html")
-	if err := templ.Execute(w, data); err != nil {
+	data := loginData{
+		Request:  r,
+		Username: username,
+		User:     user,
+		Error:    userError,
+	}
+
+	tmpl, err := initTemplate("login.html").ParseFiles("templates/layout.html", "templates/login.html")
+	if err != nil {
+		log.Printf("Failed to parse login template with err: %v", err)
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Failed to render login template with err: %v", err)
 	}
 }
 
 type registerData struct {
-	Request *http.Request
-	User    interface{}
-	Error   string
+	Request  *http.Request
+	Username string
+	Email    string
+	User     interface{}
+	Error    string
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	//Maybe this should be empty for the template to work
-	registerError := "Registration failed."
+	registerError := ""
 	if _, found := session["user_id"]; found {
 		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
 	}
@@ -227,15 +238,32 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := registerData{
-		Request: r,
-		User:    user,
-		Error:   registerError,
+	username := ""
+	if len(r.Form["username"]) != 0 {
+		username = r.Form["username"][0]
 	}
 
-	templ := parseTemplate("register", "templates/register.html")
-	if err := templ.Execute(w, data); err != nil {
-		log.Printf("Failed to render login template with err: %v", err)
+	email := ""
+	if len(r.Form["email"]) != 0 {
+		email = r.Form["email"][0]
+	}
+
+	data := registerData{
+		Request:  r,
+		User:     user,
+		Username: username,
+		Email:    email,
+		Error:    registerError,
+	}
+
+	tmpl, err := initTemplate("register.html").ParseFiles("templates/layout.html", "templates/register.html")
+	if err != nil {
+		log.Printf("Failed to parse the templates with err: %v", err)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "register.html", data)
+	if err != nil {
+		log.Printf("Failed to render the template with err: %v", err)
 	}
 }
 
@@ -342,8 +370,12 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 		PerPage:  PER_PAGE,
 	}
 
-	tmpl := parseTemplate("timeline", "templates/timeline.html")
-	err := tmpl.Execute(w, data)
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
+	if err != nil {
+		log.Printf("Failed to parse the templates with err: %v", err)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "timeline.html", data)
 	if err != nil {
 		log.Printf("Failed to render the template with err: %v", err)
 	}
@@ -360,8 +392,12 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 		PerPage:  PER_PAGE,
 	}
 
-	tmpl := parseTemplate("timeline", "templates/timeline.html")
-	err := tmpl.Execute(w, data)
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
+	if err != nil {
+		log.Printf("Failed to parse the templates with err: %v", err)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "timeline.html", data)
 	if err != nil {
 		log.Printf("Failed to render the template with err: %v", err)
 	}
@@ -392,26 +428,25 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 		User:        user,
 	}
 
-	tmpl := parseTemplate("timeline", "templates/timeline.html")
-	err := tmpl.Execute(w, data)
+	tmpl, err := initTemplate("timeline.html").ParseFiles("templates/layout.html", "templates/timeline.html")
+	if err != nil {
+		log.Printf("Failed to parse the templates with err: %v", err)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "timeline.html", data)
 	if err != nil {
 		log.Printf("Failed to render the template with err: %v", err)
 	}
 }
 
-func parseTemplate(name string, file string) *template.Template {
-	contents, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Printf("Failed to read the template contents: %v", err)
-	}
-
-	tmpl, err := template.New(name).Funcs(template.FuncMap{
+func initTemplate(name string) *template.Template {
+	return template.New(name).Funcs(template.FuncMap{
 		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
-	}).Parse(string(contents))
-	if err != nil {
-		log.Printf("Failed to parse the template: %v", err)
-	}
-	return tmpl
+	})
+}
+
+func ServeCSS(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/style.css")
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
@@ -422,7 +457,8 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	r.Use(BeforeRequest)
 
-	r.HandleFunc("/", Timeline)
+	r.HandleFunc("/static/style.css", ServeCSS)
+
 	r.HandleFunc("/public", PublicTimeline)
 	r.HandleFunc("/user/{username}", UserTimeline)
 

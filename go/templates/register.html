@@ -1,13 +1,14 @@
-{{ block "title" . }}<h1>Sign Up</h1>{{ end }}
-{{ block "body" . }}
+{{ template "layout" . }}
+{{ define "title" }}Sign Up{{ end }}
+{{ define "body" }}
   <h2>Sign Up</h2>
   {{ if (ne .Error "") }}<div class=error><strong>Error:</strong> {{ .Error }}</div>{{ end }}
   <form action="" method=post>
     <dl>
       <dt>Username:
-      <dd><input type=text name=username size=30 value="{{ index .Request.Form "username" }}">
+      <dd><input type=text name=username size=30 value="{{ if (ne .Username "") }}{{ .Username }}{{ end }}">
       <dt>E-Mail:
-      <dd><input type=text name=email size=30 value="{{ index .Request.Form "email" }}">
+      <dd><input type=text name=email size=30 value="{{ if (ne .Email "") }}{{ .Email }}{{ end }}">
       <dt>Password:
       <dd><input type=password name=password size=30>
       <dt>Password <small>(repeat)</small>:
