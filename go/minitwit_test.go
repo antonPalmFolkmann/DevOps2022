@@ -205,6 +205,5 @@ func TestTimelines(t *testing.T) {
 		rv = get("/")
 		assert.NotContains(t, "the message by foo", rv.data)
 		assert.Contains(t, "the message by bar", rv.data)
-	
 	*/
 }
