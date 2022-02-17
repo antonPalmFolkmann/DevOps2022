@@ -456,7 +456,7 @@ func main() {
 
 // Return the gravatar image for the given email address.
 // Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
-// Converting bytes to hexadecimal s%}tring: https://pkg.go.dev/encoding/hex#EncodeToStrin
+// Converting bytes to hexadecimal s%}tring: https://pkg.go.dev/encoding/hex#EncodeToString
 func GravatarUrl(email string, size int) string {
 	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
 		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
