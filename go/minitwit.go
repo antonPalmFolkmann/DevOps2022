@@ -273,14 +273,15 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func FollowUser(w http.ResponseWriter, r *http.Request) {
-	//TO-DO: This check needs to be changed in all methods using it.
+	vars := mux.Vars(r)
+	username := vars["username"]
+
 	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		//TO-DO: Again, from where are these variables piped
 		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (%s, %s)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
@@ -292,12 +293,16 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		//TO-DO: I am imagnining the following url redirects to the followed users timeline
-		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+
+		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
 	if _, found := session["user_id"]; !found {
 
 		log.Fatalln("Abort 401")
@@ -305,7 +310,6 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		//TO-DO: Again, from where are these variables piped
 		deleteMessageSQL := "DELETE FROM follower WHERE who_id = %s AND whom_id = %s"
 		statement, err := db.Prepare(deleteMessageSQL) // Avoid SQL injections
 
@@ -317,8 +321,9 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		//TO-DO: I am imagnining the following url redirects to the un-followed users timeline
-		http.Redirect(w, r, "http:localhost:8080/user_timeline/%s", http.StatusFound)
+
+		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
 
