@@ -325,7 +325,6 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 
-
 		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
@@ -476,9 +475,6 @@ func main() {
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
-
-	r.HandleFunc("/user/{username}/follow", FollowUser)
-	r.HandleFunc("/user/{username}/unfollow", UnfollowUser)
 
 	// Bind to a port and pass our router in
 	log.Fatal(http.ListenAndServe(":8080", r))
