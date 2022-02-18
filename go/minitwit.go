@@ -238,7 +238,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			stmt, _ := db.Prepare(insertMessageSQL)
 			defer stmt.Close()
 			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
-      
+
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -456,9 +456,10 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
+	log.Println("User is:", username)
 
-	Query := fmt.Sprintf("select * from user where username = '%s'", username)
-	ProfileUser := QueryDb(Query, true)[0]
+	ProfileUser := QueryDb("select * from user where username = ?", true, username)[0]
+	log.Println(ProfileUser)
 	if ProfileUser == nil {
 		w.Write([]byte("404 Not Found"))
 	}
@@ -468,10 +469,13 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 		followed = QueryDb("select 1 from follower where follower.who_id = ? and follower.whom_id = ?", true, session["user_id"], ProfileUser["user_id"])[0] != nil
 	}
 
+	messages := QueryDb("select * from message limit 50", false)
+	log.Println("messages: ", messages)
+
 	data := timelineData{
 		Title:       "User Timeline",
 		Request:     r,
-		Messages:    QueryDb("select * from message limit 50", false),
+		Messages:    QueryDb("select message.*, user.* from message, user where user.user_id = message.author_id and user.user_id = ? order by message.pub_date desc limit ?", false, ProfileUser["user_id"], PER_PAGE),
 		ProfileUser: ProfileUser,
 		Followed:    followed,
 		PerPage:     PER_PAGE,
@@ -491,7 +495,7 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 
 func initTemplate(name string) *template.Template {
 	return template.New(name).Funcs(template.FuncMap{
-		"gravatar":       func(size int, email string) string { return GravatarUrl(email, size) },
+		"gravatar":       func(size int, email interface{}) string { return GravatarUrl(email, size) },
 		"datetimeformat": FormatDatetime,
 	})
 }
@@ -526,12 +530,15 @@ func main() {
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
+
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 // Return the gravatar image for the given email address.
 // Converting string to bytes: https://stackoverflow.com/questions/42541297/equivalent-of-pythons-encodeutf8-in-golang
 // Converting bytes to hexadecimal s%}tring: https://pkg.go.dev/encoding/hex#EncodeToString
-func GravatarUrl(email string, size int) string {
+func GravatarUrl(email interface{}, size int) string {
+	strEmail := email.(string)
 	return fmt.Sprintf("http://www.gravatar.com/avatar/%s?d=identicon&s=%d",
-		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(email)))), size)
+		hex.EncodeToString([]byte(strings.ToLower(strings.TrimSpace(strEmail)))), size)
 }

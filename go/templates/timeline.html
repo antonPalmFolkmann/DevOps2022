@@ -40,7 +40,7 @@
       <li>
         <img src="{{ index . "email" | gravatar 48 }}" >
         <p>
-          <strong><a href="/user_timeline/{{ index . "username" }}">{{ index . "username" }}</a></strong>
+          <strong><a href="/user/{{ index . "username" }}">{{ index . "username" }}</a></strong>
           {{ index . "text" }}
           <small> &mdash; {{ index . "pub_date" | datetimeformat }}</small>
         </p>
