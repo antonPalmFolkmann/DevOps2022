@@ -14,7 +14,6 @@ import (
 
 func setUp() {
 	db, _ = sql.Open("sqlite3", ":memory:")
-	// Use httptest package instead of minitwit.app.test_client()
 	DATABASE = ":memory:"
 	InitDb()
 }
@@ -89,6 +88,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestHandler(t *testing.T) {
+	setUp()
 	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
 	w := httptest.NewRecorder()
 	Handler(w, req)
@@ -104,6 +104,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
+	setUp()
 	var tests = []struct {
 		name      string
 		username  string
@@ -132,6 +133,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLoginLogout(t *testing.T) {
+	setUp()
 	// Make sure logging in and logging out works
 
 	rv1 := registerAndLogin("user1", "default")
@@ -149,6 +151,7 @@ func TestLoginLogout(t *testing.T) {
 }
 
 func TestMessageRecording(t *testing.T) {
+	setUp()
 	// check if adding messages works
 	_ = registerAndLogin("foo", "default")
 	rv1 := addMessage("test message 1")
@@ -159,6 +162,7 @@ func TestMessageRecording(t *testing.T) {
 }
 
 func TestTimelines(t *testing.T) {
+	setUp()
 	// Make sure that timelines work
 	_ = registerAndLogin("foo", "default")
 	rv1 := addMessage("the message by foo")
@@ -202,5 +206,4 @@ func TestTimelines(t *testing.T) {
 		assert.NotContains(t, "the message by foo", rv.data)
 		assert.Contains(t, "the message by bar", rv.data)
 	*/
-
 }
