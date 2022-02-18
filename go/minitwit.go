@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -97,7 +98,7 @@ func BeforeRequest(next http.Handler) http.Handler {
 		db = ConnectDb()
 		user = nil
 		if _, found := session["user_id"]; found {
-			user = QueryDb("select * from user where user id = %s", true, session["user_id"])[0]
+			user = QueryDb("select * from user where user id = '%s'", true, session["user_id"])[0]
 		}
 
 		next.ServeHTTP(w, r)
@@ -218,7 +219,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			registerError = "Please enter a valid e-mail address"
 		} else if _, found := r.Form["password"]; !found {
 			registerError = "Please enter a password"
-		} else if _, err := GetUserId(r.Form["username"][0]); err == nil {
+		} else if _, err := UserNameExistsInDB(r.Form["username"][0]); err != nil {
 			registerError = "Username already taken"
 		} else {
 			hash := md5.New()
@@ -228,7 +229,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 			insertMessageSQL = fmt.Sprintf(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
 
-			_, err = db.Exec(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
+			_, err := db.Exec(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -265,6 +266,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to render the template with err: %v", err)
 	}
+}
+
+func UserNameExistsInDB(username string) (ok string, err error) {
+	UsernameQuery := "SELECT username FROM user WHERE username = ?"
+	UsernameMap := QueryDb(UsernameQuery, true, username)
+
+	if len(UsernameMap) == 0 {
+		return "okay", nil
+	} else {
+		return "error", errors.New("exists already")
+	}
+
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -323,17 +336,12 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Convenience method to look up the id for a username.
-func GetUserId(username string) (*int, error) {
-	var usernameResult int
-	// Query for a value based on a single row.
-	if err := db.QueryRow("SELECT user_id from user where id = ?", username).Scan(&username); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("GetUserId %s: unknown username", username)
-		}
-		return nil, fmt.Errorf("GetUserId %s failed", username)
-	}
+func GetUserId(username string) int {
+	messageQuery := fmt.Sprintf("SELECT user_id FROM user WHERE username = '%s'", username)
+	usernameResult := QueryDb(messageQuery, false)
+	userID := int(usernameResult[0]["user_id"].(int64))
 
-	return &usernameResult, nil
+	return userID
 }
 
 func GetMessagesFromURL(url string) []M {
@@ -348,27 +356,14 @@ func GetMessagesFromURL(url string) []M {
 		getMessageQuery = "SELECT text from message"
 		resultMap = QueryDb(getMessageQuery, false)
 	} else if split[1] == "user_timeline" {
-		userID, err := GetUserId(split[2])
-		log.Printf("User id for frick: %v", userID)
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		getMessageQuery = "SELECT text from message where message.flagged = 0 AND user_id = %v"
-		resultMap = QueryDb(getMessageQuery, false, userID)
+		userID := GetUserId(split[2])
+		getMessageQuery = "SELECT text from message where message.flagged = 0 and author_id = " + strconv.Itoa(userID)
+		resultMap = QueryDb(getMessageQuery, false)
 	}
 
 	/*
-		// loop over elements of slice
-		for _, m := range resultMap {
 
-			// m is a map[string]interface.
-			// loop over keys and values in the map.
-			for k, v := range m {
-				fmt.Println(k, ": ", v)
-			}
-		}
-	*/
+	 */
 	return resultMap
 }
 
@@ -444,7 +439,9 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	ProfileUser := QueryDb("select * from user where username = %s", true, username)[0]
+	Query := fmt.Sprintf("select * from user where username = '%s'", username)
+
+	ProfileUser := QueryDb(Query, true)[0]
 	if ProfileUser == nil {
 		w.Write([]byte("404 Not Found"))
 	}
@@ -500,18 +497,6 @@ func main() {
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/register", Register)
-
-	mapresults1 := GetMessagesFromURL("/")
-	log.Printf("Length of general map: %v", len(mapresults1))
-
-	mapResults2 := GetMessagesFromURL("/public")
-	log.Printf("Length of public map: %v", len(mapResults2))
-
-	mapResults3 := GetMessagesFromURL("/user_timeline/frick")
-	log.Printf("Length of map for user frick: %v", len(mapResults3))
-
-	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 // Return the gravatar image for the given email address.
