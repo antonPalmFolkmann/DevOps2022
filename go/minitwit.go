@@ -90,7 +90,7 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	}
 }
 
-// Make sure that we are connected to teh database each request and look up the current user to that we know they're
+// Make sure that we are connected to the database each request and look up the current user so that we know they're
 // there
 func BeforeRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
