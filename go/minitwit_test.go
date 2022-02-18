@@ -33,13 +33,13 @@ func login(username string, password string) string {
 	return Login(w, req)
 }
 
-func logOut() string {
+func logout() string {
 	req, err := http.NewRequest("POST", "/logout", bytes.NewBuffer([]byte{}))
 	if err != nil {
 		log.Fatal("fatal")
 	}
 	w := httptest.NewRecorder()
-	return LogOut(w, req)
+	return Logout(w, req)
 }
 
 func register(username string, password string, password2 string, email string) string {
@@ -140,7 +140,7 @@ func TestLoginLogout(t *testing.T) {
 	assert.Equal(t, "You were successfully registered and can login now", rv1[0])
 	assert.Equal(t, "You were logged in", rv1[1])
 
-	rv2 := logOut()
+	rv2 := logout()
 	assert.Equal(t, "You were logged out", rv2)
 
 	rv3 := login("user1", "wrongpassword")
@@ -166,7 +166,7 @@ func TestTimelines(t *testing.T) {
 	// Make sure that timelines work
 	_ = registerAndLogin("foo", "default")
 	rv1 := addMessage("the message by foo")
-	_ = logOut()
+	_ = logout()
 	_ = registerAndLogin("bar", "default")
 	rv2 := addMessage("the message by bar")
 	// TODO: GET ALL TWEET MESSAGES FROM PUBLIC TIMELINE IN TEXT TO CHECK THEY WERE UPLOADED rv = get("/public") (#67)

@@ -486,6 +486,7 @@ func main() {
 	r.HandleFunc("add_message", AddMessage)
 
 	r.HandleFunc("/login", Login)
+	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
 
 	// Bind to a port and pass our router in
