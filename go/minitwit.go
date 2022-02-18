@@ -59,8 +59,13 @@ type M map[string]interface{}
 // Queries the database and returns a list of maps
 func QueryDb(query string, one bool, args ...interface{}) []M {
 	rv := make([]M, 0)
-	log.Printf("Attempting query with: "+query, args...)
-	rows, _ := db.Query(query, args...)
+
+	stmt, _ := db.Prepare(query)
+	defer stmt.Close()
+
+	log.Printf("Attempting query with: %v", stmt)
+
+	rows, _ := stmt.Query(args...)
 	cols, _ := rows.Columns()
 	for rows.Next() {
 		// Solution for storing results in map adapted from: https://kylewbanks.com/blog/query-result-to-map-in-golang
@@ -97,7 +102,8 @@ func BeforeRequest(next http.Handler) http.Handler {
 		db = ConnectDb()
 		user = nil
 		if _, found := session["user_id"]; found {
-			user = QueryDb("select * from user where user id = %s", true, session["user_id"])[0]
+			queryString := "select * from user where user_id = ?"
+			user = QueryDb(queryString, true, session["user_id"])[0]
 		}
 
 		next.ServeHTTP(w, r)
@@ -117,7 +123,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (%s,%s,%s,0)"
+		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 		if err != nil {
@@ -128,7 +134,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 		log.Printf("SHOULD FLASH: Your message was recorded")
-		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		http.Redirect(w, r, "/timeline", http.StatusFound)
 	}
 }
 
@@ -141,7 +147,8 @@ type loginData struct {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	if _, found := session["user_id"]; found {
-		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusMultipleChoices)
+		log.Printf("Session is: %v", session)
+		http.Redirect(w, r, "/", http.StatusMultipleChoices)
 		return
 	}
 
@@ -153,6 +160,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			//We concatenate like this because variable assignment with % doesn't seem to work here
 			getMessageSQL := "SELECT * FROM user WHERE username = '" + r.Form["username"][0] + "'"
 			queryResult := QueryDb(getMessageSQL, true)
+			log.Println(queryResult)
+			user = queryResult[0]
 
 			hash := md5.New()
 			io.WriteString(hash, r.Form["password"][0])
@@ -166,8 +175,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				log.Printf("SHOULD FLASH: You were logged in")
 				queryUserID := queryResult[0]["user_id"].(int64)
 				session["user_id"] = strconv.Itoa(int(queryUserID))
-				user = queryResult[0]
-				http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+				http.Redirect(w, r, "/", http.StatusFound)
 				return
 			}
 		}
@@ -204,14 +212,13 @@ type registerData struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	registerError := ""
 	if _, found := session["user_id"]; found {
-		http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 
+	registerError := ""
 	if r.Method == "POST" {
 		r.ParseForm()
-		log.Printf("%v", r.Form)
 		if _, found := r.Form["username"]; !found {
 			registerError = "Please enter a username"
 		} else if _, found := r.Form["email"]; !found {
@@ -226,17 +233,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			hash := md5.New()
 			io.WriteString(hash, r.Form["password"][0])
 
-			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values ('%s', '%s', '%x')"
+			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
+			stmt, _ := db.Prepare(insertMessageSQL)
+			defer stmt.Close()
 
-			insertMessageSQL = fmt.Sprintf(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
-
-			_, err = db.Exec(insertMessageSQL, r.Form["username"][0], r.Form["email"][0], hash.Sum(nil))
+			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
 			if err != nil {
 				log.Fatalln(err)
 			}
 
 			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
-			http.Redirect(w, r, "http:localhost:8080/timeline", http.StatusFound)
+			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
 	}
@@ -286,7 +293,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (%s, %s)"
+		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
 		statement, err := db.Prepare(insertMessageSQL)
 
 		if err != nil {
@@ -313,7 +320,7 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		deleteMessageSQL := "DELETE FROM follower WHERE who_id = %s AND whom_id = %s"
+		deleteMessageSQL := "DELETE FROM follower WHERE who_id = ? AND whom_id = ?"
 		statement, err := db.Prepare(deleteMessageSQL) // Avoid SQL injections
 
 		if err != nil {
@@ -360,21 +367,24 @@ type timelineData struct {
 // messages as well as all the messages of followed users.
 func Timeline(w http.ResponseWriter, r *http.Request) {
 	log.Printf("We got a vistor from %s", r.RemoteAddr)
+	log.Printf("User is: %v", user)
 
 	if user == nil {
 		http.Redirect(w, r, "/public", http.StatusMultipleChoices)
 		return
 	}
 
+	log.Printf("User is: %v", user)
+
 	_ = r.URL.Query().Get("offset")
 
-	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = %s or user.user_id in (select whom_id from follower where who_id = %s)) order by message.pub_date desc limit %s"
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
 
 	data := timelineData{
 		Title:    "Public Timeline",
 		Request:  r,
 		Messages: QueryDb(messageQuery, false, session["user_id"], session["user_id"], PER_PAGE),
-		UserId:   "123123",
+		UserId:   session["user_id"],
 		PerPage:  PER_PAGE,
 	}
 
@@ -416,14 +426,14 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	ProfileUser := QueryDb("select * from user where username = '%s'", true, username)[0]
+	ProfileUser := QueryDb("select * from user where username = '?'", true, username)[0]
 	if ProfileUser == nil {
 		w.Write([]byte("404 Not Found"))
 	}
 
 	followed := false
 	if user != nil {
-		followed = QueryDb("select 1 from follower where follower.who_id = %s and follower.whom_id = %s", true, session["user_id"], ProfileUser["user_id"])[0] != nil
+		followed = QueryDb("select 1 from follower where follower.who_id = ? and follower.whom_id = ?", true, session["user_id"], ProfileUser["user_id"])[0] != nil
 	}
 
 	data := timelineData{
@@ -467,6 +477,7 @@ func main() {
 
 	r.HandleFunc("/static/style.css", ServeCSS)
 
+	r.HandleFunc("/", Timeline)
 	r.HandleFunc("/public", PublicTimeline)
 	r.HandleFunc("/user/{username}", UserTimeline)
 
