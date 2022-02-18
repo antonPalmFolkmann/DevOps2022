@@ -472,6 +472,15 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Gorilla!\n"))
 }
 
+func format_datetime(timestamp string) string {
+	i, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	timeUnix := time.Unix(i, 0)
+	return timeUnix.Format("yyyy-mm-dd hh:mm")
+}
+
 func main() {
 	r.Use(BeforeRequest)
 
