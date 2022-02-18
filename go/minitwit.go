@@ -491,7 +491,8 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 
 func initTemplate(name string) *template.Template {
 	return template.New(name).Funcs(template.FuncMap{
-		"gravatar": func(size int, email string) string { return GravatarUrl(email, size) },
+		"gravatar":       func(size int, email string) string { return GravatarUrl(email, size) },
+		"datetimeformat": FormatDatetime,
 	})
 }
 
@@ -502,6 +503,11 @@ func ServeCSS(w http.ResponseWriter, r *http.Request) {
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	defer AfterRequest()
 	w.Write([]byte("Gorilla!\n"))
+}
+
+func FormatDatetime(timestamp int64) string {
+	timeUnix := time.Unix(timestamp, 0)
+	return timeUnix.Format("2006-01-02 15:04")
 }
 
 func main() {
