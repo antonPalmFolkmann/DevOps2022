@@ -280,7 +280,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 	log.Printf("SHOULD FLASH: You were logged out")
 	delete(session, "user_id")
-	http.Redirect(w, r, "http:localhost:8080/public_timeline", http.StatusOK)
+	http.Redirect(w, r, "/public", http.StatusOK)
 }
 
 func FollowUser(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +305,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 
-		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		redirectTo := fmt.Sprintf("/user/%s", username)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
@@ -332,7 +332,7 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err.Error())
 		}
 
-		redirectTo := fmt.Sprintf("http:localhost:8080/user/%s", username)
+		redirectTo := fmt.Sprintf("/user/%s", username)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
