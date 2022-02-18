@@ -42,8 +42,7 @@
         <p>
           <strong><a href="/user_timeline/{{ index . "username" }}">{{ index . "username" }}</a></strong>
           {{ index . "text" }}
-          {{/* TODO: Pipe "pub_date" into a datetimeformat */}}
-          <small> &mdash; {{ index . "pub_date" }}</small>
+          <small> &mdash; {{ index . "pub_date" | datetimeformat }}</small>
         </p>
       </li>
     {{ else }}
