@@ -116,14 +116,22 @@ func AfterRequest() {
 	db.Close()
 }
 
+type messageData struct {
+	Request *http.Request
+	Message string
+	User    interface{}
+	Error   string
+}
+
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
+	userError := ""
 	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
 
 	r.ParseForm()
-	if _, found := r.Form["text"]; found {
+	if _, found := r.Form["message"]; found {
 		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
@@ -137,6 +145,28 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 		log.Printf("SHOULD FLASH: Your message was recorded")
 		http.Redirect(w, r, "/timeline", http.StatusFound)
 	}
+
+	message := ""
+	if len(r.Form["message"]) != 0 {
+		message = r.Form["message"][0]
+	}
+
+	data := messageData{
+		Request: r,
+		Message: message,
+		User:    user,
+		Error:   userError,
+	}
+
+	tmpl, err := initTemplate("addmessage.html").ParseFiles("templates/layout.html", "templates/addmessage.html")
+	if err != nil {
+		log.Printf("Failed to parse login template with err: %v", err)
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Failed to render login template with err: %v", err)
+	}
+
 }
 
 type loginData struct {
@@ -160,6 +190,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if _, found := r.Form["username"]; found {
 			//We concatenate like this because variable assignment with % doesn't seem to work here
 			getMessageSQL := "SELECT * FROM user WHERE username = '" + r.Form["username"][0] + "'"
+			log.Println("Query in login method: " + getMessageSQL)
 			queryResult := QueryDb(getMessageSQL, true)
 			log.Println(queryResult)
 			user = queryResult[0]
@@ -528,7 +559,7 @@ func main() {
 
 	r.HandleFunc("/user/{username}/follow", FollowUser)
 	r.HandleFunc("/user/{username}/unfollow", UnfollowUser)
-	r.HandleFunc("add_message", AddMessage)
+	r.HandleFunc("/addmessage", AddMessage)
 
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/logout", Logout)

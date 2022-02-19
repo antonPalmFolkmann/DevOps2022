@@ -8,10 +8,12 @@
   {{ if (ne (len .User) 0 ) }}
     <a href="/">my timeline</a> |
     <a href="/public">public timeline</a> |
+    <a href="/addmessage">public timeline</a> |
     <a href="/logout">sign out [{{ index .User "username" }}]</a>
   {{ else }}
     <a href="/public">public timeline</a> |
     <a href="/register">sign up</a> |
+    <a href="/addmessage">add message</a> |
     <a href="/login">sign in</a>
   {{ end }}
   </div>
