@@ -244,7 +244,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
-			http.Redirect(w, r, "/", http.StatusFound)
+			http.Redirect(w, r, "/", http.StatusNoContent)
 			return
 		}
 	}
@@ -351,12 +351,15 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Convenience method to look up the id for a username.
-func GetUserId(username string) int {
+func GetUserId(username string) *int {
 	messageQuery := fmt.Sprintf("SELECT user_id FROM user WHERE username = '%s'", username)
 	usernameResult := QueryDb(messageQuery, false)
-	userID := int(usernameResult[0]["user_id"].(int64))
-
-	return userID
+	if len(usernameResult) > 0 {
+		userID := int(usernameResult[0]["user_id"].(int64))
+		return &userID
+	} else {
+		return nil
+	}
 }
 
 func GetMessagesFromURL(url string) []M {
@@ -372,7 +375,7 @@ func GetMessagesFromURL(url string) []M {
 		resultMap = QueryDb(getMessageQuery, false)
 	} else if split[1] == "user_timeline" {
 		userID := GetUserId(split[2])
-		getMessageQuery = "SELECT text from message where message.flagged = 0 and author_id = " + strconv.Itoa(userID)
+		getMessageQuery = "SELECT text from message where message.flagged = 0 and author_id = " + strconv.Itoa(*userID)
 		resultMap = QueryDb(getMessageQuery, false)
 	}
 
@@ -531,6 +534,7 @@ func main() {
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
 
+	go ApiMain()
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
