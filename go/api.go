@@ -109,7 +109,7 @@ func MessagesHandler(w http.ResponseWriter, r *http.Request) {
 		noMessages, _ = strconv.Atoi(arg[0])
 	}
 
-	if r.Method == "POST" {
+	if r.Method == "GET" {
 		query := "SELECT message.*, user.* FROM message, user WHERE message.flagged = 0 AND message.author_id = user.user_id ORDER BY message.pub_date DESC LIMIT ?"
 
 		messages := QueryDb(query, false, noMessages)
