@@ -244,7 +244,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
-			http.Redirect(w, r, "/", http.StatusNoContent)
+			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
 	}
@@ -354,12 +354,12 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 func GetUserId(username string) *int {
 	messageQuery := fmt.Sprintf("SELECT user_id FROM user WHERE username = '%s'", username)
 	usernameResult := QueryDb(messageQuery, false)
-	if len(usernameResult) > 0 {
-		userID := int(usernameResult[0]["user_id"].(int64))
-		return &userID
-	} else {
+	if len(usernameResult) == 0 {
 		return nil
 	}
+	userID := int(usernameResult[0]["user_id"].(int64))
+
+	return &userID
 }
 
 func GetMessagesFromURL(url string) []M {
@@ -534,7 +534,6 @@ func main() {
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
 
-	go ApiMain()
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
