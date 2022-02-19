@@ -25,7 +25,7 @@ func NotReqFromSimulator(r *http.Request) []byte {
 	fromSimulator := r.Header.Get("Authorization")
 	if fromSimulator != "Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh" {
 		error := "You are not authorized to use this resource!"
-		jsonify := "{\"status\": 403, \"error_msg\":" + error
+		jsonify := "{\"status\": 403, \"error_msg\":" + error + "}"
 		return []byte(jsonify)
 	}
 	return nil

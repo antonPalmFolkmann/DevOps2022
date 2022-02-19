@@ -534,6 +534,8 @@ func main() {
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
 
+	go ApiMain()
+
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
