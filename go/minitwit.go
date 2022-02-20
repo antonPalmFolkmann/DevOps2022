@@ -126,9 +126,9 @@ type messageData struct {
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
 	userError := ""
-	if _, found := session["user_id"]; !found {
+	/* if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
-	}
+	} */
 
 	r.ParseForm()
 	if _, found := r.Form["message"]; found {
@@ -193,6 +193,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			log.Println("Query in login method: " + getMessageSQL)
 			queryResult := QueryDb(getMessageSQL, true)
 			log.Println(queryResult)
+			log.Printf("Query result: %v", queryResult)
 			user = queryResult[0]
 
 			hash := md5.New()
