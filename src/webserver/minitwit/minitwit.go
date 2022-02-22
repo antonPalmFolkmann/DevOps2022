@@ -1,4 +1,4 @@
-package main
+package minitwit
 
 import (
 	"crypto/md5"
@@ -27,9 +27,7 @@ var (
 	// Configuration
 	DATABASE = "../minitwit.db"
 
-	// Create our little application :)
-	r       *mux.Router = mux.NewRouter()
-	db      *sql.DB     = ConnectDb()
+	Db      *sql.DB = ConnectDb()
 	user    M
 	session map[string]string = make(map[string]string)
 )
@@ -42,11 +40,11 @@ func ConnectDb() *sql.DB {
 
 // InitDb creates the database tables
 func InitDb() {
-	defer db.Close()
+	defer Db.Close()
 
 	query, _ := ioutil.ReadFile("../schema.sql")
 
-	tx, _ := db.Begin()
+	tx, _ := Db.Begin()
 	stmt, _ := tx.Prepare(string(query))
 	stmt.Exec()
 	tx.Commit()
@@ -60,7 +58,7 @@ type M map[string]interface{}
 func QueryDb(query string, one bool, args ...interface{}) []M {
 	rv := make([]M, 0)
 
-	stmt, _ := db.Prepare(query)
+	stmt, _ := Db.Prepare(query)
 	defer stmt.Close()
 
 	log.Printf("Attempting query with: %v", stmt)
@@ -99,7 +97,7 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 // there
 func BeforeRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db = ConnectDb()
+		Db = ConnectDb()
 		user = nil
 		if _, found := session["user_id"]; found {
 			queryString := "select * from user where user_id = ?"
@@ -112,7 +110,7 @@ func BeforeRequest(next http.Handler) http.Handler {
 
 // Closes the database again at the end of the request
 func AfterRequest() {
-	db.Close()
+	Db.Close()
 }
 
 type messageData struct {
@@ -134,7 +132,7 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 	if _, found := r.Form["message"]; found {
 		currentTime := int32(time.Now().Unix())
 		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
-		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
+		statement, err := Db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 		if err != nil {
 			log.Fatalln(err.Error())
@@ -270,7 +268,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(hash, r.Form["password"][0])
 
 			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
-			stmt, _ := db.Prepare(insertMessageSQL)
+			stmt, _ := Db.Prepare(insertMessageSQL)
 			defer stmt.Close()
 			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
 
@@ -344,7 +342,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
 		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
-		statement, err := db.Prepare(insertMessageSQL)
+		statement, err := Db.Prepare(insertMessageSQL)
 
 		if err != nil {
 			log.Fatalln(err.Error())
@@ -372,7 +370,7 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
 		deleteMessageSQL := "DELETE FROM follower WHERE who_id = ? AND whom_id = ?"
-		statement, err := db.Prepare(deleteMessageSQL) // Avoid SQL injections
+		statement, err := Db.Prepare(deleteMessageSQL) // Avoid SQL injections
 
 		if err != nil {
 			log.Fatalln(err.Error())
@@ -560,15 +558,7 @@ func FormatDatetime(timestamp int64) string {
 	return timeUnix.Format("2006-01-02 15:04")
 }
 
-func main() {
-	HandleFuncRoutesMain()
-
-	go ApiMain()
-
-	log.Fatal(http.ListenAndServe(":8080", r))
-}
-
-func HandleFuncRoutesMain() {
+func SetupRoutes(r *mux.Router) {
 	r.Use(BeforeRequest)
 
 	r.HandleFunc("/static/style.css", ServeCSS)
