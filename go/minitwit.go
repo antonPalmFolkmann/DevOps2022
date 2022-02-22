@@ -42,7 +42,6 @@ func ConnectDb() *sql.DB {
 
 // InitDb creates the database tables
 func InitDb() {
-	db := ConnectDb()
 	defer db.Close()
 
 	query, _ := ioutil.ReadFile("../schema.sql")
@@ -118,6 +117,7 @@ func AfterRequest() {
 
 // Registers a new message for the user.
 func AddMessage(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	if _, found := session["user_id"]; !found {
 		log.Fatalln("Abort 401")
 	}
@@ -147,6 +147,7 @@ type loginData struct {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	if _, found := session["user_id"]; found {
 		log.Printf("Session is: %v", session)
 		http.Redirect(w, r, "/", http.StatusMultipleChoices)
@@ -213,6 +214,7 @@ type registerData struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	if _, found := session["user_id"]; found {
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
@@ -291,12 +293,14 @@ func UserNameExistsInDB(username string) (ok string, err error) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	log.Printf("SHOULD FLASH: You were logged out")
 	delete(session, "user_id")
 	http.Redirect(w, r, "/public", http.StatusOK)
 }
 
 func FollowUser(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	vars := mux.Vars(r)
 	username := vars["username"]
 
@@ -324,6 +328,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func UnfollowUser(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	vars := mux.Vars(r)
 	username := vars["username"]
 
@@ -400,6 +405,7 @@ type timelineData struct {
 // redirect to the public timeline.  This timeline shows the user's
 // messages as well as all the messages of followed users.
 func Timeline(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	log.Printf("We got a vistor from %s", r.RemoteAddr)
 	log.Printf("User is: %v", user)
 
@@ -435,6 +441,7 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 
 // Displays the latest messages of all users.
 func PublicTimeline(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
 
 	data := timelineData{
@@ -504,6 +511,7 @@ func initTemplate(name string) *template.Template {
 }
 
 func ServeCSS(w http.ResponseWriter, r *http.Request) {
+	defer AfterRequest()
 	http.ServeFile(w, r, "static/style.css")
 }
 
