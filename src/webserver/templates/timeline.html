@@ -1,6 +1,6 @@
 {{ template "layout" . }}
 {{ define "title" }}
-  {{ if (eq .Request.URL.String "/public_timeline") }}
+  {{ if (eq .Request.URL.String "/public") }}
     Public Timeline
   {{ else if (eq .Request.URL.String "/user_timeline") }}
     User Timeline

@@ -482,6 +482,7 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 		Title:    "Public Timeline",
 		Request:  r,
 		Messages: QueryDb(messageQuery, false),
+		User:     user,
 		PerPage:  PER_PAGE,
 	}
 
@@ -510,7 +511,7 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 
 	followed := false
 	if user != nil {
-		followed = QueryDb("select 1 from follower where follower.who_id = ? and follower.whom_id = ?", true, session["user_id"], ProfileUser["user_id"])[0] != nil
+		followed = len(QueryDb("select 1 from follower where follower.who_id = ? and follower.whom_id = ?", true, session["user_id"], ProfileUser["user_id"])) == 0
 	}
 
 	messages := QueryDb("select * from message limit 50", false)
