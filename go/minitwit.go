@@ -518,6 +518,14 @@ func FormatDatetime(timestamp int64) string {
 }
 
 func main() {
+	HandleFuncRoutesMain()
+
+	go ApiMain()
+
+	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+func HandleFuncRoutesMain() {
 	r.Use(BeforeRequest)
 
 	r.HandleFunc("/static/style.css", ServeCSS)
@@ -533,10 +541,6 @@ func main() {
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/register", Register)
-
-	go ApiMain()
-
-	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 // Return the gravatar image for the given email address.
