@@ -260,11 +260,15 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiMain() {
+	HandleFuncRoutesAPI()
+
+	log.Fatal(http.ListenAndServe(":8081", apiR))
+}
+
+func HandleFuncRoutesAPI() {
 	apiR.HandleFunc("/fllws/{username}", FollowsHandler)
 	apiR.HandleFunc("/register", RegisterHandler)
 	apiR.HandleFunc("/msgs", MessagesHandler)
 	apiR.HandleFunc("/msgs/{username}", MessagesPerUsernameHandler)
 	apiR.HandleFunc("/latest", LatestHandler)
-
-	log.Fatal(http.ListenAndServe(":8081", apiR))
 }
