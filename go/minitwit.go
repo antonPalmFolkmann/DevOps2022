@@ -132,18 +132,19 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["message"]; found {
+		currentTime := int32(time.Now().Unix())
 		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
 		statement, err := db.Prepare(insertMessageSQL) // Avoid SQL injections
 
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		_, err = statement.Exec(session["user_id"], r.Form["text"], time.Now)
+		_, err = statement.Exec(session["user_id"], r.Form["message"][0], currentTime)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
 		log.Printf("SHOULD FLASH: Your message was recorded")
-		http.Redirect(w, r, "/timeline", http.StatusFound)
+		http.Redirect(w, r, "/public", http.StatusFound)
 	}
 
 	message := ""
@@ -447,10 +448,11 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
 
 	data := timelineData{
-		Title:    "Public Timeline",
+		Title:    "Public  Timeline",
 		Request:  r,
 		Messages: QueryDb(messageQuery, false, session["user_id"], session["user_id"], PER_PAGE),
 		UserId:   session["user_id"],
+		User:     user,
 		PerPage:  PER_PAGE,
 	}
 
