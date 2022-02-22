@@ -41,9 +41,9 @@ func UpdateLatest(r *http.Request) {
 }
 
 func LatestHandler(w http.ResponseWriter, r *http.Request) {
-	var jsonData = []byte(`{
-		"latest": LATEST
-	}`)
+	respMsg := fmt.Sprintf("{\"latest\": \"%v\"}", LATEST)
+
+	var jsonData = []byte(respMsg)
 	w.Write(jsonData)
 }
 
