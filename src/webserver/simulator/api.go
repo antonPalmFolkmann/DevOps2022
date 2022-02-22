@@ -32,21 +32,17 @@ func NotReqFromSimulator(r *http.Request) []byte {
 }
 
 func UpdateLatest(r *http.Request) {
-	vars := mux.Vars(r)
-
-	latest := -1
-	if latestQuery, found := vars["latest"]; found {
-		asInt, _ := strconv.Atoi(latestQuery)
-		latest = asInt
-	}
-
-	if latest != -1 {
-		LATEST = latest
+	if r.URL.Query().Has("latest") {
+		asInt, err := strconv.Atoi(r.URL.Query().Get("latest"))
+		if err != nil {
+			log.Printf("api.go:39 Failed to parse latest as int: %v", err)
+		}
+		LATEST = asInt
 	}
 }
 
 func LatestHandler(w http.ResponseWriter, r *http.Request) {
-	respMsg := fmt.Sprintf("{\"latest\": \"%v\"}", LATEST)
+	respMsg := fmt.Sprintf("{\"latest\": %d}", LATEST)
 
 	var jsonData = []byte(respMsg)
 	w.Write(jsonData)

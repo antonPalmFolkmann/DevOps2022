@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -44,19 +43,9 @@ type latestResponse struct {
 
 func TestLatestReturnsLatest(t *testing.T) {
 	// Post something to update LATEST
-	target := fmt.Sprintf("%s/register", BASE_URL)
+	target := fmt.Sprintf("%s/msgs?latest=%d", BASE_URL, 1337)
 
-	params := url.Values{}
-	params.Set("latest", "1337")
-
-	data := url.Values{
-		"username": []string{"test"},
-		"email":    []string{"test@test"},
-		"pwd":      []string{"foo"},
-	}
-
-	target = target + "?" + params.Encode()
-	resp, err := http.PostForm(target, data)
+	resp, err := http.Get(target)
 	if err != nil {
 		log.Fatalf("api_test.go:60 Failed to PostFrom: %v", err)
 	}
@@ -64,11 +53,14 @@ func TestLatestReturnsLatest(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Verify that the latest was updated
-	target = fmt.Sprintf("%s/register", BASE_URL)
+	target = fmt.Sprintf("%s/latest", BASE_URL)
 	req, _ := http.NewRequest(http.MethodGet, target, nil)
 	req.Header = HEADERS
 
-	resp, _ = http.DefaultClient.Do(req)
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("api_test.go:67 Failed to Get Latest: %v", err)
+	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
@@ -76,5 +68,5 @@ func TestLatestReturnsLatest(t *testing.T) {
 	json.Unmarshal(body, &respData)
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, respData.Latest, 1337)
+	assert.Equal(t, 1337, respData.Latest)
 }
