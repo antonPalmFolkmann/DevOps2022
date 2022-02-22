@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	LATEST *http.Request
+	LATEST int
 )
 
 func NotReqFromSimulator(r *http.Request) []byte {
@@ -32,11 +32,16 @@ func NotReqFromSimulator(r *http.Request) []byte {
 }
 
 func UpdateLatest(r *http.Request) {
-	req, err := http.NewRequest("GET", "/latest", nil)
-	if err != nil {
-		log.Fatalf("Error: %v", err.Error())
-	} else {
-		LATEST = req
+	vars := mux.Vars(r)
+
+	latest := -1
+	if latestQuery, found := vars["latest"]; found {
+		asInt, _ := strconv.Atoi(latestQuery)
+		latest = asInt
+	}
+
+	if latest != -1 {
+		LATEST = latest
 	}
 }
 
