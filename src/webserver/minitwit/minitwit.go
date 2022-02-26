@@ -61,8 +61,6 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	stmt, _ := Db.Prepare(query)
 	defer stmt.Close()
 
-	log.Printf("Attempting query with: %v", stmt)
-
 	rows, _ := stmt.Query(args...)
 	cols, _ := rows.Columns()
 	for rows.Next() {
@@ -320,7 +318,6 @@ func UserNameExistsInDB(username string) (ok string, err error) {
 	} else {
 		return "error", errors.New("exists already")
 	}
-
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {

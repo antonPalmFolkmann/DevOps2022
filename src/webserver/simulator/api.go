@@ -9,9 +9,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
 	"github.com/gorilla/mux"
@@ -59,40 +58,35 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Error: %s", err.Error())
 	}
+	log.Printf("Registering with %v", data)
 
-	error := ""
-
-	if r.Method != "POST" {
-		if data["username"] == "" {
-			error = "You have to enter a username"
-		} else if data["email"] == "" || !strings.Contains(data["email"].(string), "@") {
-			error = "You have to enter a valid email address"
-		} else if data["pwd"] == "" {
-			error = "You have to enter a password"
-		} else if _, err := minitwit.UserNameExistsInDB(r.Form["username"][0]); err != nil {
-			error = "Username already taken"
+	var regError string
+	if r.Method == http.MethodPost {
+		if _, found := data["username"]; !found {
+			regError = "You have to enter a username"
+		} else if _, found := data["email"]; !found || !strings.Contains(data["email"].(string), "@") {
+			regError = "You have to enter a valid email address"
+		} else if _, found := data["pwd"]; !found {
+			regError = "You have to enter a password"
+		} else if minitwit.GetUserId(data["username"].(string)) != nil {
+			regError = "The username is already taken"
 		} else {
+			query := "INSERT INTO user (username, email, pw_hash) VALUES (?, ?, ?)"
+
 			hash := md5.New()
-			io.WriteString(hash, r.Form["password"][0])
+			io.WriteString(hash, data["pwd"].(string))
+			pwdHash := fmt.Sprintf("%x", hash.Sum(nil))
 
-			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
-			stmt, _ := minitwit.Db.Prepare(insertMessageSQL)
-			defer stmt.Close()
-			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
-
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
-			http.Redirect(w, r, "/", http.StatusNoContent)
-			return
+			minitwit.QueryDb(query, false, data["username"].(string), data["email"].(string), pwdHash)
 		}
 	}
-	if error != "" {
-		http.Redirect(w, r, "/", http.StatusNotFound)
+
+	if regError != "" {
+		w.WriteHeader(400)
+		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
+		w.Write([]byte(jsonify))
 	} else {
-		http.Redirect(w, r, "/", http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -210,7 +204,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 
 	var data map[string]interface{}
-	json.Unmarshal(body, data)
+	json.Unmarshal(body, &data)
 
 	_, hasFollowKey := data["follow"]
 	_, hasUnfollowKey := data["unfollow"]
@@ -243,7 +237,6 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(204)
 		w.Write([]byte(""))
 	} else if r.Method == "GET" {
-		noFollowers = 100
 		if arg, found := r.URL.Query()["no"]; found {
 			noFollowers, _ = strconv.Atoi(arg[0])
 		}
