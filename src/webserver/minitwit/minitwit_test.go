@@ -1,4 +1,4 @@
-package main
+package minitwit
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 )
 
 func setUp() {
-	db, _ = sql.Open("sqlite3", ":memory:")
+	Db, _ = sql.Open("sqlite3", ":memory:")
 	DATABASE = ":memory:"
 	InitDb()
 }

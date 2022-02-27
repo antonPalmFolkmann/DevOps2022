@@ -1,4 +1,4 @@
-package main
+package simulator
 
 import (
 	"crypto/md5"
@@ -9,16 +9,15 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
-	"strings"
-
+	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
 	"github.com/gorilla/mux"
 )
 
 var (
-	apiR   *mux.Router = mux.NewRouter()
-	LATEST *http.Request
+	LATEST int
 )
 
 func NotReqFromSimulator(r *http.Request) []byte {
@@ -32,16 +31,17 @@ func NotReqFromSimulator(r *http.Request) []byte {
 }
 
 func UpdateLatest(r *http.Request) {
-	req, err := http.NewRequest("GET", "/latest", nil)
-	if err != nil {
-		log.Fatalf("Error: %v", err.Error())
-	} else {
-		LATEST = req
+	if r.URL.Query().Has("latest") {
+		asInt, err := strconv.Atoi(r.URL.Query().Get("latest"))
+		if err != nil {
+			log.Printf("api.go:39 Failed to parse latest as int: %v", err)
+		}
+		LATEST = asInt
 	}
 }
 
 func LatestHandler(w http.ResponseWriter, r *http.Request) {
-	respMsg := fmt.Sprintf("{\"latest\": \"%v\"}", LATEST)
+	respMsg := fmt.Sprintf("{\"latest\": %d}", LATEST)
 
 	var jsonData = []byte(respMsg)
 	w.Write(jsonData)
@@ -58,40 +58,35 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Error: %s", err.Error())
 	}
+	log.Printf("Registering with %v", data)
 
-	error := ""
-
-	if r.Method != "POST" {
-		if data["username"] == "" {
-			error = "You have to enter a username"
-		} else if data["email"] == "" || !strings.Contains(data["email"].(string), "@") {
-			error = "You have to enter a valid email address"
-		} else if data["pwd"] == "" {
-			error = "You have to enter a password"
-		} else if _, err := UserNameExistsInDB(r.Form["username"][0]); err != nil {
-			error = "Username already taken"
+	var regError string
+	if r.Method == http.MethodPost {
+		if _, found := data["username"]; !found {
+			regError = "You have to enter a username"
+		} else if _, found := data["email"]; !found || !strings.Contains(data["email"].(string), "@") {
+			regError = "You have to enter a valid email address"
+		} else if _, found := data["pwd"]; !found {
+			regError = "You have to enter a password"
+		} else if minitwit.GetUserId(data["username"].(string)) != nil {
+			regError = "The username is already taken"
 		} else {
+			query := "INSERT INTO user (username, email, pw_hash) VALUES (?, ?, ?)"
+
 			hash := md5.New()
-			io.WriteString(hash, r.Form["password"][0])
+			io.WriteString(hash, data["pwd"].(string))
+			pwdHash := fmt.Sprintf("%x", hash.Sum(nil))
 
-			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
-			stmt, _ := db.Prepare(insertMessageSQL)
-			defer stmt.Close()
-			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
-
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			log.Printf("SHOULD FLASH: You were successfully registered and can login now")
-			http.Redirect(w, r, "/", http.StatusNoContent)
-			return
+			minitwit.QueryDb(query, false, data["username"].(string), data["email"].(string), pwdHash)
 		}
 	}
-	if error != "" {
-		http.Redirect(w, r, "/", http.StatusNotFound)
+
+	if regError != "" {
+		w.WriteHeader(400)
+		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
+		w.Write([]byte(jsonify))
 	} else {
-		http.Redirect(w, r, "/", http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -112,11 +107,11 @@ func MessagesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		query := "SELECT message.*, user.* FROM message, user WHERE message.flagged = 0 AND message.author_id = user.user_id ORDER BY message.pub_date DESC LIMIT ?"
 
-		messages := QueryDb(query, false, noMessages)
+		messages := minitwit.QueryDb(query, false, noMessages)
 
-		filteredMsgs := make([]M, 0)
+		filteredMsgs := make([]minitwit.M, 0)
 		for _, msg := range messages {
-			filteredMsg := make(M, 0)
+			filteredMsg := make(minitwit.M, 0)
 			filteredMsg["content"] = msg["text"]
 			filteredMsg["pub_date"] = msg["pub_date"]
 			filteredMsg["user"] = msg["username"]
@@ -146,7 +141,7 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		userId := GetUserId(username)
+		userId := minitwit.GetUserId(username)
 
 		if userId == nil {
 			w.WriteHeader(404)
@@ -154,11 +149,11 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query := "SELECT message.*, user.* FROM message, user WHERE message.flagged = 0 AND user.user_id = message.author_id AND user.user_id = ? ORDER BY message.pub_date DESC LIMIT ?"
-		messages := QueryDb(query, false, userId, noMessages)
+		messages := minitwit.QueryDb(query, false, userId, noMessages)
 
-		filteredMsgs := make([]M, 0)
+		filteredMsgs := make([]minitwit.M, 0)
 		for _, msg := range messages {
-			filteredMsg := make(M)
+			filteredMsg := make(minitwit.M)
 			filteredMsg["content"] = msg["text"]
 			filteredMsg["pub_date"] = msg["pub_date"]
 			filteredMsgs = append(filteredMsgs, filteredMsg)
@@ -174,7 +169,7 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		json.Unmarshal(body, requestData)
 
 		query := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?, ?, ?, 0)"
-		db.Exec(query, requestData["content"], time.Now().Unix())
+		minitwit.Db.Exec(query, requestData["content"], time.Now().Unix())
 
 		w.WriteHeader(204)
 		w.Write([]byte(""))
@@ -193,7 +188,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := GetUserId(username)
+	userId := minitwit.GetUserId(username)
 
 	if userId == nil {
 		w.WriteHeader(404)
@@ -209,13 +204,13 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 
 	var data map[string]interface{}
-	json.Unmarshal(body, data)
+	json.Unmarshal(body, &data)
 
 	_, hasFollowKey := data["follow"]
 	_, hasUnfollowKey := data["unfollow"]
 	if r.Method == "POST" && hasFollowKey {
 		followsUsername := data["follow"].(string)
-		followsUserId := GetUserId(followsUsername)
+		followsUserId := minitwit.GetUserId(followsUsername)
 		if followsUserId == nil {
 			w.WriteHeader(404)
 			return
@@ -223,31 +218,30 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 
 		query := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
 
-		db.Exec(query, userId, followsUserId)
+		minitwit.Db.Exec(query, userId, followsUserId)
 		// TODO: Unsure what to do with g.db.commit line
 
 		w.WriteHeader(204)
 		w.Write([]byte(""))
 	} else if r.Method == "POST" && hasUnfollowKey {
 		unfollowsUsername := data["unfollow"].(string)
-		unfollowsUserId := GetUserId(unfollowsUsername)
+		unfollowsUserId := minitwit.GetUserId(unfollowsUsername)
 		if unfollowsUserId == nil {
 			w.WriteHeader(404)
 			return
 		}
 
 		query := "DELETE FROM follower WHERE who_id=? and WHOM_ID=?"
-		db.Exec(query, userId, unfollowsUserId)
+		minitwit.Db.Exec(query, userId, unfollowsUserId)
 
 		w.WriteHeader(204)
 		w.Write([]byte(""))
 	} else if r.Method == "GET" {
-		noFollowers = 100
 		if arg, found := r.URL.Query()["no"]; found {
 			noFollowers, _ = strconv.Atoi(arg[0])
 		}
 		query := "SELECT user.username FROM user INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?"
-		followers := QueryDb(query, false, userId, noFollowers)
+		followers := minitwit.QueryDb(query, false, userId, noFollowers)
 
 		followerNames := make([]string, 0)
 		for _, f := range followers {
@@ -259,16 +253,10 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ApiMain() {
-	HandleFuncRoutesAPI()
-
-	log.Fatal(http.ListenAndServe(":8081", apiR))
-}
-
-func HandleFuncRoutesAPI() {
-	apiR.HandleFunc("/fllws/{username}", FollowsHandler)
-	apiR.HandleFunc("/register", RegisterHandler)
-	apiR.HandleFunc("/msgs", MessagesHandler)
-	apiR.HandleFunc("/msgs/{username}", MessagesPerUsernameHandler)
-	apiR.HandleFunc("/latest", LatestHandler)
+func SetupRoutes(r *mux.Router) {
+	r.HandleFunc("/fllws/{username}", FollowsHandler)
+	r.HandleFunc("/register", RegisterHandler)
+	r.HandleFunc("/msgs", MessagesHandler)
+	r.HandleFunc("/msgs/{username}", MessagesPerUsernameHandler)
+	r.HandleFunc("/latest", LatestHandler)
 }
