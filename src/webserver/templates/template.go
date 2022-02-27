@@ -16,7 +16,7 @@ func AddMessageTemplate(w http.ResponseWriter, data interface{}) {
 		log.Printf("Failed to parse login template with err: %v", err)
 	}
 
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := tmpl.ExecuteTemplate(w, "addmessage.html", data); err != nil {
 		log.Printf("Failed to render login template with err: %v", err)
 	}
 }
@@ -27,7 +27,7 @@ func LoginTemplate(w http.ResponseWriter, data interface{}) {
 		log.Printf("Failed to parse login template with err: %v", err)
 	}
 
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := tmpl.ExecuteTemplate(w, "login.html", data); err != nil {
 		log.Printf("Failed to render login template with err: %v", err)
 	}
 }
