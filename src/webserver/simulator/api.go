@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/gorilla/mux"
 )
@@ -69,7 +68,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			regError = "You have to enter a valid email address"
 		} else if _, found := data["pwd"]; !found {
 			regError = "You have to enter a password"
-		} else if minitwit.GetUserId(data["username"].(string)) != nil {
+		} else if storage.GetUserId(data["username"].(string)) != nil {
 			regError = "The username is already taken"
 		} else {
 			query := "INSERT INTO user (username, email, pw_hash) VALUES (?, ?, ?)"
@@ -142,7 +141,7 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		userId := minitwit.GetUserId(username)
+		userId := storage.GetUserId(username)
 
 		if userId == nil {
 			w.WriteHeader(404)
@@ -189,7 +188,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := minitwit.GetUserId(username)
+	userId := storage.GetUserId(username)
 
 	if userId == nil {
 		w.WriteHeader(404)
@@ -211,7 +210,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 	_, hasUnfollowKey := data["unfollow"]
 	if r.Method == "POST" && hasFollowKey {
 		followsUsername := data["follow"].(string)
-		followsUserId := minitwit.GetUserId(followsUsername)
+		followsUserId := storage.GetUserId(followsUsername)
 		if followsUserId == nil {
 			w.WriteHeader(404)
 			return
@@ -226,7 +225,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(""))
 	} else if r.Method == "POST" && hasUnfollowKey {
 		unfollowsUsername := data["unfollow"].(string)
-		unfollowsUserId := minitwit.GetUserId(unfollowsUsername)
+		unfollowsUserId := storage.GetUserId(unfollowsUsername)
 		if unfollowsUserId == nil {
 			w.WriteHeader(404)
 			return

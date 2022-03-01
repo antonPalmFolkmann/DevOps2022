@@ -2,9 +2,14 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"hash"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // Hack for an array of maps in golang:
@@ -95,6 +100,90 @@ func LoginQuery(r *http.Request) []M {
 	queryResult := QueryDb(getMessageSQL, true)
 	return queryResult
 }
+
+func CreateUserQuery(r *http.Request, hash hash.Hash) error {
+	insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
+	stmt, _ := Db.Prepare(insertMessageSQL)
+	defer stmt.Close()
+	_, err := stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
+	return err
+}
+
+func AddMessageQuery(r *http.Request) error {
+	currentTime := int32(time.Now().Unix())
+	insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
+	statement, err := Db.Prepare(insertMessageSQL)
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(Session["user_id"], r.Form["message"][0], currentTime)
+	return err
+}
+
+func UserNameExistsInDB(username string) (ok string, err error) {
+	UsernameQuery := "SELECT username FROM user WHERE username = '?'"
+	UsernameMap := QueryDb(UsernameQuery, true, username)
+
+	if len(UsernameMap) == 0 {
+		return "okay", nil
+	} else {
+		return "error", errors.New("exists already")
+	}
+}
+
+func CreateNewFollowingQuery(r *http.Request) error {
+	insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
+	statement, err := Db.Prepare(insertMessageSQL)
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	_, err = statement.Exec(Session["user_id"], r.Form["text"], time.Now)
+	return err
+}
+
+func DeleteFollowerQuery(r *http.Request) error {
+	deleteMessageSQL := "DELETE FROM follower WHERE who_id = ? AND whom_id = ?"
+	statement, err := Db.Prepare(deleteMessageSQL)
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	_, err = statement.Exec(Session["user_id"], r.Form["text"], time.Now)
+	return err
+}
+
+// Convenience method to look up the id for a username.
+func GetUserId(username string) *int {
+	messageQuery := "SELECT user_id FROM user WHERE username = '?'"
+	usernameResult := QueryDb(messageQuery, false, username)
+	if len(usernameResult) == 0 {
+		return nil
+	}
+	userID := int(usernameResult[0]["user_id"].(int64))
+
+	return &userID
+}
+
+func GetAllMessages() []M{
+	getMessageQuery := "SELECT text from message"
+	return QueryDb(getMessageQuery, false)
+}
+
+func GetAllNonFlaggedMessages() []M{
+	getMessageQuery := "SELECT text from message where message.flagged = 0"
+	return QueryDb(getMessageQuery, false)
+}
+
+func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
+	userID := GetUserId(userString)
+	getMessageQuery := "SELECT text from message where message.flagged = 0 and author_id = ?"
+	return QueryDb(getMessageQuery, false, strconv.Itoa(*userID))
+}
+
 
 // Closes the database again at the end of the request
 func AfterRequest() {

@@ -2,17 +2,15 @@ package minitwit
 
 import (
 	"crypto/md5"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/antonPalmFolkmann/DevOps2022/templates"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/antonPalmFolkmann/DevOps2022/templates"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -38,14 +36,8 @@ func AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["message"]; found {
-		currentTime := int32(time.Now().Unix())
-		insertMessageSQL := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?,?,?,0)"
-		statement, err := storage.Db.Prepare(insertMessageSQL) // Avoid SQL injections
-
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-		_, err = statement.Exec(storage.Session["user_id"], r.Form["message"][0], currentTime)
+		// Avoid SQL injections
+		err := storage.AddMessageQuery(r)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
@@ -151,16 +143,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			registerError = "Please enter a valid e-mail address"
 		} else if _, found := r.Form["password"]; !found {
 			registerError = "Please enter a password"
-		} else if _, err := UserNameExistsInDB(r.Form["username"][0]); err != nil {
+		} else if _, err := storage.UserNameExistsInDB(r.Form["username"][0]); err != nil {
 			registerError = "Username already taken"
 		} else {
 			hash := md5.New()
 			io.WriteString(hash, r.Form["password"][0])
 
-			insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
-			stmt, _ := storage.Db.Prepare(insertMessageSQL)
-			defer stmt.Close()
-			_, err = stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
+			err := storage.CreateUserQuery(r, hash)
 
 			if err != nil {
 				log.Fatalln(err)
@@ -193,17 +182,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	templates.RegisterTemplate(w, &data)
 }
 
-func UserNameExistsInDB(username string) (ok string, err error) {
-	UsernameQuery := "SELECT username FROM user WHERE username = ?"
-	UsernameMap := storage.QueryDb(UsernameQuery, true, username)
-
-	if len(UsernameMap) == 0 {
-		return "okay", nil
-	} else {
-		return "error", errors.New("exists already")
-	}
-}
-
 func Logout(w http.ResponseWriter, r *http.Request) {
 	defer storage.AfterRequest()
 	log.Printf("SHOULD FLASH: You were logged out")
@@ -222,14 +200,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
-		statement, err := storage.Db.Prepare(insertMessageSQL)
-
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		_, err = statement.Exec(storage.Session["user_id"], r.Form["text"], time.Now)
+		err := storage.CreateNewFollowingQuery(r)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
@@ -250,14 +221,8 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		deleteMessageSQL := "DELETE FROM follower WHERE who_id = ? AND whom_id = ?"
-		statement, err := storage.Db.Prepare(deleteMessageSQL) // Avoid SQL injections
-
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		_, err = statement.Exec(storage.Session["user_id"], r.Form["text"], time.Now)
+		// Avoid SQL injections
+		err := storage.DeleteFollowerQuery(r)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
@@ -267,38 +232,17 @@ func UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Convenience method to look up the id for a username.
-func GetUserId(username string) *int {
-	messageQuery := fmt.Sprintf("SELECT user_id FROM user WHERE username = '%s'", username)
-	usernameResult := storage.QueryDb(messageQuery, false)
-	if len(usernameResult) == 0 {
-		return nil
-	}
-	userID := int(usernameResult[0]["user_id"].(int64))
-
-	return &userID
-}
-
 func GetMessagesFromURL(url string) []storage.M {
-	var getMessageQuery string
 	var resultMap []storage.M
 	split := strings.Split(url, "/")
 
 	if split[1] == "public" {
-		getMessageQuery = "SELECT text from message where message.flagged = 0"
-		resultMap = storage.QueryDb(getMessageQuery, false)
+		resultMap = storage.GetAllNonFlaggedMessages()
 	} else if split[1] == "" {
-		getMessageQuery = "SELECT text from message"
-		resultMap = storage.QueryDb(getMessageQuery, false)
+		resultMap = storage.GetAllMessages()
 	} else if split[1] == "user_timeline" {
-		userID := GetUserId(split[2])
-		getMessageQuery = "SELECT text from message where message.flagged = 0 and author_id = " + strconv.Itoa(*userID)
-		resultMap = storage.QueryDb(getMessageQuery, false)
+		resultMap = storage.GetAllNonFlaggedMessagesFromUser(split[2])
 	}
-
-	/*
-
-	 */
 	return resultMap
 }
 
