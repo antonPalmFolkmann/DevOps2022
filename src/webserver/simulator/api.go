@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
+	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/gorilla/mux"
 )
 
@@ -77,7 +78,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(hash, data["pwd"].(string))
 			pwdHash := fmt.Sprintf("%x", hash.Sum(nil))
 
-			minitwit.QueryDb(query, false, data["username"].(string), data["email"].(string), pwdHash)
+			storage.QueryDb(query, false, data["username"].(string), data["email"].(string), pwdHash)
 		}
 	}
 
@@ -107,11 +108,11 @@ func MessagesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		query := "SELECT message.*, user.* FROM message, user WHERE message.flagged = 0 AND message.author_id = user.user_id ORDER BY message.pub_date DESC LIMIT ?"
 
-		messages := minitwit.QueryDb(query, false, noMessages)
+		messages := storage.QueryDb(query, false, noMessages)
 
-		filteredMsgs := make([]minitwit.M, 0)
+		filteredMsgs := make([]storage.M, 0)
 		for _, msg := range messages {
-			filteredMsg := make(minitwit.M, 0)
+			filteredMsg := make(storage.M, 0)
 			filteredMsg["content"] = msg["text"]
 			filteredMsg["pub_date"] = msg["pub_date"]
 			filteredMsg["user"] = msg["username"]
@@ -149,11 +150,11 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query := "SELECT message.*, user.* FROM message, user WHERE message.flagged = 0 AND user.user_id = message.author_id AND user.user_id = ? ORDER BY message.pub_date DESC LIMIT ?"
-		messages := minitwit.QueryDb(query, false, userId, noMessages)
+		messages := storage.QueryDb(query, false, userId, noMessages)
 
-		filteredMsgs := make([]minitwit.M, 0)
+		filteredMsgs := make([]storage.M, 0)
 		for _, msg := range messages {
-			filteredMsg := make(minitwit.M)
+			filteredMsg := make(storage.M)
 			filteredMsg["content"] = msg["text"]
 			filteredMsg["pub_date"] = msg["pub_date"]
 			filteredMsgs = append(filteredMsgs, filteredMsg)
@@ -166,10 +167,10 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		var requestData map[string]interface{}
 
-		json.Unmarshal(body, requestData)
+		json.Unmarshal(body, &requestData)
 
 		query := "INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?, ?, ?, 0)"
-		minitwit.Db.Exec(query, requestData["content"], time.Now().Unix())
+		storage.Db.Exec(query, requestData["content"], time.Now().Unix())
 
 		w.WriteHeader(204)
 		w.Write([]byte(""))
@@ -218,7 +219,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 
 		query := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
 
-		minitwit.Db.Exec(query, userId, followsUserId)
+		storage.Db.Exec(query, userId, followsUserId)
 		// TODO: Unsure what to do with g.db.commit line
 
 		w.WriteHeader(204)
@@ -232,7 +233,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query := "DELETE FROM follower WHERE who_id=? and WHOM_ID=?"
-		minitwit.Db.Exec(query, userId, unfollowsUserId)
+		storage.Db.Exec(query, userId, unfollowsUserId)
 
 		w.WriteHeader(204)
 		w.Write([]byte(""))
@@ -241,7 +242,7 @@ func FollowsHandler(w http.ResponseWriter, r *http.Request) {
 			noFollowers, _ = strconv.Atoi(arg[0])
 		}
 		query := "SELECT user.username FROM user INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?"
-		followers := minitwit.QueryDb(query, false, userId, noFollowers)
+		followers := storage.QueryDb(query, false, userId, noFollowers)
 
 		followerNames := make([]string, 0)
 		for _, f := range followers {
