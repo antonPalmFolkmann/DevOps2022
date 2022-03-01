@@ -39,6 +39,8 @@ jobs:
         host: ${{ secrets.PROD_HOST }}
         username: ${{ secrets.PROD_USER }}
         password: ${{ secrets.PROD_PWD }}
-        script:
-          ./scripts/deploy.sh
+        script: |
+          wget https://raw.githubusercontent.com/toffernator/DevOps2022/main/src/scripts/restart-container.sh
+          chmod +x restart-container.sh
+          ./restart-container.sh minitwit toffernator/minitwit:latest
     
