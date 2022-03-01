@@ -1,14 +1,9 @@
 build:
-	docker build -f docker/webserver.Dockerfile -t minitwit/webserver --target development . && \
-	docker build -f docker/webserver.Dockerfile -t minitwit/tests --target test .
+	docker build -f docker/webserver.Dockerfile -t minitwit/webserver .
 
 start:
 	make build && \
-	docker run --detach -p 8080:8080 --name minitwit-webserver minitwit/webserver:latest
-
-stop:
-	docker stop minitwit-webserver
-	docker stop minitwit-tests
+	docker run --detach -p 8081:8081 minitwit/webserver:latest
 
 test:
 	make build && \

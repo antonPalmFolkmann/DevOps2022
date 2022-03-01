@@ -41,6 +41,7 @@ func UpdateLatest(r *http.Request) {
 }
 
 func LatestHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Hit Latest Endpoint")
 	respMsg := fmt.Sprintf("{\"latest\": %d}", LATEST)
 
 	var jsonData = []byte(respMsg)
@@ -48,6 +49,7 @@ func LatestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Hit Register Endpoint")
 	UpdateLatest(r)
 
 	defer r.Body.Close()
@@ -91,6 +93,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MessagesHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Hit Message Endpoint")
 	UpdateLatest(r)
 
 	notFromSimResponse := NotReqFromSimulator(r)
@@ -124,6 +127,7 @@ func MessagesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Hit Message Per Username Endpoint")
 	UpdateLatest(r)
 
 	vars := mux.Vars(r)
@@ -177,6 +181,7 @@ func MessagesPerUsernameHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func FollowsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Hit Follow Endpoint")
 	UpdateLatest(r)
 
 	vars := mux.Vars(r)
