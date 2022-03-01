@@ -1,4 +1,4 @@
-name: ci
+name: Build and Deploy
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - 'main'
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
       -
@@ -29,3 +29,20 @@ jobs:
           file: ./docker/webserver.Dockerfile
           push: true
           tags: antonfolkmann/minitwit:latest
+  
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Executing deploy script
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        password: ${{ secrets.PROD_PWD }}
+        script:
+          tmux kill-session -t 0
+          tmux new-session
+          docker pull antonfolkmann/minitwit
+          docker run -d -p 8081:8081
+          tmux detach
+    
