@@ -20,10 +20,10 @@ type M map[string]interface{}
 
 var (
 	// Configuration
-	DATABASE = "../minitwit.db"
-	Db      *sql.DB = ConnectDb()
+	DATABASE         = "../minitwit.db"
+	Db       *sql.DB = ConnectDb()
 	UserM    M
-	Session map[string]string = make(map[string]string)
+	Session  map[string]string = make(map[string]string)
 )
 
 const (
@@ -174,17 +174,17 @@ func GetUserId(username string) *int {
 	return &userID
 }
 
-func GetAllMessages() []M{
+func GetAllMessages() []M {
 	getMessageQuery := "SELECT text from message"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessages() []M{
+func GetAllNonFlaggedMessages() []M {
 	getMessageQuery := "SELECT text from message where message.flagged = 0"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
+func GetAllNonFlaggedMessagesFromUser(userString string) []M {
 	userID := GetUserId(userString)
 	getMessageQuery := "SELECT text from message where message.flagged = 0 and author_id = ?"
 	return QueryDb(getMessageQuery, false, strconv.Itoa(*userID))
@@ -217,8 +217,9 @@ func GetCurrentUserQuery(r *http.Request) M {
 
 func IsUserFollowed(UserMap *interface{}) bool {
 	followed := false
-	FollowerEmptyQuery := "select 1 from follower where follower.who_id = ? and follower.whom_id = ?"
+	FollowerEmptyQuery := ""
 	FollowerMap := QueryDb(FollowerEmptyQuery, true, Session["user_id"], UserMap)
+	log.Printf("Profile user from IsUserFollowed : %v", FollowerMap)
 	if UserM != nil {
 		followed = len(FollowerMap) == 0
 	}
@@ -230,7 +231,6 @@ func Get30MessagesFromLoggedInUser(UserMap *interface{}) []M {
 	MessagesFromUserMap := QueryDb(MessagesFromLoggedInUserQuery, false, UserMap, PER_PAGE)
 	return MessagesFromUserMap
 }
-
 
 // Closes the database again at the end of the request
 func AfterRequest() {

@@ -1,8 +1,8 @@
 {{ template "layout" . }}
 {{ define "title" }}
-  {{ if (eq .Request.URL.String "/public") }}
+  {{ if (urlContains .Request.URL.String "/public") }}
     Public Timeline
-  {{ else if (eq .Request.URL.String "/user_timeline") }}
+  {{ else if (urlContains .Request.URL.String "/user/") }}
     User Timeline
   {{ else }}
     My Timeline
@@ -10,8 +10,8 @@
 {{ end }}
 {{ define "body" }}
   <h2>{{ .Title }}</h2>
-  {{ if (eq (len .User) 0) }}
-    {{ if (eq .Request.URL.String "/user_timeline")}}
+  {{ if (ne (len .User) 0) }}
+    {{ if (urlContains .Request.URL.String "/user/")}}
       <div class=followstatus>
         {{ if (eq (index .User "user_id") (index .ProfileUser "user_id")) }}
           <p> This is you! <p>

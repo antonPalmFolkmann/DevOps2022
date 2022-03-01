@@ -8,6 +8,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	/* "github.com/antonPalmFolkmann/DevOps2022/storage" */
 )
 
 func AddMessageTemplate(w http.ResponseWriter, data interface{}) {
@@ -63,8 +65,18 @@ func initTemplate(name string) *template.Template {
 	return template.New(name).Funcs(template.FuncMap{
 		"gravatar":       func(size int, email interface{}) string { return GravatarUrl(email, size) },
 		"datetimeformat": FormatDatetime,
+		"urlContains":    urlContains,
 	})
 }
+
+func urlContains(url string, check string) bool {
+	return strings.Contains(url, check)
+}
+
+/* func follows(userOne int32, userTwo int32) bool {
+	defer storage.AfterRequest()
+	storage.IsUserFollowed()
+} */
 
 func FormatDatetime(timestamp int64) string {
 	timeUnix := time.Unix(timestamp, 0)

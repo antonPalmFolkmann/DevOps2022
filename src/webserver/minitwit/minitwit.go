@@ -126,6 +126,8 @@ type registerData struct {
 	Error    string
 }
 
+
+
 func Register(w http.ResponseWriter, r *http.Request) {
 	defer storage.AfterRequest()
 	if _, found := storage.Session["user_id"]; found {
@@ -338,6 +340,8 @@ func ServeCSS(w http.ResponseWriter, r *http.Request) {
 	defer storage.AfterRequest()
 	http.ServeFile(w, r, "static/style.css")
 }
+
+
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 	defer storage.AfterRequest()
