@@ -40,7 +40,7 @@ jobs:
         username: ${{ secrets.PROD_USER }}
         password: ${{ secrets.PROD_PWD }}
         script: |
-          wget https://raw.githubusercontent.com/toffernator/DevOps2022/main/src/scripts/restart-container.sh
+          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/src/scripts/restart-container.sh
           chmod +x restart-container.sh
           ./restart-container.sh minitwit toffernator/minitwit:latest
     
