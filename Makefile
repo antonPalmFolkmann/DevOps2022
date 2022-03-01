@@ -3,7 +3,7 @@ build:
 
 start:
 	make build && \
-	docker run --detach -p 8081:8081 minitwit/webserver:latest
+	docker run --detach -p 8080:8080 -p 8081:8081 minitwit/webserver:latest
 
 test:
 	make build && \
