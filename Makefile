@@ -1,6 +1,5 @@
 build:
-	docker build -f docker/webserver.Dockerfile -t minitwit/webserver --target development . && \
-	docker build -f docker/webserver.Dockerfile -t minitwit/tests --target test .
+	docker build -f docker/webserver.Dockerfile -t minitwit/webserver
 
 start:
 	make build && \
