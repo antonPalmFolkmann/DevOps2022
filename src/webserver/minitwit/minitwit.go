@@ -272,14 +272,12 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("User is: %v", storage.UserM)
 
-	_ = r.URL.Query().Get("offset")
-
-	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
+	messages := storage.Get30NonFlaggedMessagesFromTimeline(r)
 
 	data := timelineData{
 		Title:    "Public  Timeline",
 		Request:  r,
-		Messages: storage.QueryDb(messageQuery, false, storage.Session["user_id"], storage.Session["user_id"], PER_PAGE),
+		Messages: messages,
 		UserId:   storage.Session["user_id"],
 		User:     storage.UserM,
 		PerPage:  PER_PAGE,
@@ -291,12 +289,12 @@ func Timeline(w http.ResponseWriter, r *http.Request) {
 // Displays the latest messages of all users.
 func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 	defer storage.AfterRequest()
-	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
+	messages := storage.Get30NonFlaggedMessagesFromPublicTimeline()
 
 	data := timelineData{
 		Title:    "Public Timeline",
 		Request:  r,
-		Messages: storage.QueryDb(messageQuery, false),
+		Messages: messages,
 		User:     storage.UserM,
 		PerPage:  PER_PAGE,
 	}
@@ -306,28 +304,27 @@ func PublicTimeline(w http.ResponseWriter, r *http.Request) {
 
 // Displays a user's tweets
 func UserTimeline(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	username := vars["username"]
-	log.Println("User is:", username)
-
-	ProfileUser := storage.QueryDb("select * from user where username = ?", true, username)[0]
-	log.Println(ProfileUser)
+	ProfileUser := storage.GetCurrentUserQuery(r)
 	if ProfileUser == nil {
 		w.Write([]byte("404 Not Found"))
 	}
 
-	followed := false
-	if storage.UserM != nil {
-		followed = len(storage.QueryDb("select 1 from follower where follower.who_id = ? and follower.whom_id = ?", true, storage.Session["user_id"], ProfileUser["user_id"])) == 0
-	}
+	log.Printf("Profile user : %v", ProfileUser)
 
-	messages := storage.QueryDb("select * from message limit 50", false)
-	log.Println("messages: ", messages)
+	UserMap := ProfileUser["user_id"]
+
+	followed := storage.IsUserFollowed(&UserMap)
+
+	MessagesFromUserMap := storage.Get30MessagesFromLoggedInUser(&UserMap)
+	
+	// Hvorfor nedenstående?
+	// messages := storage.QueryDb("select * from message limit 50", false)
+	// log.Println("messages: ", messages)
 
 	data := timelineData{
 		Title:       "User Timeline",
 		Request:     r,
-		Messages:    storage.QueryDb("select message.*, user.* from message, user where user.user_id = message.author_id and user.user_id = ? order by message.pub_date desc limit ?", false, ProfileUser["user_id"], PER_PAGE),
+		Messages:    MessagesFromUserMap,
 		ProfileUser: ProfileUser,
 		Followed:    followed,
 		PerPage:     PER_PAGE,

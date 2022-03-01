@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // Hack for an array of maps in golang:
@@ -22,6 +24,10 @@ var (
 	Db      *sql.DB = ConnectDb()
 	UserM    M
 	Session map[string]string = make(map[string]string)
+)
+
+const (
+	PER_PAGE = 30
 )
 
 // ConnectDb returns a new connection to the database
@@ -182,6 +188,47 @@ func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
 	userID := GetUserId(userString)
 	getMessageQuery := "SELECT text from message where message.flagged = 0 and author_id = ?"
 	return QueryDb(getMessageQuery, false, strconv.Itoa(*userID))
+}
+
+func Get30NonFlaggedMessagesFromTimeline(r *http.Request) []M {
+	_ = r.URL.Query().Get("offset")
+
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
+	messages := QueryDb(messageQuery, false, Session["user_id"], Session["user_id"], PER_PAGE)
+	return messages
+}
+
+func Get30NonFlaggedMessagesFromPublicTimeline() []M {
+	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
+	messages := QueryDb(messageQuery, false)
+	return messages
+}
+
+func GetCurrentUserQuery(r *http.Request) M {
+	vars := mux.Vars(r)
+	username := vars["username"]
+	log.Printf("HELLO! User is: %v", username)
+
+	UserQuery := "SELECT * FROM user WHERE username = ?"
+	ProfileUser := QueryDb(UserQuery, true, username)[0]
+	log.Println(ProfileUser)
+	return ProfileUser
+}
+
+func IsUserFollowed(UserMap *interface{}) bool {
+	followed := false
+	FollowerEmptyQuery := "select 1 from follower where follower.who_id = ? and follower.whom_id = ?"
+	FollowerMap := QueryDb(FollowerEmptyQuery, true, Session["user_id"], UserMap)
+	if UserM != nil {
+		followed = len(FollowerMap) == 0
+	}
+	return followed
+}
+
+func Get30MessagesFromLoggedInUser(UserMap *interface{}) []M {
+	MessagesFromLoggedInUserQuery := "select message.*, user.* from message, user where user.user_id = message.author_id and user.user_id = ? order by message.pub_date desc limit ?"
+	MessagesFromUserMap := QueryDb(MessagesFromLoggedInUserQuery, false, UserMap, PER_PAGE)
+	return MessagesFromUserMap
 }
 
 
