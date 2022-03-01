@@ -13,11 +13,11 @@ func main() {
 	go func() {
 		r := mux.NewRouter()
 		simulator.SetupRoutes(r)
-		log.Fatalln(http.ListenAndServe("localhost:8081", r))
+		log.Fatalln(http.ListenAndServe(":8081", r))
 	}()
 
 	// Setup minitwit "website"
 	r := mux.NewRouter()
 	minitwit.SetupRoutes(r)
-	log.Fatalln(http.ListenAndServe("localhost:8080", r))
+	log.Fatalln(http.ListenAndServe(":8080", r))
 }
