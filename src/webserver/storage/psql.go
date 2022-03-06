@@ -17,7 +17,6 @@ func ConnectPsql() *sql.DB {
 		"database",
 		5432,
 		os.Getenv("POSTGRES_DB"))
-	log.Println("connStr: ", connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("psql.go/ConnectPsql(): Failed to connect to PSQL: %s", err)
@@ -28,6 +27,5 @@ func ConnectPsql() *sql.DB {
 		log.Fatalf("psql.go/ConnectedPsql(): Failed to ping the database: %s", err)
 	}
 
-	log.Println("Successfully connected to database!")
 	return db
 }

@@ -10,8 +10,6 @@ import (
 )
 
 func main() {
-	log.Printf("Hello!")
-
 	go func() {
 		r := mux.NewRouter()
 		simulator.SetupRoutes(r)

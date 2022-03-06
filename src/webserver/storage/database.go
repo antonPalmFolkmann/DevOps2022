@@ -51,7 +51,6 @@ func QueryDb(query string, one bool, args ...interface{}) []M {
 	rv := make([]M, 0)
 
 	stmt, _ := Db.Prepare(query)
-	log.Printf("databse.go/QueryDb(): %s", stmt)
 	defer stmt.Close()
 
 	rows, _ := stmt.Query(args...)
