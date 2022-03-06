@@ -20,10 +20,10 @@ type M map[string]interface{}
 
 var (
 	// Configuration
-	DATABASE = "../minitwit.db"
-	Db      *sql.DB = ConnectDb()
+	DATABASE         = "../minitwit.db"
+	Db       *sql.DB = ConnectDb()
 	UserM    M
-	Session map[string]string = make(map[string]string)
+	Session  map[string]string = make(map[string]string)
 )
 
 const (
@@ -174,17 +174,17 @@ func GetUserId(username string) *int {
 	return &userID
 }
 
-func GetAllMessages() []M{
+func GetAllMessages() []M {
 	getMessageQuery := "SELECT text from message"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessages() []M{
+func GetAllNonFlaggedMessages() []M {
 	getMessageQuery := "SELECT text from message where message.flagged = 0"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
+func GetAllNonFlaggedMessagesFromUser(userString string) []M {
 	userID := GetUserId(userString)
 	getMessageQuery := "SELECT text from message where message.flagged = 0 and author_id = ?"
 	return QueryDb(getMessageQuery, false, strconv.Itoa(*userID))
@@ -230,7 +230,6 @@ func Get30MessagesFromLoggedInUser(UserMap *interface{}) []M {
 	MessagesFromUserMap := QueryDb(MessagesFromLoggedInUserQuery, false, UserMap, PER_PAGE)
 	return MessagesFromUserMap
 }
-
 
 // Closes the database again at the end of the request
 func AfterRequest() {
