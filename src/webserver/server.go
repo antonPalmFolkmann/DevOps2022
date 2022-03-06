@@ -1,9 +1,25 @@
 package main
 
 import (
-	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"log"
+	"net/http"
+
+	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
+	"github.com/antonPalmFolkmann/DevOps2022/simulator"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	storage.ConnectPsql()
+	log.Printf("Hello!")
+
+	go func() {
+		r := mux.NewRouter()
+		simulator.SetupRoutes(r)
+		log.Fatalln(http.ListenAndServe(":8081", r))
+	}()
+
+	// Setup minitwit "website"
+	r := mux.NewRouter()
+	minitwit.SetupRoutes(r)
+	log.Fatalln(http.ListenAndServe(":8080", r))
 }

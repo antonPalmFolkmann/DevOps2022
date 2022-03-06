@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func ConnectPsql() {
+func ConnectPsql() *sql.DB {
 	// connStr := fmt.Sprintf("user=%s dbname=%s password=%s host=localhost sslmode=disable", os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_DB"), os.Getenv("POSTGRES_PASSWORD"))
 	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
 		os.Getenv("POSTGRES_USER"),
@@ -29,4 +29,5 @@ func ConnectPsql() {
 	}
 
 	log.Println("Successfully connected to database!")
+	return db
 }
