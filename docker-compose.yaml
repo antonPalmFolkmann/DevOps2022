@@ -3,7 +3,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: docker/postgres-restore.Dockerfile
+      dockerfile: docker/db.Dockerfile
     container_name: database
     restart: always
     environment:
