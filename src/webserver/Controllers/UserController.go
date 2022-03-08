@@ -14,16 +14,8 @@ import (
 /*
 	GET, POST, DELETE.
 
-
-	Er vi enige om at UserService er det der svarer til e.g. UserRepository?
-	Tror jeg vil prøve at få interfacet ind i userService og få det til at ligne
-	vores BDSA projekt. Yes, lad os prøve
-	Enig, men jeg ved ikke helt hvordan vi gør. Vi kan prøve herfra
-
-		https://gobyexample.com/interfaces
-		https://betterprogramming.pub/implementing-interfaces-with-golang-51a3b7f527b4
-	I think so, not sure
-	Tror det er nemmere at ændre interface nu, but dunno
+	https://gobyexample.com/interfaces
+	https://betterprogramming.pub/implementing-interfaces-with-golang-51a3b7f527b4
 */
 
 type IUserController interface {
@@ -33,7 +25,6 @@ type IUserController interface {
 	GetUserIdByUsername(http.ResponseWriter, http.Request)
 	DeleteUser(http.ResponseWriter, http.Request)
 }
-
 
 type UserController struct {
 	userService services.IUserService
