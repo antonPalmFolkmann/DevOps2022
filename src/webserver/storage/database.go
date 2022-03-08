@@ -138,7 +138,7 @@ func UserNameExistsInDB(username string) (ok string, err error) {
 	}
 }
 
-func CreateNewFollowingQuery(r *http.Request) error {
+func CreateNewFollowingQuery(r *http.Request, followee_id string) error {
 	insertMessageSQL := "INSERT INTO follower (who_id, whom_id) VALUES (?, ?)"
 	statement, err := Db.Prepare(insertMessageSQL)
 
@@ -146,7 +146,7 @@ func CreateNewFollowingQuery(r *http.Request) error {
 		log.Fatalln(err.Error())
 	}
 
-	_, err = statement.Exec(Session["user_id"], r.Form["text"], time.Now)
+	_, err = statement.Exec(Session["user_id"], followee_id, time.Now)
 	return err
 }
 
@@ -216,6 +216,7 @@ func GetCurrentUserQuery(r *http.Request) M {
 }
 
 func IsUserFollowed(UserMap *interface{}) bool {
+	return false
 	followed := false
 	FollowerEmptyQuery := ""
 	FollowerMap := QueryDb(FollowerEmptyQuery, true, Session["user_id"], UserMap)

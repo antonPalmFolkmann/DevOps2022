@@ -9,7 +9,7 @@ import (
 	"text/template"
 	"time"
 
-	/* "github.com/antonPalmFolkmann/DevOps2022/storage" */
+	"github.com/antonPalmFolkmann/DevOps2022/storage"
 )
 
 func AddMessageTemplate(w http.ResponseWriter, data interface{}) {
@@ -66,7 +66,21 @@ func initTemplate(name string) *template.Template {
 		"gravatar":       func(size int, email interface{}) string { return GravatarUrl(email, size) },
 		"datetimeformat": FormatDatetime,
 		"urlContains":    urlContains,
+		"printStuff":     printStuff,
+		"followUser":     followUser,
 	})
+}
+
+func printStuff() string {
+	return "print stuff"
+}
+
+func followUser(followee_id string) bool {
+	err := storage.CreateNewFollowingQuery(nil, followee_id)
+	if err != nil {
+		log.Fatalln("Error")
+	}
+	return false
 }
 
 func urlContains(url string, check string) bool {

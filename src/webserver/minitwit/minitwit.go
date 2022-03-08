@@ -202,7 +202,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if _, found := r.Form["text"]; found {
-		err := storage.CreateNewFollowingQuery(r)
+		err := storage.CreateNewFollowingQuery(r, vars["user_id"])
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
