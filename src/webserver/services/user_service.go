@@ -49,7 +49,7 @@ func (u *UserService) ReadUserByUsername(username string) (models.User, error) {
 func (u *UserService) ReadUserIdByUsername(username string) (int64, error) {
 	var user models.User
 	err := u.db.Where("username = ?", username).Find(&user).Error
-	return user.User_id, err
+	return user.UserId, err
 }
 
 func (u *UserService) UpdateUser(user *models.User, id int) error {
