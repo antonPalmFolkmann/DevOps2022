@@ -2,130 +2,110 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
-	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/gorilla/mux"
 )
 
-/*
-	GET, POST, DELETE.
-
-	https://gobyexample.com/interfaces
-	https://betterprogramming.pub/implementing-interfaces-with-golang-51a3b7f527b4
-*/
-
 type IUserController interface {
-	GetAllUsers(http.ResponseWriter, http.Request)
-	ReadUserByUsername(http.ResponseWriter, http.Request)
-	CreateUser(http.ResponseWriter, http.Request)
-	GetUserIdByUsername(http.ResponseWriter, http.Request)
-	DeleteUser(http.ResponseWriter, http.Request)
+	MessagesPerUserHandler(w http.ResponseWriter, r *http.Request)
+	FollowHandler(w http.ResponseWriter, r *http.Request)
+	UnfollowHandler(w http.ResponseWriter, r *http.Request)
+	SetupRoutes(r *mux.Router)
 }
 
 type UserController struct {
-	userService services.IUserService
+	userService     services.IUserService
+	messagesService services.IMessageService
 }
 
-func NewUserController(userService services.IUserService) *UserController {
+func NewUserController(userService services.IUserService, messagesService services.IMessageService) *UserController {
 	return &UserController{userService: userService}
 }
 
-func (u *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var resp Response
-	users, err := u.userService.ReadAllUsers()
-	if err == nil {
-		log.Println(users)
-		resp.Data = users
-		resp.Message = "SUCCESS"
-		json.NewEncoder(w).Encode(&resp)
+func (u *UserController) SetupRoutes(r *mux.Router) {
+	r.HandleFunc("/msgs/{username}", u.MessagesPerUserHandler)
+}
+
+func (u *UserController) MessagesPerUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		u.getMessagesByUser(w, r)
+	} else if r.Method == http.MethodPost {
+		u.postMessage(w, r)
 	} else {
-		log.Println(err)
-		http.Error(w, err.Error(), 400)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
-func (u *UserController) GetUserByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["user_id"])
-	var resp Response
-	user, err := u.userService.ReadUserById(id)
-	if err == nil {
-		log.Println(user)
-		resp.Data = append(resp.Data, user)
-		resp.Message = "SUCCESS"
-		json.NewEncoder(w).Encode(&resp)
-	} else {
-		log.Println(err)
-		http.Error(w, err.Error(), 400)
-	}
-}
+func (u *UserController) getMessagesByUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
 
-func (u *UserController) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	username := params["username"]
-	var resp Response
-	user, err := u.userService.ReadUserByUsername(username)
-	if err == nil {
-		log.Println(user)
-		resp.Data = append(resp.Data, user)
-		resp.Message = "SUCCESS"
-		json.NewEncoder(w).Encode(&resp)
-	} else {
-		log.Println(err)
-		http.Error(w, err.Error(), 400)
-	}
-}
-
-func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var resp Response
-	var user storage.User
-	_ = json.NewDecoder(r.Body).Decode(&user)
-	log.Println(user)
-	err := u.userService.CreateUser(user)
+	limit, err := parseNo(r)
 	if err != nil {
-		http.Error(w, "Error Creating Record", 400)
-		return
-	}
-	resp.Message = "CREATED"
-	json.NewEncoder(w).Encode(resp)
-}
-
-func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["user_id"])
-	var resp Response
-	var user storage.User
-	_ = json.NewDecoder(r.Body).Decode(&user)
-	err := u.userService.UpdateUser(user, id)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
-	resp.Message = "UPDATED"
-	json.NewEncoder(w).Encode(resp)
-}
-
-func (u *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["user_id"])
-	var resp Response
-	err := u.userService.DeleteUser(id)
+	user, err := u.userService.ReadUserIdByUsername(username)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	resp.Message = "DELETED"
-	json.NewEncoder(w).Encode(resp)
+
+	msgs, err := u.messagesService.ReadAllMessagesByAuthorId(user, *limit)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(&msgs)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
+func (u *UserController) postMessage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var payload PostMessageRequest
+	err = json.Unmarshal(body, &payload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// TODO: Maybe we do need DTOs/method headers that mimic DTOs
+
+	log.Println(username)
+}
+
+func parseNo(r *http.Request) (*int, error) {
+	asInt, err := strconv.Atoi(r.URL.Query().Get("no"))
+	if err != nil {
+		return nil, errors.New("no query parameter is not a number")
+	}
+	return &asInt, nil
 }
