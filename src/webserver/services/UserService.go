@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/antonPalmFolkmann/DevOps2022/models"
+	"github.com/jinzhu/gorm"
 )
 
 type IUserService interface {
@@ -14,44 +15,50 @@ type IUserService interface {
 	DeleteUser(id int) error
 }
 
-type UserService struct{}
+type UserService struct {
+	db *gorm.DB
+}
 
-func (u MessageService) CreateUser(user *models.User) error {
-	err := dbconn.Create(&user).Error
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{db: db}
+}
+
+func (u *UserService) CreateUser(user *models.User) error {
+	err := u.db.Create(&user).Error
 	return err
 }
 
-func (u MessageService) ReadAllUsers() ([]models.User, error) {
+func (u *UserService) ReadAllUsers() ([]models.User, error) {
 	var users = make([]models.User, 0)
-	err := dbconn.Find(&users).Error
+	err := u.db.Find(&users).Error
 	return users, err
 }
 
-func (u MessageService) ReadUserById(id int) (models.User, error) {
+func (u *UserService) ReadUserById(id int) (models.User, error) {
 	var user models.User
-	err := dbconn.Where("user_id = ?", id).Find(&user).Error
+	err := u.db.Where("user_id = ?", id).Find(&user).Error
 	return user, err
 }
 
-func (u MessageService) ReadUserByUsername(username string) (models.User, error) {
+func (u *UserService) ReadUserByUsername(username string) (models.User, error) {
 	var user models.User
-	err := dbconn.Where("username = ?", username).Find(&user).Error
+	err := u.db.Where("username = ?", username).Find(&user).Error
 	return user, err
 }
 
-func (u MessageService) ReadUserIdByUsername(username string) (int64, error) {
+func (u *UserService) ReadUserIdByUsername(username string) (int64, error) {
 	var user models.User
-	err := dbconn.Where("username = ?", username).Find(&user).Error
+	err := u.db.Where("username = ?", username).Find(&user).Error
 	return user.User_id, err
 }
 
-func (u MessageService) UpdateUser(user *models.User, id int) error {
-	err := dbconn.Model(&user).Where("user_id = ?", id).Update(&user).Error
+func (u *UserService) UpdateUser(user *models.User, id int) error {
+	err := u.db.Model(&user).Where("user_id = ?", id).Update(&user).Error
 	return err
 }
 
-func (u MessageService) DeleteUser(id int) error {
+func (u *UserService) DeleteUser(id int) error {
 	var user models.User
-	err := dbconn.Delete(&user, id).Error
+	err := u.db.Delete(&user, id).Error
 	return err
 }
