@@ -9,8 +9,8 @@ var dbconn *gorm.DB
 
 func SetDB(db *gorm.DB) {
 	dbconn = db
-	var user = models.GetUser()
-	var message = models.GetMessage()
+	var user models.User
+	var message []models.User
 	dbconn.AutoMigrate(&user)
 	dbconn.AutoMigrate(&message)
 }

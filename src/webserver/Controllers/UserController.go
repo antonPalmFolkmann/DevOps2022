@@ -31,7 +31,7 @@ type UserController struct {
 }
 
 func NewUserController(userService services.IUserService) *UserController {
-	return &UserController{userService: userService}	
+	return &UserController{userService: userService}
 }
 
 func (u *UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var resp Response
-	var user = models.GetUser()
+	var user models.User
 	_ = json.NewDecoder(r.Body).Decode(&user)
 	log.Println(user)
 	err := u.userService.CreateUser(user)
@@ -104,7 +104,7 @@ func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["user_id"])
 	var resp Response
-	var user = models.GetUser()
+	var user models.User
 	_ = json.NewDecoder(r.Body).Decode(&user)
 	err := u.userService.UpdateUser(user, id)
 	if err != nil {

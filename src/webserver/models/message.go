@@ -12,13 +12,3 @@ type Message struct {
 	Pub_date   int64  `gorm:"type:bigint;" json:"pub_date"`
 	Flagged    int    `gorm:"type:int;" json:"flagged"`
 }
-
-func GetMessage() Message {
-	var message Message
-	return message
-}
-
-func GetMessages() []Message {
-	var messages []Message
-	return messages
-}
