@@ -20,7 +20,7 @@ type M map[string]interface{}
 
 var (
 	// Configuration
-	DATABASE = "../minitwit.db"
+	DATABASE = "../minitwitcopy.db"
 	Db      *sql.DB = ConnectDb()
 	UserM    M
 	Session map[string]string = make(map[string]string)
