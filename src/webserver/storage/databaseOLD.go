@@ -2,7 +2,6 @@ package storage
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"hash"
 	"io/ioutil"
@@ -23,7 +22,7 @@ var (
 	DATABASE = "../minitwitcopy.db"
 	Db      *sql.DB = ConnectDb()
 	UserM    M
-	Session map[string]string = make(map[string]string)
+	Session  map[string]string = make(map[string]string)
 )
 
 const (
@@ -32,8 +31,7 @@ const (
 
 // ConnectDb returns a new connection to the database
 func ConnectDb() *sql.DB {
-	db, _ := sql.Open("sqlite3", DATABASE)
-	return db
+	return ConnectPsql()
 }
 
 // InitDb creates the database tables
@@ -92,7 +90,7 @@ func BeforeRequest(next http.Handler) http.Handler {
 		Db = ConnectDb()
 		UserM = nil
 		if _, found := Session["user_id"]; found {
-			queryString := "select * from user where user_id = ?"
+			queryString := "select * from \"user\" where user_id = ?"
 			UserM = QueryDb(queryString, true, Session["user_id"])[0]
 		}
 
@@ -101,14 +99,14 @@ func BeforeRequest(next http.Handler) http.Handler {
 }
 
 func LoginQuery(r *http.Request) []M {
-	getMessageSQL := "SELECT * FROM user WHERE username = '" + r.Form["username"][0] + "'"
+	getMessageSQL := "SELECT * FROM \"user\" WHERE username = '" + r.Form["username"][0] + "'"
 	log.Println("Query in login method: " + getMessageSQL)
 	queryResult := QueryDb(getMessageSQL, true)
 	return queryResult
 }
 
 func CreateUserQuery(r *http.Request, hash hash.Hash) error {
-	insertMessageSQL := "INSERT INTO user (username, email, pw_hash) values (?, ?, ?)"
+	insertMessageSQL := "INSERT INTO \"user\" (username, email, pw_hash) values (?, ?, ?)"
 	stmt, _ := Db.Prepare(insertMessageSQL)
 	defer stmt.Close()
 	_, err := stmt.Exec(r.Form["username"][0], r.Form["email"][0], fmt.Sprintf("%x", hash.Sum(nil)))
@@ -127,15 +125,12 @@ func AddMessageQuery(r *http.Request) error {
 	return err
 }
 
-func UserNameExistsInDB(username string) (ok string, err error) {
-	UsernameQuery := "SELECT username FROM user WHERE username = '?'"
+func IsUsernameTaken(username string) bool {
+	log.Printf("database.go/UserNameExistsInDB: looking for %s", username)
+	UsernameQuery := "SELECT username FROM \"user\" WHERE username = ?"
 	UsernameMap := QueryDb(UsernameQuery, true, username)
 
-	if len(UsernameMap) == 0 {
-		return "okay", nil
-	} else {
-		return "error", errors.New("exists already")
-	}
+	return !(len(UsernameMap) == 0)
 }
 
 func CreateNewFollowingQuery(r *http.Request) error {
@@ -164,7 +159,7 @@ func DeleteFollowerQuery(r *http.Request) error {
 
 // Convenience method to look up the id for a username.
 func GetUserId(username string) *int {
-	messageQuery := "SELECT user_id FROM user WHERE username = '?'"
+	messageQuery := "SELECT user_id FROM \"user\" WHERE username = '?'"
 	usernameResult := QueryDb(messageQuery, false, username)
 	if len(usernameResult) == 0 {
 		return nil
@@ -174,17 +169,17 @@ func GetUserId(username string) *int {
 	return &userID
 }
 
-func GetAllMessages() []M{
+func GetAllMessages() []M {
 	getMessageQuery := "SELECT text from message"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessages() []M{
+func GetAllNonFlaggedMessages() []M {
 	getMessageQuery := "SELECT text from message where message.flagged = 0"
 	return QueryDb(getMessageQuery, false)
 }
 
-func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
+func GetAllNonFlaggedMessagesFromUser(userString string) []M {
 	userID := GetUserId(userString)
 	getMessageQuery := "SELECT text from message where message.flagged = 0 and author_id = ?"
 	return QueryDb(getMessageQuery, false, strconv.Itoa(*userID))
@@ -193,13 +188,13 @@ func GetAllNonFlaggedMessagesFromUser(userString string,) []M {
 func Get30NonFlaggedMessagesFromTimeline(r *http.Request) []M {
 	_ = r.URL.Query().Get("offset")
 
-	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and ( user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
+	messageQuery := "select message.*, \"user\".* from message, \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id and ( \"user\".user_id = ? or \"user\".user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit ?"
 	messages := QueryDb(messageQuery, false, Session["user_id"], Session["user_id"], PER_PAGE)
 	return messages
 }
 
 func Get30NonFlaggedMessagesFromPublicTimeline() []M {
-	messageQuery := "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30"
+	messageQuery := "select message.*, \"user\".* from message, \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id order by message.pub_date desc limit 30"
 	messages := QueryDb(messageQuery, false)
 	return messages
 }
@@ -209,7 +204,7 @@ func GetCurrentUserQuery(r *http.Request) M {
 	username := vars["username"]
 	log.Printf("HELLO! User is: %v", username)
 
-	UserQuery := "SELECT * FROM user WHERE username = ?"
+	UserQuery := "SELECT * FROM \"user\" WHERE username = ?"
 	ProfileUser := QueryDb(UserQuery, true, username)[0]
 	log.Println(ProfileUser)
 	return ProfileUser
@@ -226,11 +221,10 @@ func IsUserFollowed(UserMap *interface{}) bool {
 }
 
 func Get30MessagesFromLoggedInUser(UserMap *interface{}) []M {
-	MessagesFromLoggedInUserQuery := "select message.*, user.* from message, user where user.user_id = message.author_id and user.user_id = ? order by message.pub_date desc limit ?"
+	MessagesFromLoggedInUserQuery := "select message.*, \"user\".* from message, \"user\" where \"user\".user_id = message.author_id and \"user\".user_id = ? order by message.pub_date desc limit ?"
 	MessagesFromUserMap := QueryDb(MessagesFromLoggedInUserQuery, false, UserMap, PER_PAGE)
 	return MessagesFromUserMap
 }
-
 
 // Closes the database again at the end of the request
 func AfterRequest() {

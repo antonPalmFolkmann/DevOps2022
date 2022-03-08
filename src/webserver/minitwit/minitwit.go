@@ -12,7 +12,6 @@ import (
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/antonPalmFolkmann/DevOps2022/templates"
 	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -143,7 +142,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			registerError = "Please enter a valid e-mail address"
 		} else if _, found := r.Form["password"]; !found {
 			registerError = "Please enter a password"
-		} else if _, err := storage.UserNameExistsInDB(r.Form["username"][0]); err != nil {
+		} else if storage.IsUsernameTaken(r.Form["username"][0]) {
 			registerError = "Username already taken"
 		} else {
 			hash := md5.New()
@@ -316,7 +315,7 @@ func UserTimeline(w http.ResponseWriter, r *http.Request) {
 	followed := storage.IsUserFollowed(&UserMap)
 
 	MessagesFromUserMap := storage.Get30MessagesFromLoggedInUser(&UserMap)
-	
+
 	// Hvorfor nedenstående?
 	// messages := storage.QueryDb("select * from message limit 50", false)
 	// log.Println("messages: ", messages)
