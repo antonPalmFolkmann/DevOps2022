@@ -10,11 +10,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
+type IUser interface {
+	ReadUserById(id int64) *User
+	ReadUserByUsername(username string) *User
+	CreateUser(username string, email string, pw_hash string) error
+	GetUserIdByUsername(username string) int64
+	DeleteUser(id int64) error
+}
+
+func ControllerGetAllUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var users = models.GetUsers()
 	var resp Response
-	err := dbconn.Find(&users).Error
+	users, err := ServiceGetAllUsers()
 	if err == nil {
 		log.Println(users)
 		resp.Data = users
@@ -26,13 +33,18 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetUserByID(w http.ResponseWriter, r *http.Request) {
+func ServiceGetAllUsers() ([]models.User, error) {
+	var users = models.GetUsers()
+	err := dbconn.Find(&users).Error
+	return users, err
+}
+
+func ControllerGetUserByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["user_id"])
 	var resp Response
-	var user = models.GetUser()
-	err := dbconn.Where("user_id = ?",  id).Find(&user).Error
+	user, err := ServicegetUserByID(id)
 	if err == nil {
 		log.Println(user)
 		resp.Data = append(resp.Data, user)
@@ -44,13 +56,18 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetUserByUsername(w http.ResponseWriter, r *http.Request) {
+func ServicegetUserByID(id int) (models.User, error) {
+	var user = models.GetUser()
+	err := dbconn.Where("user_id = ?", id).Find(&user).Error
+	return user, err
+}
+
+func ControllerGetUserByUsername(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	username := params["username"]
 	var resp Response
-	var user = models.GetUser()
-	err := dbconn.Where("username = ?", username).Find(&user).Error
+	user, err := ServiceGetUserByUsername(username)
 	if err == nil {
 		log.Println(user)
 		resp.Data = append(resp.Data, user)
@@ -60,6 +77,12 @@ func GetUserByUsername(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, err.Error(), 400)
 	}
+}
+
+func ServiceGetUserByUsername(username string) (models.User, error) {
+	var user = models.GetUser()
+	err := dbconn.Where("username = ?", username).Find(&user).Error
+	return user, err
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
