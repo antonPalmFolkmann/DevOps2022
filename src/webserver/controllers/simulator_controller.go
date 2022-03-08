@@ -10,9 +10,10 @@ import (
 	"strconv"
 
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/gorilla/mux"
 )
 
-type IService interface {
+type ISimulatorService interface {
 	IsAuthorized(token string) bool
 	ReadLatest() int
 	UpdateLatest(latest int)
@@ -21,7 +22,7 @@ type IService interface {
 type Simulator struct {
 	messageService   storage.IMessage
 	userSservice     storage.IUser
-	simulatorService IService
+	simulatorService ISimulatorService
 	followerService  storage.IFollows
 }
 
@@ -44,7 +45,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isAuthorized(w, r) {
+	if !IsAuthorized(w, r) {
 		return
 	}
 
@@ -63,7 +64,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if regError != "" {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
 		w.Write([]byte(jsonify))
 	} else {
@@ -78,6 +79,94 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !IsAuthorized(w, r) {
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	//TODO Implement service -> query db and store the user registering
+	msgs, err := json.Marshal(filtered_msgs)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Write(msgs)
+	}
+}
+
+func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
+	err := s.updateLatest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !IsAuthorized(w, r) {
+		return
+	}
+
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	if r.Method == http.MethodGet {
+		postUserPerMessage(w, r, username)
+	} else if r.Method == http.MethodPost {
+		getUserPerMessage(w, r, username)
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
+
+func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, username string) {
+	defer r.Body.Close()
+	body, _ := ioutil.ReadAll(r.Body)
+	var requestBody tweetRequestBody
+	err := json.Unmarshal(body, &requestBody)
+	if err != nil {
+		log.Fatalf("Error: %s", err.Error())
+	}
+
+	response := service.postUserMessage(requestBody)
+
+	if !response {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, username string) {
+	filtered_msgs := service.getUserMessages(username)
+	msgs, err := json.Marshal(filtered_msgs)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Write(msgs)
+	}
+}
+
+func (s *Simulator) followUserHandler(w http.ResponseWriter, r *http.Request) {
+	err := s.updateLatest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !IsAuthorized(w, r) {
+		return
+	}
+
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	if r.Method == http.MethodPost ||
 }
 
 func (s *Simulator) updateLatest(r *http.Request) error {
@@ -103,7 +192,7 @@ func parseLatest(r *http.Request) (*int, error) {
 	return &asInt, nil
 }
 
-func isAuthorized(w http.ResponseWriter, r *http.Request) bool {
+func IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
 	authorizedReq := r.Header.Get("Authorization")
 	if authorizedReq != "Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh" {
 		error := "You are not authorized to use this resource!"
