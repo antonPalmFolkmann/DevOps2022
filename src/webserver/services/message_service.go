@@ -1,18 +1,18 @@
 package services
 
 import (
-	"github.com/antonPalmFolkmann/DevOps2022/models"
+	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
 )
 
 type IMessageService interface {
-	CreateMessage(message models.Message) error
-	ReadAllMessages() ([]models.Message, error)
-	ReadAllMessagesByAuthorId(id int) ([]models.Message, error)
-	ReadAllFlaggedMessages() ([]models.Message, error)
-	ReadAllFlaggedMessagesByAuthorId(id int) ([]models.Message, error)
-	ReadMessageById(id int) (models.Message, error)
-	UpdateMessage(message models.Message, id int) error
+	CreateMessage(message storage.Message) error
+	ReadAllMessages() ([]storage.Message, error)
+	ReadAllMessagesByAuthorId(id int) ([]storage.Message, error)
+	ReadAllFlaggedMessages() ([]storage.Message, error)
+	ReadAllFlaggedMessagesByAuthorId(id int) ([]storage.Message, error)
+	ReadMessageById(id int) (storage.Message, error)
+	UpdateMessage(message storage.Message, id int) error
 	DeleteMessage(id int) error
 }
 
@@ -24,48 +24,48 @@ func NewMessageService(db *gorm.DB) *MessageService {
 	return &MessageService{db: db}
 }
 
-func (m *MessageService) CreateMessage(message *models.Message) error {
+func (m *MessageService) CreateMessage(message *storage.Message) error {
 	err := m.db.Create(&message).Error
 	return err
 }
 
-func (m *MessageService) ReadAllMessages() ([]models.Message, error) {
-	var messages = make([]models.Message, 0)
+func (m *MessageService) ReadAllMessages() ([]storage.Message, error) {
+	var messages = make([]storage.Message, 0)
 	err := m.db.Where("flagged = 0").Find(&messages).Error
 	return messages, err
 }
 
-func (m *MessageService) ReadAllMessagesByAuthorId(id int) ([]models.Message, error) {
-	var messages = make([]models.Message, 0)
+func (m *MessageService) ReadAllMessagesByAuthorId(id int) ([]storage.Message, error) {
+	var messages = make([]storage.Message, 0)
 	err := m.db.Where("author_id = ?", id).Find(&messages).Error
 	return messages, err
 }
 
-func (m *MessageService) ReadAllFlaggedMessages() ([]models.Message, error) {
-	var messages = make([]models.Message, 0)
+func (m *MessageService) ReadAllFlaggedMessages() ([]storage.Message, error) {
+	var messages = make([]storage.Message, 0)
 	err := m.db.Where("flagged = 1").Find(&messages).Error
 	return messages, err
 }
 
-func (m *MessageService) ReadAllFlaggedMessagesByAuthorId(id int) ([]models.Message, error) {
-	var messages = make([]models.Message, 0)
+func (m *MessageService) ReadAllFlaggedMessagesByAuthorId(id int) ([]storage.Message, error) {
+	var messages = make([]storage.Message, 0)
 	err := m.db.Where("author_id = ? AND flagged = 1", id).Find(&messages).Error
 	return messages, err
 }
 
-func (m *MessageService) ReadMessageById(id int) (models.Message, error) {
-	var message models.Message
+func (m *MessageService) ReadMessageById(id int) (storage.Message, error) {
+	var message storage.Message
 	err := m.db.Where("message_id = ?", id).Find(&message).Error
 	return message, err
 }
 
-func (m *MessageService) UpdateMessage(message *models.Message, id int) error {
+func (m *MessageService) UpdateMessage(message *storage.Message, id int) error {
 	err := m.db.Model(&message).Where("message_id = ?", id).Update(&message).Error
 	return err
 }
 
 func (m *MessageService) DeleteMessage(id int) error {
-	var message models.Message
+	var message storage.Message
 	err := m.db.Delete(&message, id).Error
 	return err
 }
