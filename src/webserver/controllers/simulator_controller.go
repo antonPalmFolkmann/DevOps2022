@@ -127,7 +127,8 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 	var requestBody tweetRequestBody
 	err := json.Unmarshal(body, &requestBody)
 	if err != nil {
-		log.Fatalf("Error: %s", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	response := service.postUserMessage(requestBody)
@@ -152,7 +153,7 @@ func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, us
 	}
 }
 
-func (s *Simulator) followUserHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Simulator) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	err := s.updateLatest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -163,10 +164,76 @@ func (s *Simulator) followUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.Method == http.MethodPost {
+		defer r.Body.Close()
+		body, _ := ioutil.ReadAll(r.Body)
+		var requestBody followRequestBody
+		err := json.Unmarshal(body, &requestBody)
+		if err != nil {
+			unfollowerUser(w, r)
+		} else {
+			followUser(w, r, requestBody)
+		}
+	}
+
+	if r.Method == http.MethodGet {
+		getFollowers(w, r)
+	}
+}
+
+func (s *Simulator) followUser(w http.ResponseWriter, r *http.Request, body followRequestBody) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	if r.Method == http.MethodPost ||
+	response := service.followUser(username, body.Follow)
+
+	if response {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	defer r.Body.Close()
+	body, _ := ioutil.ReadAll(r.Body)
+	var requestBody unfollowRequestBody
+	err := json.Unmarshal(body, &requestBody)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	response := service.unfollowUser(username, requestBody.Unfollow)
+
+	if response {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	filtered_followers, err := service.getUserFollowers(username)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	followers, err := json.Marshal(filtered_followers)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(followers)
 }
 
 func (s *Simulator) updateLatest(r *http.Request) error {
