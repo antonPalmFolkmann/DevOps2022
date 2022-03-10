@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 func ConnectPsql() *gorm.DB {
@@ -22,5 +22,11 @@ func ConnectPsql() *gorm.DB {
 		log.Fatalf("psql.go/ConnectPsql(): Failed to connect to PSQL: %s", err)
 	}
 
+	db.DB().Ping()
+
 	return db
+}
+
+func Migrate(db *gorm.DB) {
+	db.AutoMigrate(&User{}, &Message{})
 }

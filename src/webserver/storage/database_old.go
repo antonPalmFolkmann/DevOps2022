@@ -43,6 +43,9 @@ func ConnectDb() *sql.DB {
 	if err != nil {
 		log.Fatalf("psql.go/ConnectPsql(): Failed to connect to PSQL: %s", err)
 	}
+
+	db.Ping()
+
 	return db
 }
 

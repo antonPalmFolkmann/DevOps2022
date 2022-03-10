@@ -3,24 +3,23 @@ package storage
 import "github.com/jinzhu/gorm"
 
 type User struct {
+	// gorm.Model provides ID
 	gorm.Model
-	UserId   int64  `gorm:"type:bigint;" json:"user_id"`
-	Username string `gorm:"type:varchar(255);" json:"username"`
-	Email    string `gorm:"type:varchar(255);" json:"email"`
-	PwHash   string `gorm:"type:varchar(255);" json:"pw_hash"`
+	Username string
+	Email    string
+	PwHash   string
+	// Creates a "user has many messages" relationship
+	Messages []Message
+	// Creates a "user follows many users" relationship
+	Follows []*User `gorm:"many2many:follows;association_jointable_foreignkey:whom_id"`
 }
 
 type Message struct {
+	// gorm.Model provides ID
 	gorm.Model
-	MessageId int64  `gorm:"type:bigint;" json:"message_id"`
-	AuthorId  int64  `gorm:"type:bigint;" json:"author_id"`
-	Text      string `gorm:"type:text;" json:"text"`
-	PubDate   int64  `gorm:"type:bigint;" json:"pub_date"`
-	Flagged   int    `gorm:"type:int;" json:"flagged"`
-}
-
-type Follows struct {
-	gorm.Model
-	WhoId  int64 `gorm:"primaryKey"`
-	WhomId int64 `gorm:"primaryKey"`
+	// Creates a "message belongs-to one user" relationship
+	UserID  uint
+	Text    string
+	PubDate int
+	Flagged bool
 }
