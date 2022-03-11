@@ -1,4 +1,4 @@
-user_id,username,email,pw_hash
+id,username,email,pw_hash
 1,"Roger Histand",Roger+Histand@hotmail.com,pbkdf2:sha256:50000$27tb2qgX$64cd47b7cbd27b0f27f170a26e0e434ae24a310cf2e4704f075fcc9f48339c8e
 2,"Geoffrey Stieff",Geoffrey.Stieff@gmail.com,pbkdf2:sha256:50000$ZKEH4LvN$c16172a5a217c2410d410daf558ffaa2fecb088bae29913277f75151f4719e27
 3,"Wendell Ballan",Wendell-Ballan@gmail.com,pbkdf2:sha256:50000$QvV3EqQX$6dad4d42045b6542b6b0d888f7c6e679e77495451ee9fe1c96763ee8f2f82970
