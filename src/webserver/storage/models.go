@@ -14,10 +14,25 @@ type User struct {
 	Follows []*User `gorm:"many2many:follows;association_jointable_foreignkey:whom_id"`
 }
 
+type UserDTO struct {
+	Username string
+	Email    string
+	PwHash   string
+	Messages []Message
+	Follows  []*User
+}
+
 type Message struct {
 	// gorm.Model provides ID
 	gorm.Model
 	// Creates a "message belongs-to one user" relationship
+	UserID  uint
+	Text    string
+	PubDate int
+	Flagged bool
+}
+
+type MessageDTO struct {
 	UserID  uint
 	Text    string
 	PubDate int
