@@ -15,11 +15,12 @@ type User struct {
 }
 
 type UserDTO struct {
+	ID   uint
 	Username string
 	Email    string
 	PwHash   string
-	Messages []Message
-	Follows  []*User
+	Messages []MessageDTO
+	Follows  []UserDTO
 }
 
 type Message struct {
