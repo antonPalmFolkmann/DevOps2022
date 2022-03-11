@@ -4,7 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 )
 
@@ -19,10 +18,6 @@ func main() {
 	var user storage.User
 	db.First(&user, 1)
 	log.Println(user)
-
-	service := services.NewMessageService(db)
-
-	service.
 
 	// go func() {
 	// 	r := mux.NewRouter()

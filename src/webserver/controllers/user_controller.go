@@ -54,7 +54,7 @@ func (u *UserController) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["user_id"])
 	var resp Response
-	user, err := u.userService.ReadUserById(id)
+	user, err := u.userService.ReadUserById(uint(id))
 	if err == nil {
 		log.Println(user)
 		resp.Data = append(resp.Data, user)
@@ -106,7 +106,7 @@ func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var resp Response
 	var user storage.User
 	_ = json.NewDecoder(r.Body).Decode(&user)
-	err := u.userService.UpdateUser(user, id)
+	err := u.userService.UpdateUser(user, uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
@@ -121,7 +121,7 @@ func (u *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["user_id"])
 	var resp Response
-	err := u.userService.DeleteUser(id)
+	err := u.userService.DeleteUser(uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
