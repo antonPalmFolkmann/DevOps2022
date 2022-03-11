@@ -18,8 +18,6 @@ func main() {
 	db.First(&user, 1)
 	log.Println(user)
 
-	log.Println()
-
 	// go func() {
 	// 	r := mux.NewRouter()
 	// 	simulator.SetupRoutes(r)
