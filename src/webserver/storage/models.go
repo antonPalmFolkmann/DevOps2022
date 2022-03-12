@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
 
 type User struct {
 	// gorm.Model provides ID
@@ -15,7 +19,7 @@ type User struct {
 }
 
 type UserDTO struct {
-	ID   uint
+	ID       uint
 	Username string
 	Email    string
 	PwHash   string
@@ -27,15 +31,15 @@ type Message struct {
 	// gorm.Model provides ID
 	gorm.Model
 	// Creates a "message belongs-to one user" relationship
-	UserID  uint
-	Text    string
-	PubDate int
-	Flagged bool
+	AuthorID uint
+	Text     string
+	PubDate  time.Time
+	Flagged  bool
 }
 
 type MessageDTO struct {
-	UserID  uint
-	Text    string
-	PubDate int
-	Flagged bool
+	AuthorID uint
+	Text     string
+	PubDate  time.Time
+	Flagged  bool
 }
