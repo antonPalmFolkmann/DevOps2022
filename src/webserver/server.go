@@ -2,30 +2,35 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"os"
 	"time"
 
+	"github.com/antonPalmFolkmann/DevOps2022/controllers"
+	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
+
+func init() {
+
+}
 
 func main() {
 	time.Sleep(5 * time.Second)
 	db := storage.ConnectPsql()
 	defer db.Close()
-
 	storage.Migrate(db)
 
-	var user storage.User
-	db.First(&user, 1)
-	log.Println(user)
+	store := sessions.NewCookieStore([]byte(os.Getenv("SECURE_COOKIE_KEY")))
 
-	// go func() {
-	// 	r := mux.NewRouter()
-	// 	simulator.SetupRoutes(r)
-	// 	log.Fatalln(http.ListenAndServe(":8081", r))
-	// }()
+	userService := services.NewUserService(db)
+	messageService := services.NewMessageService(db)
 
-	// // Setup minitwit "website"
-	// r := mux.NewRouter()
-	// minitwit.SetupRoutes(r)
-	// log.Fatalln(http.ListenAndServe(":8080", r))
+	userController := controllers.NewUserController(userService, messageService, store)
+
+	r := mux.NewRouter()
+	userController.SetupRoutes(r)
+	log.Fatalln(http.ListenAndServe(":8080", r))
 }

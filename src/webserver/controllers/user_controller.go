@@ -18,6 +18,7 @@ type IUser interface {
 	Timeline(w http.ResponseWriter, r *http.Request)
 	Follow(w http.ResponseWriter, r *http.Request)
 	Unfollow(w http.ResponseWriter, r *http.Request)
+	SetupRoutes(r *mux.Router)
 }
 
 type UserReq struct {
@@ -215,4 +216,13 @@ func parseUsername(r *http.Request) (string, error) {
 	} else {
 		return username, nil
 	}
+}
+
+func (u *User) SetupRoutes(r *mux.Router) {
+	r.HandleFunc("/register", u.Register)
+	r.HandleFunc("/login", u.Login)
+	r.HandleFunc("/logout", u.Logout)
+	r.HandleFunc("/msgs/{username}", u.Timeline)
+	r.HandleFunc("/fllw/{username}", u.Follow)
+	r.HandleFunc("/unfllw/{username}", u.Unfollow)
 }
