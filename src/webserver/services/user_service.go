@@ -15,6 +15,8 @@ type IUser interface {
 	DeleteUser(ID uint) error
 	Hash(password string) string
 	Unhash(hash string) string
+	Follow(userID uint, whomID uint) error
+	Unfollow(userID uint, whomID uint) error
 }
 
 type User struct {
