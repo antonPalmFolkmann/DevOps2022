@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
+	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -158,7 +159,7 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := parseUsername(r)
+	username, err := utils.ParseUsername(r)
 	if err != nil {
 		http.Error(w, "There is no username to follow", http.StatusNotFound)
 		return
@@ -191,7 +192,7 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := parseUsername(r)
+	username, err := utils.ParseUsername(r)
 	if err != nil {
 		http.Error(w, "There is no username to follow", http.StatusNotFound)
 		return
@@ -215,15 +216,6 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func parseUsername(r *http.Request) (string, error) {
-	vars := mux.Vars(r)
-	if username, found := vars["username"]; !found {
-		return "", errors.New("there is no username")
-	} else {
-		return username, nil
-	}
 }
 
 func (u *User) SetupRoutes(r *mux.Router) {
