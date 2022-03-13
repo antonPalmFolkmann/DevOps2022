@@ -5,10 +5,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/jinzhu/gorm"
 )
 
 type IUser interface {
@@ -46,6 +48,14 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, err := u.users.ReadUserByUsername(data.Username); !errors.Is(err, gorm.ErrRecordNotFound) {
+		w.WriteHeader(http.StatusConflict)
+		resp := RegisterResp{Error: "Username already taken"}
+		jsonify, _ := json.Marshal(&resp)
+		w.Write(jsonify)
+		return
+	}
+
 	pwHash := u.users.Hash(data.Password)
 	err = u.users.CreateUser(data.Username, data.Email, pwHash)
 	if err != nil {
@@ -54,10 +64,18 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	resp := RegisterResp{Error: ""}
+	jsonify, _ := json.Marshal(&resp)
+	w.Write(jsonify)
 }
 
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
-	// FIXME: Is the user already logged in?
+	session, _ := u.store.Get(r, "session-name")
+
+	if isAuthenticated, _ := session.Values["isAuthenticated"].(bool); isAuthenticated {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -84,8 +102,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _ := u.store.Get(r, "session-name")
-	session.Values["username"] = data.Username
+	session.Values["username"] = user.Username
 	session.Values["isAuthenticated"] = true
 	err = session.Save(r, w)
 	if err != nil {
@@ -94,6 +111,15 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	resp := LoginResp{
+		Username: user.Username,
+		Email:    user.Email,
+		Avatar:   "not yet implemented",
+		Follows:  []string{}, // FIXME: Need this as part of the user services interface
+	}
+	jsonify, _ := json.Marshal(&resp)
+	w.Write(jsonify)
+
 }
 
 func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
@@ -115,11 +141,14 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	user := vars["username"]
+	username := vars["username"]
 
-	id, err := u.users.ReadUserIdByUsername(user)
-	if err != nil {
+	id, err := u.users.ReadUserIdByUsername(username)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	} else if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -129,14 +158,37 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonify, err := json.Marshal(&msgs)
+	filteredMsgs := make([]MsgResp, 0)
+	for _, m := range msgs {
+		author, _ := u.users.ReadUserById(m.UserID)
+		filteredM := MsgResp{
+			AuthorName: author.Username,
+			Text:       m.Text,
+			PubDate:    formatDatetime(int64(m.PubDate)),
+			Flagged:    m.Flagged,
+		}
+		filteredMsgs = append(filteredMsgs, filteredM)
+	}
+
+	user, err := u.users.ReadUserByUsername(username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	resp := MsgsPerUsernameResp{
+		Username: user.Username,
+		Email:    user.Email,
+		Avatar:   "not yet implemented...",
+		Msgs:     filteredMsgs,
+	}
+	jsonify, _ := json.Marshal(resp)
 	w.Write(jsonify)
+}
+
+func formatDatetime(timestamp int64) string {
+	timeUnix := time.Unix(timestamp, 0)
+	return timeUnix.Format("2006-01-02 15:04")
 }
 
 func (u *User) Follow(w http.ResponseWriter, r *http.Request) {

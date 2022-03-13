@@ -15,9 +15,10 @@ type RegisterResp struct {
 }
 
 type LoginResp struct {
-	UserReq
-	Email   string   `json:"email"`
-	Follows []string `json:"follows"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Avatar   string   `json:"avatar"`
+	Follows  []string `json:"follows"`
 }
 
 type MsgResp struct {
@@ -28,10 +29,10 @@ type MsgResp struct {
 }
 
 type MsgsPerUsernameResp struct {
-	UserReq
-	Email  string `json:"email"`
-	Avatar string `json:"avatar"`
-	Msgs   []MsgResp
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	Msgs     []MsgResp
 }
 
 type AddMsgsReq struct {
