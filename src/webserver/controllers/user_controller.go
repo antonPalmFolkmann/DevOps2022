@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
-	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -133,53 +132,22 @@ func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	if _, found := vars["username"]; !found {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	username := vars["username"]
-
-	id, err := u.users.ReadUserIdByUsername(username)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, "There are no messages for that user because they don't exist", http.StatusNotFound)
-		return
-	} else if err != nil {
-		http.Error(w, "There was an error while trying to read the user id", http.StatusInternalServerError)
+	session, _ := u.store.Get(r, "session-name")
+	if isAuthenticated, found := session.Values["isAuthenticated"].(bool); !isAuthenticated || !found {
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	msgs, err := u.messages.ReadAllMessagesByAuthorId(id)
+	username := session.Values["username"].(string)
+
+	msgs, err := u.messages.ReadAllMessagesForUsername(username)
 	if err != nil {
-		http.Error(w, "There was an error while trying to read the messages", http.StatusInternalServerError)
+		http.Error(w, "There was an error while reading the messages", http.StatusInternalServerError)
 		return
 	}
 
-	filteredMsgs := make([]MsgResp, 0)
-	for _, m := range msgs {
-		author, _ := u.users.ReadUserById(m.UserID)
-		filteredM := MsgResp{
-			AuthorName: author.Username,
-			Text:       m.Text,
-			PubDate:    utils.FormatDatetime(int64(m.PubDate)),
-			Flagged:    m.Flagged,
-		}
-		filteredMsgs = append(filteredMsgs, filteredM)
-	}
-
-	user, err := u.users.ReadUserByUsername(username)
-	if err != nil {
-		http.Error(w, "There was an error while trying to read the user information", http.StatusInternalServerError)
-	}
-
+	jsonify, _ := json.Marshal(msgs)
 	w.WriteHeader(http.StatusOK)
-	resp := MsgsPerUsernameResp{
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   "not yet implemented...",
-		Msgs:     filteredMsgs,
-	}
-	jsonify, _ := json.Marshal(resp)
 	w.Write(jsonify)
 }
 
