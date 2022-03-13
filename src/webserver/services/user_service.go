@@ -37,30 +37,38 @@ func (u *User) CreateUser(username string, email string, password string) error 
 
 func (u *User) ReadAllUsers() ([]storage.UserDTO, error) {
 	var users = make([]storage.UserDTO, 0)
-	err := u.db.Select("user_id", "username", "email", "pw_hash").Find(&users).Error
+	err := u.db.Select([]string{"id", "username", "email", "pw_hash"}).
+				Find(&users).Error
 	return users, err
 }
 
 func (u *User) ReadUserById(id uint) (storage.UserDTO, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
-				Where("user_id = ?", id).
+	var user storage.User
+	err := u.db.Unscoped().
+				Where("id = ?", id).
+				Select([]string{"id", "username", "email", "pw_hash"}).
 				Find(&user).Error
-	return user, err
+
+	userDTO := storage.UserDTO{ID: user.ID, Username: user.Username, Email: user.Email, PwHash: user.PwHash}
+	return userDTO, err
 }
 
 func (u *User) ReadUserByUsername(username string) (storage.UserDTO, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
+	var user storage.User
+	err := u.db.Unscoped().
 				Where("username = ?", username).
+				Select([]string{"id", "username", "email", "pw_hash"}).
 				Find(&user).Error
-	return user, err
+
+	userDTO := storage.UserDTO{ID: user.ID, Username: user.Username, Email: user.Email, PwHash: user.PwHash}
+	return userDTO, err
 }
 
 func (u *User) ReadUserIdByUsername(username string) (uint, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
+	var user storage.User
+	err := u.db.Unscoped().
 				Where("username = ?", username).
+				Select("id").
 				Find(&user).Error
 	return user.ID, err
 }
