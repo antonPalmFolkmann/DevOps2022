@@ -14,7 +14,6 @@ type IMessage interface {
 	ReadAllMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error)
 	ReadAllFlaggedMessages() ([]storage.MessageDTO, error)
 	ReadAllFlaggedMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error)
-	ReadAllMessagesForUsername(username string) ([]storage.MessageDTO, error)
 	ReadMessageById(ID uint) (storage.MessageDTO, error)
 	ReadAllMessagesForUsername(username string) (storage.MessageDTO, error)
 	UpdateMessage(ID uint, userID uint, text string, pubDate time.Time, flagged bool) error
