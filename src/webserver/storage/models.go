@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -31,10 +29,10 @@ type Message struct {
 	// gorm.Model provides ID
 	gorm.Model
 	// Creates a "message belongs-to one user" relationship
-	UserID uint
-	Text     string
-	PubDate  time.Time
-	Flagged  bool
+	UserID  uint
+	Text    string
+	PubDate int
+	Flagged bool
 }
 
 type MessageDTO struct {

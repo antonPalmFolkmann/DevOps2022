@@ -28,7 +28,7 @@ func NewMessageService(db *gorm.DB) *Message {
 }
 
 func (m *Message) CreateMessage(UserID uint, text string, flagged bool) error {
-	message := storage.Message{UserID: UserID, Text: text, PubDate: time.Now(), Flagged: flagged}
+	message := storage.Message{UserID: UserID, Text: text, PubDate: int(time.Now().Unix()), Flagged: flagged}
 	err := m.db.Create(message).Error
 	return err
 }
@@ -46,10 +46,10 @@ func (m *Message) ReadAllMessages() ([]storage.MessageDTO, error) {
 	return messages, err
 }
 
-func (m *Message) ReadAllMessagesByAuthorId(id uint) ([]storage.MessageDTO, error) {
+func (m *Message) ReadAllMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error) {
 	var messages = make([]storage.MessageDTO, 0)
 	err := m.db.Select("user_id", "text", "pub_date", "flagged").
-				Where("user_id = ?", id).
+				Where("user_id = ?", ID).
 				Find(&messages).Error
 	return messages, err
 }
@@ -62,10 +62,10 @@ func (m *Message) ReadAllFlaggedMessages() ([]storage.MessageDTO, error) {
 	return messages, err
 }
 
-func (m *Message) ReadAllFlaggedMessagesByAuthorId(id uint) ([]storage.MessageDTO, error) {
+func (m *Message) ReadAllFlaggedMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error) {
 	var messages = make([]storage.MessageDTO, 0)
 	err := m.db.Select("user_id", "text", "pub_date", "flagged").
-				Where("user_id = ? AND flagged = 1", id).
+				Where("user_id = ? AND flagged = 1", ID).
 				Find(&messages).Error
 	return messages, err
 }
@@ -88,15 +88,15 @@ func (m *Message) UpdateMessage(ID uint, UserId uint, text string, flagged bool)
 
 	message.UserID = UserId
 	message.Text = text
-	message.PubDate = time.Now()
+	message.PubDate = int(time.Now().Unix())
 	message.Flagged = flagged
 	
 	err = m.db.Save(&message).Error
 	return err
 }
 
-func (m *Message) DeleteMessage(id uint) error {
+func (m *Message) DeleteMessage(ID uint) error {
 	var message storage.Message
-	err := m.db.Delete(&message, id).Error
+	err := m.db.Delete(&message, ID).Error
 	return err
 }
