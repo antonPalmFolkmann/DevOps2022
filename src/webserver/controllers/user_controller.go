@@ -21,16 +21,6 @@ type IUser interface {
 	SetupRoutes(r *mux.Router)
 }
 
-type UserReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type RegisterReq struct {
-	UserReq
-	Email string `json:"email"`
-}
-
 type User struct {
 	store    sessions.Store
 	users    services.IUser
@@ -64,10 +54,11 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
+	// FIXME: Is the user already logged in?
+
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -78,7 +69,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	var data UserReq
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -146,7 +137,6 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonify)
-	w.WriteHeader(http.StatusNotImplemented)
 }
 
 func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +148,7 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 
 	username, err := parseUsername(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -172,7 +162,7 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 
 	err = u.users.Follow(userID, toFollowID)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -188,7 +178,7 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 
 	username, err := parseUsername(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -202,7 +192,7 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 
 	err = u.users.Unfollow(userID, toUnfollowID)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
