@@ -31,7 +31,7 @@ func NewMessage(store sessions.Store, messages services.IMessage, users services
 func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
 	msgs, err := m.messages.ReadAllMessages()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while reading messages", http.StatusInternalServerError)
 		return
 	}
 
@@ -41,12 +41,11 @@ func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	if _, found := vars["username"]; !found {
-		w.WriteHeader(http.StatusBadRequest)
+	username, err := utils.ParseUsername(r)
+	if err != nil {
+		http.Error(w, "There is no username", http.StatusNotFound)
 		return
 	}
-	username := vars["username"]
 
 	id, err := m.users.ReadUserIdByUsername(username)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
