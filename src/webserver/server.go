@@ -2,22 +2,31 @@ package main
 
 import (
 	"log"
-	"net/http"
+	"time"
 
-	"github.com/antonPalmFolkmann/DevOps2022/minitwit"
-	"github.com/antonPalmFolkmann/DevOps2022/simulator"
-	"github.com/gorilla/mux"
+	"github.com/antonPalmFolkmann/DevOps2022/storage"
 )
 
 func main() {
-	go func() {
-		r := mux.NewRouter()
-		simulator.SetupRoutes(r)
-		log.Fatalln(http.ListenAndServe(":8081", r))
-	}()
+	time.Sleep(5 * time.Second)
+	db := storage.ConnectPsql()
+	defer db.Close()
 
-	// Setup minitwit "website"
-	r := mux.NewRouter()
-	minitwit.SetupRoutes(r)
-	log.Fatalln(http.ListenAndServe(":8080", r))
+	storage.Migrate(db)
+
+
+	var user storage.User
+	db.First(&user, 1)
+	log.Println(user)
+
+	// go func() {
+	// 	r := mux.NewRouter()
+	// 	simulator.SetupRoutes(r)
+	// 	log.Fatalln(http.ListenAndServe(":8081", r))
+	// }()
+
+	// // Setup minitwit "website"
+	// r := mux.NewRouter()
+	// minitwit.SetupRoutes(r)
+	// log.Fatalln(http.ListenAndServe(":8080", r))
 }

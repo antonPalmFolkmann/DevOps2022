@@ -1,37 +1,39 @@
-drop table if exists "user";
-create table "user" (
-  user_id serial primary key,
+drop table if exists users cascade;
+create table users (
+  id serial primary key,
   username varchar(100) not null,
   email varchar(100) not null,
-  pw_hash varchar(100) not null
+  pw_hash varchar(5000) not null
 );
 
-drop table if exists follower;
-create table follower (
-  who_id integer,
-  whom_id integer
+drop table if exists follows cascade;
+create table follows (
+  user_id integer,
+  whom_id integer,
+
+  primary key (user_id, whom_id)
 );
 
-drop table if exists message;
-create table message (
-  message_id serial primary key,
-  author_id integer not null,
+drop table if exists messages cascade;
+create table messages (
+  id serial primary key,
+  user_id integer not null,
   text varchar(5000) not null,
   pub_date integer,
   flagged integer
 );
 
-COPY follower
-FROM '/restore/dumps/follower.csv'
+COPY follows
+FROM '/restore/dumps/followers.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY "message"
-FROM '/restore/dumps/message.csv'
+COPY messages 
+FROM '/restore/dumps/messages.csv'
 DELIMITER ','
 CSV HEADER;
 
-COPY "user"
-FROM '/restore/dumps/user.csv'
+COPY users
+FROM '/restore/dumps/users.csv'
 DELIMITER ','
 CSV HEADER;

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	services "github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/gorilla/mux"
 )
 
@@ -20,14 +20,13 @@ type ISimulatorService interface {
 }
 
 type Simulator struct {
-	messageService   storage.IMessage
-	userSservice     storage.IUser
+	messageService   services.IMessage
+	userService      services.IUser
 	simulatorService ISimulatorService
-	followerService  storage.IFollows
 }
 
-func NewSimulator(messageService storage.IMessage, userService storage.IUser, simulatorService IService, followerService storage.IFollows) *Simulator {
-	return &Simulator{messageService: messageService, userSservice: userService, simulatorService: simulatorService, followerService: followerService}
+func NewSimulator(messageService services.IMessage, userService services.IUser, simulatorService ISimulatorService) *Simulator {
+	return &Simulator{messageService: messageService, userService: userService, simulatorService: simulatorService}
 }
 
 func (s *Simulator) LatestHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,20 +54,29 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &requestBody)
 	//Error handling if the struct doesn't get the necessary paramters for initialization
 	if err != nil {
-		log.Fatalf("Error: %s", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, err.Error())
+		w.Write([]byte(jsonify))
+		return
 	}
 
 	var regError string
 	if r.Method == http.MethodPost {
 		//TODO Implement service -> query db and store the user registering
-	}
-
-	if regError != "" {
-		w.WriteHeader(http.StatusBadRequest)
-		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
-		w.Write([]byte(jsonify))
-	} else {
+		if user, _ := s.userService.ReadUserByUsername(requestBody.Username); user.Username != "" {
+			regError = "The username is already taken"
+			w.WriteHeader(http.StatusBadRequest)
+			jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
+			w.Write([]byte(jsonify))
+			return
+		}
+		err := s.userService.CreateUser(requestBody.Username, requestBody.Email, s.userService.Hash(requestBody.Password))
+		if err != nil {
+			// w.WriteHeader(http.StatusInternalServerError)
+			log.Println("simulator_controller: An error occured during creation of a user")
+		}
 		w.WriteHeader(http.StatusNoContent)
+		w.Write([]byte(""))
 	}
 }
 
@@ -87,14 +95,18 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//TODO Implement service -> query db and store the user registering
+	filtered_msgs, err := s.messageService.ReadAllMessages()
+	if err != nil {
+		// w.WriteHeader(http.StatusInternalServerError)
+		log.Println("simulator_controller: An error occured during reading all messages")
+	}
 	msgs, err := json.Marshal(filtered_msgs)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write(msgs)
+		// w.WriteHeader(http.StatusInternalServerError)
+		log.Println("simulator_controller: An error occured during marshalling of messages")
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(msgs)
 }
 
 func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,9 +124,9 @@ func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request
 	username := vars["username"]
 
 	if r.Method == http.MethodGet {
-		postUserPerMessage(w, r, username)
+		s.postUserPerMessage(w, r, username)
 	} else if r.Method == http.MethodPost {
-		getUserPerMessage(w, r, username)
+		s.getUserPerMessage(w, r, username)
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -130,19 +142,36 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	response := service.postUserMessage(requestBody)
-
-	if !response {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else {
-		w.WriteHeader(http.StatusOK)
+	userid, err := s.userService.ReadUserIdByUsername(requestBody.Username)
+	if err != nil {
+		// w.WriteHeader(http.StatusNotFound)
+		// w.Write([]byte(""))
+		// return
+		log.Println("service_simulator: user doesn't exist -> trying to post message")
 	}
+	err = s.messageService.CreateMessage(userid, requestBody.Content, false)
+
+	if err != nil {
+		// w.WriteHeader(http.StatusBadRequest)
+		// return
+		log.Println("service_simulator: failed to create messages in db")
+	}
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte(""))
 }
 
 func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, username string) {
-	filtered_msgs := service.getUserMessages(username)
+	userid, err := s.userService.ReadUserIdByUsername(username)
+	if err != nil {
+		// w.WriteHeader(http.StatusNotFound)
+		// w.Write([]byte(""))
+		// return
+		log.Println("service_simulator: user doesn't exist -> trying to post message")
+	}
+	filtered_msgs, err := s.messageService.ReadAllMessagesByAuthorId(userid)
+	if err != nil {
+		log.Println("service_simulator: Failed to read messages by author -> Author doesn't exist")
+	}
 	msgs, err := json.Marshal(filtered_msgs)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -170,14 +199,14 @@ func (s *Simulator) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 		var requestBody followRequestBody
 		err := json.Unmarshal(body, &requestBody)
 		if err != nil {
-			unfollowerUser(w, r)
+			s.unfollowUser(w, r)
 		} else {
-			followUser(w, r, requestBody)
+			s.followUser(w, r, requestBody)
 		}
 	}
 
 	if r.Method == http.MethodGet {
-		getFollowers(w, r)
+		s.getFollowers(w, r)
 	}
 }
 
@@ -185,13 +214,24 @@ func (s *Simulator) followUser(w http.ResponseWriter, r *http.Request, body foll
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	response := service.followUser(username, body.Follow)
-
-	if response {
-		w.WriteHeader(http.StatusOK)
+	userid, err := s.userService.ReadUserIdByUsername(username)
+	if err != nil {
+		log.Println("service_simulator: user doesn't exist -> trying to follow user")
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	useridToFollow, err := s.userService.ReadUserIdByUsername(body.Follow)
+	if err != nil {
+		log.Println("service_simulator: user doesn't exist -> trying to follow user")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	err = s.userService.Follow(userid, useridToFollow)
+	if err != nil {
+		log.Println("service_simulator: Failed to follow user")
+	}
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte(""))
 }
 
 func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
@@ -202,37 +242,43 @@ func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var requestBody unfollowRequestBody
 	err := json.Unmarshal(body, &requestBody)
-
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Println("Service_simulator: Request body is invalid")
+	}
+
+	userid, err := s.userService.ReadUserIdByUsername(username)
+	if err != nil {
+		log.Println("service_simulator: User doesn't exist -> trying to unfollow user")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	useridToUnfollow, err := s.userService.ReadUserIdByUsername(requestBody.Unfollow)
+	if err != nil {
+		log.Println("service_simulator: User doesn't exist -> trying to unfollow user")
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	response := service.unfollowUser(username, requestBody.Unfollow)
-
-	if response {
-		w.WriteHeader(http.StatusOK)
-		return
+	err = s.userService.Unfollow(userid, useridToUnfollow)
+	if err != nil {
+		log.Println("service_simulator: Failed to unfollow user")
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte(""))
 }
 
 func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	filtered_followers, err := service.getUserFollowers(username)
+	filtered_followers, err := s.userService.ReadFollowersForUsername(username)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		log.Println("service_simulator: Failed to read all followers from username")
 	}
 	followers, err := json.Marshal(filtered_followers)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		log.Println("service_simulator: Failed to marshall followers")
 	}
-
-	w.WriteHeader(http.StatusOK)
 	w.Write(followers)
 }
 
