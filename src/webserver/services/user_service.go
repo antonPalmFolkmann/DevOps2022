@@ -15,7 +15,7 @@ type IUser interface {
 	ReadUserById(ID uint) (storage.UserDTO, error)
 	ReadUserByUsername(username string) (storage.UserDTO, error)
 	ReadUserIdByUsername(username string) (uint, error)
-	UpdateUser(ID uint, username string, email string, pwHash string) error
+	UpdateUser(ID uint, username string, email string, password string) error
 	DeleteUser(ID uint) error
 	Hash(password string) string
 }
@@ -36,10 +36,15 @@ func (u *User) CreateUser(username string, email string, password string) error 
 }
 
 func (u *User) ReadAllUsers() ([]storage.UserDTO, error) {
-	var users = make([]storage.UserDTO, 0)
+	var users []storage.User
 	err := u.db.Select([]string{"id", "username", "email", "pw_hash"}).
 				Find(&users).Error
-	return users, err
+	userDTOs := make([]storage.UserDTO, 0)
+	for _, v := range users {
+		userDTO := storage.UserDTO{ID: v.ID, Username: v.Username, Email: v.Email, PwHash: v.PwHash}
+		userDTOs = append(userDTOs, userDTO)
+	}
+	return userDTOs, err
 }
 
 func (u *User) ReadUserById(id uint) (storage.UserDTO, error) {
@@ -72,20 +77,31 @@ func (u *User) ReadUserIdByUsername(username string) (uint, error) {
 				Find(&user).Error
 	return user.ID, err
 }
-
-func (u *User) UpdateUser(ID uint, username string, email string, pwHash string) error {
+/* 
+func (u *User) UpdateUser(ID uint, username string, email string, password string) error {
 	var user storage.User
-	err := u.db.Where("user_id = ?", ID).
+	err := u.db.Unscoped().
+				Where("id = ?", ID).
 				Find(&user).Error
 	if err != nil {
 		return err
 	}
 	user.Username = username
 	user.Email = email
-	user.PwHash = pwHash
+	user.PwHash = u.Hash(password)
 	err = u.db.Save(&user).Error
 	return err
-}
+} */
+
+func (u *User) UpdateUser(ID uint, username string, email string, password string) error {
+	var user storage.User
+	PwHash := u.Hash(password)
+	err := u.db.Model(user).
+				Unscoped().
+				Where("id = ?", ID).
+				Update(storage.User{Username: username, Email: email, PwHash: PwHash}).Error
+	return err
+} 
 
 func (u *User) DeleteUser(ID uint) error {
 	var user storage.User
