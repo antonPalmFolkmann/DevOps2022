@@ -31,15 +31,15 @@ type Message struct {
 	// gorm.Model provides ID
 	gorm.Model
 	// Creates a "message belongs-to one user" relationship
-	AuthorID uint
+	UserID uint
 	Text     string
 	PubDate  time.Time
 	Flagged  bool
 }
 
 type MessageDTO struct {
-	AuthorID uint
-	Text     string
-	PubDate  time.Time
-	Flagged  bool
+	UserID  uint
+	Text    string
+	PubDate int
+	Flagged bool
 }
