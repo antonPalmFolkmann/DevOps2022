@@ -5,9 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
+	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -37,29 +37,26 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Could not parse the JSON body", http.StatusInternalServerError)
 		return
 	}
 
 	var data RegisterReq
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "The JSON body is malformed", http.StatusBadRequest)
 		return
 	}
 
 	if _, err := u.users.ReadUserByUsername(data.Username); !errors.Is(err, gorm.ErrRecordNotFound) {
-		w.WriteHeader(http.StatusConflict)
-		resp := RegisterResp{Error: "Username already taken"}
-		jsonify, _ := json.Marshal(&resp)
-		w.Write(jsonify)
+		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	}
 
 	pwHash := u.users.Hash(data.Password)
 	err = u.users.CreateUser(data.Username, data.Email, pwHash)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Could not create a new user", http.StatusInternalServerError)
 		return
 	}
 
@@ -73,32 +70,32 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := u.store.Get(r, "session-name")
 
 	if isAuthenticated, _ := session.Values["isAuthenticated"].(bool); isAuthenticated {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Already logged in", http.StatusBadRequest)
 		return
 	}
 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Could not parse the JSON body", http.StatusInternalServerError)
 		return
 	}
 
 	var data UserReq
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "The JSON body is malformed", http.StatusBadRequest)
 		return
 	}
 
 	user, err := u.users.ReadUserByUsername(data.Username)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "Cannot login to a user that does not exist", http.StatusNotFound)
 		return
 	}
 
 	if u.users.Hash(data.Password) != user.PwHash {
-		w.WriteHeader(http.StatusForbidden)
+		http.Error(w, "Password is incorrect", http.StatusForbidden)
 		return
 	}
 
@@ -106,7 +103,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	session.Values["isAuthenticated"] = true
 	err = session.Save(r, w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "There was an error while saving your request", http.StatusInternalServerError)
 		return
 	}
 
@@ -125,7 +122,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := u.store.Get(r, "session-name")
 	if isAuthenticated, found := session.Values["isAuthenticated"].(bool); !isAuthenticated || !found {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Must be logged in to log out", http.StatusBadRequest)
 		return
 	}
 
@@ -145,16 +142,16 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	id, err := u.users.ReadUserIdByUsername(username)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, "There are no messages for that user because they don't exist", http.StatusNotFound)
 		return
 	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while trying to read the user id", http.StatusInternalServerError)
 		return
 	}
 
 	msgs, err := u.messages.ReadAllMessagesByAuthorId(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while trying to read the messages", http.StatusInternalServerError)
 		return
 	}
 
@@ -164,7 +161,7 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 		filteredM := MsgResp{
 			AuthorName: author.Username,
 			Text:       m.Text,
-			PubDate:    formatDatetime(int64(m.PubDate)),
+			PubDate:    utils.FormatDatetime(int64(m.PubDate)),
 			Flagged:    m.Flagged,
 		}
 		filteredMsgs = append(filteredMsgs, filteredM)
@@ -172,7 +169,7 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.users.ReadUserByUsername(username)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while trying to read the user information", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -186,27 +183,25 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonify)
 }
 
-func formatDatetime(timestamp int64) string {
-	timeUnix := time.Unix(timestamp, 0)
-	return timeUnix.Format("2006-01-02 15:04")
-}
-
 func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 	session, _ := u.store.Get(r, "session-name")
 	if isAuthenticated, found := session.Values["isAuthenticated"].(bool); !isAuthenticated || !found {
-		w.WriteHeader(http.StatusForbidden)
+		http.Error(w, "You must be logged in to follow", http.StatusForbidden)
 		return
 	}
 
 	username, err := parseUsername(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "There is no username to follow", http.StatusNotFound)
 		return
 	}
 
 	toFollowID, err := u.users.ReadUserIdByUsername(username)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "The user being followed does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "There was an error while reading user information", http.StatusInternalServerError)
 		return
 	}
 
@@ -214,7 +209,7 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 
 	err = u.users.Follow(userID, toFollowID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while performing the follow operation", http.StatusInternalServerError)
 		return
 	}
 
@@ -224,19 +219,22 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 	session, _ := u.store.Get(r, "session-name")
 	if isAuthenticated, found := session.Values["isAuthenticated"].(bool); !isAuthenticated || !found {
-		w.WriteHeader(http.StatusForbidden)
+		http.Error(w, "You must be logged in to unfollow", http.StatusForbidden)
 		return
 	}
 
 	username, err := parseUsername(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "There is no username to follow", http.StatusNotFound)
 		return
 	}
 
 	toUnfollowID, err := u.users.ReadUserIdByUsername(username)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "The user being followed does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "There was an error while reading user information", http.StatusInternalServerError)
 		return
 	}
 
@@ -244,7 +242,7 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 
 	err = u.users.Unfollow(userID, toUnfollowID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "There was an error while performing the unfollow operation", http.StatusInternalServerError)
 		return
 	}
 
