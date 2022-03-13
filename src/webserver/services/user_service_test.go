@@ -8,6 +8,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/go-test/deep"
+
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -49,7 +51,32 @@ func TestInit(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
 
-/*
+func (s *Suite) Test_CreateUser() {
+	// Arrange
+	var (
+		id               = uint(1)
+		username         = "Ronald Weasley"
+		email            = "ginger6@hp.com"
+		passwordUnhashed = "secrets"
+		passwordHashed   = "7de38f3c3d3baa7ca58a366f09577586"
+	)
+
+	const sqlInsert = `INSERT INTO "users" ("created_at","updated_at","deleted_at","username","email","pw_hash") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "users"."id"`
+	
+	// Act
+	s.mock.ExpectBegin() // begin transaction
+	s.mock.ExpectQuery(regexp.QuoteMeta(sqlInsert)).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).
+									AddRow(id))
+	s.mock.ExpectCommit() // commit transaction
+
+	err := s.UserService.CreateUser(username, email, passwordUnhashed)
+
+	// Assert
+	require.NoError(s.T(), err)
+}
+
 func (s *Suite) Test_ReadUserByID() {
 	// Arrange
 	var (
@@ -67,11 +94,11 @@ func (s *Suite) Test_ReadUserByID() {
 		WithArgs(id).
 		WillReturnRows(rows)
 
-	res, err := s.UserService.ReadUserById(uint(1))
+	res, err := s.UserService.ReadUserById(id)
 
 	// Assert
 	require.NoError(s.T(), err)
-	require.Nil(s.T(), deep.Equal(storage.UserDTO{ID: uint(1), Username: res.Username, Email: res.Email, PwHash: res.PwHash}, res))
+	require.Nil(s.T(), deep.Equal(storage.UserDTO{ID: id, Username: res.Username, Email: res.Email, PwHash: res.PwHash}, res))
 }
 
 func (s *Suite) Test_ReadUserByUsername() {
@@ -120,28 +147,4 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
-} */
-
-func (s *Suite) Test_CreateUser() {
-	// Arrange
-	var (
-		id               = uint(1)
-		username         = "Ronald Weasley"
-		email            = "ginger6@hp.com"
-		passwordUnhashed = "secrets"
-		passwordHashed   = "7de38f3c3d3baa7ca58a366f09577586"
-	)
-
-	// Act
-	s.mock.ExpectBegin()
-	prep := s.mock.ExpectPrepare(regexp.QuoteMeta(`INSERT INTO "users" ("created_at", "updated_at", "deleted_at", "username", "email", "pw_hash") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "users"."id"`))
-	prep.ExpectQuery().WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
-					   WillReturnRows(sqlmock.NewRows([]string{"created_at","updated_at","deleted_at","username","email","pw_hash"}).
-					   		AddRow(id, username, email, passwordHashed))
-	s.mock.ExpectCommit()
-
-	err := s.UserService.CreateUser(username, email, passwordUnhashed)
-
-	// Assert
-	require.NoError(s.T(), err)
-}
+} 
