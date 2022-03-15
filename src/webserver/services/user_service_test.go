@@ -8,8 +8,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
-
-	//"github.com/go-test/deep"
+	"github.com/go-test/deep"
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
@@ -52,7 +51,7 @@ func TestInit(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
 
-/* func (s *Suite) Test_CreateUser() {
+func (s *Suite) Test_CreateUser() {
 	// Arrange
 	var (
 		id               = uint(1)
@@ -170,7 +169,8 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
-}  */
+}  
+
 
 /* func (s *Suite) Test_UpdateUser() {
 
@@ -179,45 +179,34 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 		id               = uint(1)
 		username         = "Ronald Weasley"
 		email            = "ginger6@hp.com"
-		passwordUnhashed = "secrets"
 		passwordHashed   = "7de38f3c3d3baa7ca58a366f09577586"
 
-		sqlInsert = `INSERT INTO "users" ("created_at","updated_at","deleted_at","username","email","pw_hash") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "users"."id"`
-
-		changed_id             = uint(2)
 		changed_username       = "Ronild Waslib"
 		changed_email          = "gingertop6@hp.com"
-		changed_passwordHashed = "doublesecrets"
+		changed_passwordUnhashed = "doublesecrets"
+		changed_passwordHashed = "32c1c1c9bb44cb8db8f4933b241a2c61"
 
-		sqlUpdate = `SELECT * FROM "users" WHERE ("id" = $1)`
+		sqlUpdate = `UPDATE "users" SET "email" = $1, "pw_hash" = $2, "updated_at" = $3, "username" = $4  WHERE (id = $5)`
 	)
 
 	// Insert
-	s.mock.ExpectBegin() // begin transaction
-	s.mock.ExpectQuery(regexp.QuoteMeta(sqlInsert)).
-		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
-	s.mock.ExpectCommit() // commit transaction
+	s.mock.NewRows([]string{"id","username","email","pw_hash"}).AddRow(id, username, email, passwordHashed)
 
 	// Update
-	s.mock.ExpectBegin() // begin transaction
+	s.mock.ExpectBegin()
 	s.mock.ExpectQuery(regexp.QuoteMeta(sqlUpdate)).
-		WithArgs(id).
+		WithArgs(changed_email, changed_passwordHashed, sqlmock.AnyArg(), changed_username, id).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
-	s.mock.ExpectCommit() // commit transaction
-
+	s.mock.ExpectCommit()
 	// Act
-	err := s.UserService.CreateUser(username, email, passwordUnhashed)
-	require.NoError(s.T(), err)
 	
-	err = s.UserService.UpdateUser(changed_id, changed_username, changed_email, changed_passwordHashed)
+	err := s.UserService.UpdateUser(id, changed_username, changed_email, changed_passwordUnhashed)
 
 	// Assert
 	require.NoError(s.T(), err)
 } */
 
-func (s *Suite) Test_UpdateUser() {
-
+/* func (s *Suite) Test_DeleteUser()  {
 	// Arrange
 	var (
 		id               = uint(1)
@@ -225,28 +214,20 @@ func (s *Suite) Test_UpdateUser() {
 		email            = "ginger6@hp.com"
 		passwordHashed   = "7de38f3c3d3baa7ca58a366f09577586"
 
-		changed_id             = uint(2)
-		changed_username       = "Ronild Waslib"
-		changed_email          = "gingertop6@hp.com"
-		//changed_passwordUnhashed = "doublesecrets"
-		changed_passwordHashed = "doublesecrets"
-
-		sqlUpdate = `UPDATE "users" SET ("id" = $1,"username" = $2,"email" = $3,"pw_hash" = $4) WHERE ("id" = $1) ` 
+		sqlDelete = `DELETE FROM "users" WHERE (id = $1)`
 	)
 
 	// Insert
-	s.mock.NewRows([]string{"id", "username", "email", "pw_hash"}).AddRow(id, username, email, passwordHashed)
+	s.mock.NewRows([]string{"id","username","email","pw_hash"}).AddRow(id, username, email, passwordHashed)
 
-	// Update
-	s.mock.ExpectBegin()
-	s.mock.ExpectQuery(regexp.QuoteMeta(sqlUpdate)).
-		WithArgs(changed_id, changed_username, changed_email, changed_passwordHashed).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(changed_id))
-	s.mock.ExpectCommit()
 	// Act
-	
-	err := s.UserService.UpdateUser(changed_id, changed_username, changed_email, changed_passwordHashed)
+	s.mock.ExpectBegin() // begin transaction
+	s.mock.ExpectQuery(regexp.QuoteMeta(sqlDelete)).
+			WithArgs(id)
+	s.mock.ExpectCommit() // commit transaction
+
+	err := s.UserService.DeleteUser(id)
 
 	// Assert
 	require.NoError(s.T(), err)
-}
+} */

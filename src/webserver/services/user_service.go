@@ -77,35 +77,22 @@ func (u *User) ReadUserIdByUsername(username string) (uint, error) {
 				Find(&user).Error
 	return user.ID, err
 }
-/* 
-func (u *User) UpdateUser(ID uint, username string, email string, password string) error {
-	var user storage.User
-	err := u.db.Unscoped().
-				Where("id = ?", ID).
-				Find(&user).Error
-	if err != nil {
-		return err
-	}
-	user.Username = username
-	user.Email = email
-	user.PwHash = u.Hash(password)
-	err = u.db.Save(&user).Error
-	return err
-} */
 
 func (u *User) UpdateUser(ID uint, username string, email string, password string) error {
 	var user storage.User
 	PwHash := u.Hash(password)
-	err := u.db.Model(user).
+	err := u.db.Model(&user).
 				Unscoped().
 				Where("id = ?", ID).
-				Update(storage.User{Username: username, Email: email, PwHash: PwHash}).Error
+				Update(&storage.User{Username: username, Email: email, PwHash: PwHash}).Error
 	return err
 } 
 
 func (u *User) DeleteUser(ID uint) error {
 	var user storage.User
-	err := u.db.Delete(&user, ID).Error
+	err := u.db.Unscoped().
+				Where("id = ?", ID).
+				Delete(&user).Error
 	return err
 }
 
