@@ -63,13 +63,12 @@ func (s *Suite) Test_CreateUser() {
 		sqlInsert = `INSERT INTO "users" ("created_at","updated_at","deleted_at","username","email","pw_hash") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "users"."id"`
 	)
 
-
 	// Act
 	s.mock.ExpectBegin() // begin transaction
 	s.mock.ExpectQuery(regexp.QuoteMeta(sqlInsert)).
-			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).
-									AddRow(id))
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(id))
 	s.mock.ExpectCommit() // commit transaction
 
 	err := s.UserService.CreateUser(username, email, passwordUnhashed)
@@ -78,7 +77,7 @@ func (s *Suite) Test_CreateUser() {
 	require.NoError(s.T(), err)
 }
 
-func (s *Suite) Test_ReadAllUsers()  {
+func (s *Suite) Test_ReadAllUsers() {
 	// Arrange
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "pw_hash"}).
 		AddRow(1, "user1", "email1", "password1").
@@ -121,4 +120,4 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
-} 
+}

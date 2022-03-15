@@ -16,7 +16,7 @@ func main() {
 	storage.Migrate(db)
 
 	UserService := *services.NewUserService(db)
-	user, err := UserService.ReadUserById(uint(1))
+	user, err := UserService.ReadUserByUsername("frick")
 
 	if err != nil {
 		log.Panicf("Error: " + err.Error())
