@@ -11,15 +11,13 @@ import (
 
 type IUser interface {
 	CreateUser(username string, email string, password string) error
-	ReadAllUsers() ([]storage.UserDTO, error)
-	ReadUserById(ID uint) (storage.UserDTO, error)
-	ReadUserByUsername(username string) (storage.UserDTO, error)
-	ReadUserIdByUsername(username string) (uint, error)
-	UpdateUser(ID uint, username string, email string, password string) error
-	DeleteUser(ID uint) error
-	Hash(password string) string
+	ReadAllUsers() ([]storage.User, error)
+	ReadUserByUsername(username string) (storage.User, error)
+	ReadUserIdByUsername(username string) (uint, error)	
 	Follow(userID uint, whomID uint) error
 	Unfollow(userID uint, whomID uint) error
+	IsPasswordCorrect(username string, password string) bool
+	IsUsernameTaken(username string) bool
 }
 
 type User struct {
@@ -31,44 +29,26 @@ func NewUserService(db *gorm.DB) *User {
 }
 
 func (u *User) CreateUser(username string, email string, password string) error {
-	pwHash := u.Hash(password)
+	pwHash := u.hash(password)
 	user := storage.User{Username: username, Email: email, PwHash: pwHash}
 	err := u.db.Create(&user).Error
 	return err
 }
 
-func (u *User) ReadAllUsers() ([]storage.UserDTO, error) {
+func (u *User) ReadAllUsers() ([]storage.User, error) {
 	var users []storage.User
 	err := u.db.Select([]string{"id", "username", "email", "pw_hash"}).
 				Find(&users).Error
-	userDTOs := make([]storage.UserDTO, 0)
-	for _, v := range users {
-		userDTO := storage.UserDTO{ID: v.ID, Username: v.Username, Email: v.Email, PwHash: v.PwHash}
-		userDTOs = append(userDTOs, userDTO)
-	}
-	return userDTOs, err
+	return users, err
 }
 
-func (u *User) ReadUserById(id uint) (storage.UserDTO, error) {
-	var user storage.User
-	err := u.db.Unscoped().
-				Where("id = ?", id).
-				Select([]string{"id", "username", "email", "pw_hash"}).
-				Find(&user).Error
-
-	userDTO := storage.UserDTO{ID: user.ID, Username: user.Username, Email: user.Email, PwHash: user.PwHash}
-	return userDTO, err
-}
-
-func (u *User) ReadUserByUsername(username string) (storage.UserDTO, error) {
+func (u *User) ReadUserByUsername(username string) (storage.User, error) {
 	var user storage.User
 	err := u.db.Unscoped().
 				Where("username = ?", username).
 				Select([]string{"id", "username", "email", "pw_hash"}).
 				Find(&user).Error
-
-	userDTO := storage.UserDTO{ID: user.ID, Username: user.Username, Email: user.Email, PwHash: user.PwHash}
-	return userDTO, err
+	return user, err
 }
 
 func (u *User) ReadUserIdByUsername(username string) (uint, error) {
@@ -80,49 +60,25 @@ func (u *User) ReadUserIdByUsername(username string) (uint, error) {
 	return user.ID, err
 }
 
-func (u *User) UpdateUser(ID uint, username string, email string, password string) error {
-	var user storage.User
-	PwHash := u.Hash(password)
-	err := u.db.Model(&user).
-				Unscoped().
-				Where("id = ?", ID).
-				Update(&storage.User{Username: username, Email: email, PwHash: PwHash}).Error
-	return err
-} 
-
-func (u *User) DeleteUser(ID uint) error {
-	var user storage.User
-	err := u.db.Unscoped().
-				Where("id = ?", ID).
-				Delete(&user).Error
-	return err
-}
-
-func (u *User) Hash(password string) string {
+func (u *User) hash(password string) string {
 	hash := md5.New()
 	io.WriteString(hash, password)
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
+
 func (u *User) Follow(userID uint, whomID uint) error {
-	var user storage.User
-	var whomUser storage.User
-	whom, error := u.ReadUserById(whomID)
-	if error != nil {
-		return error
-	}
-
-	// Vi bliver nødt til at tjekke om de er fulgt først
-
-	whomUser.ID = whom.ID
-	whomUser.Follows = u.GetUserFollows(whom.Follows)
-
-	err := u.db.Unscoped().
-				Where("id = ?", userID).
-				Update(&storage.User{Follows: append(user.Follows, &whomUser)}).Error
-	return err
+	
 }
 
 func (u *User) Unfollow(userID uint, whomID uint) error {
+	
+}
+
+func (u *User) IsPasswordCorrect(username string, password string) bool {
+	
+}
+
+func (u *User) IsUsernameTaken(username string) bool {
 	
 }

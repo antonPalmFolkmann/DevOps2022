@@ -99,54 +99,6 @@ func (s *Suite) Test_ReadAllUsers()  {
 	require.Nil(s.T(), deep.Equal(5, len(res)))
 }
 
-func (s *Suite) Test_ReadUserByID() {
-	// Arrange
-	var (
-		id       = uint(3)
-		username = "Harry Potter"
-		email    = "tbwl@hp.com"
-		password = "secrets"
-	)
-
-	// Act
-	rows := sqlmock.NewRows([]string{"id", "username", "email", "pw_hash"}).
-		AddRow(id, username, email, password)
-
-	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, email, pw_hash FROM "users" WHERE (id = $1)`)).
-		WithArgs(id).
-		WillReturnRows(rows)
-
-	res, err := s.UserService.ReadUserById(id)
-
-	// Assert
-	require.NoError(s.T(), err)
-	require.Nil(s.T(), deep.Equal(storage.UserDTO{ID: id, Username: res.Username, Email: res.Email, PwHash: res.PwHash}, res))
-}
-
-func (s *Suite) Test_ReadUserByUsername() {
-	// Arrange
-	var (
-		id       = uint(4)
-		username = "Albus Dumbledore"
-		email    = "oldman@hp.com"
-		password = "secrets"
-	)
-
-	// Act
-	rows := sqlmock.NewRows([]string{"id", "username", "email", "pw_hash"}).
-		AddRow(id, username, email, password)
-
-	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, email, pw_hash FROM "users" WHERE (username = $1)`)).
-		WithArgs(username).
-		WillReturnRows(rows)
-
-	res, err := s.UserService.ReadUserByUsername(username)
-
-	// Assert
-	require.NoError(s.T(), err)
-	require.Nil(s.T(), deep.Equal(storage.UserDTO{ID: id, Username: res.Username, Email: res.Email, PwHash: res.PwHash}, res))
-}
-
 func (s *Suite) Test_ReadUserIdByUsername() {
 	// Arrange
 	var (
@@ -169,4 +121,4 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
-}  
+} 
