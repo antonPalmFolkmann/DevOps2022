@@ -23,8 +23,8 @@ type UserDTO struct {
 	Username string
 	Email    string
 	PwHash   string
-	Messages []MessageDTO
-	Follows  []UserDTO
+	Messages []uint
+	Follows  []uint
 }
 
 type Message struct {

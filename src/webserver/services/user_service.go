@@ -18,6 +18,8 @@ type IUser interface {
 	UpdateUser(ID uint, username string, email string, password string) error
 	DeleteUser(ID uint) error
 	Hash(password string) string
+	Follow(userID uint, whomID uint) error
+	Unfollow(userID uint, whomID uint) error
 }
 
 type User struct {
@@ -100,4 +102,27 @@ func (u *User) Hash(password string) string {
 	hash := md5.New()
 	io.WriteString(hash, password)
 	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+func (u *User) Follow(userID uint, whomID uint) error {
+	var user storage.User
+	var whomUser storage.User
+	whom, error := u.ReadUserById(whomID)
+	if error != nil {
+		return error
+	}
+
+	// Vi bliver nødt til at tjekke om de er fulgt først
+
+	whomUser.ID = whom.ID
+	whomUser.Follows = u.GetUserFollows(whom.Follows)
+
+	err := u.db.Unscoped().
+				Where("id = ?", userID).
+				Update(&storage.User{Follows: append(user.Follows, &whomUser)}).Error
+	return err
+}
+
+func (u *User) Unfollow(userID uint, whomID uint) error {
+	
 }
