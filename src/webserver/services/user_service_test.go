@@ -2,6 +2,7 @@ package services_test
 
 import (
 	"database/sql"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/go-test/deep"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -120,4 +123,30 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
+}
+
+func Test_follow(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.Follow("jalle", "yolo")
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Equal(t, 1, len(user.Follows))
+}
+
+func Test_unfollow(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.Follow("jalle", "yolo")
+	userService.Unfollow("jalle", "yolo")
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	log.Print(user.Follows)
+	assert.Equal(t, 0, len(user.Follows))
 }
