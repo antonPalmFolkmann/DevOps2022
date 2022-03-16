@@ -2,7 +2,6 @@ package services_test
 
 import (
 	"database/sql"
-	"log"
 	"regexp"
 	"testing"
 
@@ -147,6 +146,50 @@ func Test_unfollow(t *testing.T) {
 	userService.Unfollow("jalle", "yolo")
 	var user storage.User
 	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
-	log.Print(user.Follows)
 	assert.Equal(t, 0, len(user.Follows))
+}
+
+func Test_followFollowed(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.Follow("jalle", "yolo")
+	userService.Follow("jalle", "yolo")
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_unfollowNotFollowed(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
+	userService.Follow("jalle", "yolo")
+	userService.Unfollow("jalle", "chrisser")
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_followNonExistentReturnsError(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	err := userService.Follow("jalle", "yolo")
+	assert.NotNil(t, err)
+}
+
+func Test_unfollowNonExistentReturnsError(t *testing.T) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	err := userService.Unfollow("jalle", "yolo")
+	assert.NotNil(t, err)
 }

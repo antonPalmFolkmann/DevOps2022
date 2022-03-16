@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"log"
 
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
@@ -72,34 +71,33 @@ func (u *User) Follow(username string, whomname string) error {
 	err := u.db.
 		Where("username = ?", username).
 		First(&user).Error
+	if err != nil {
+		return err
+	}
 	var whom storage.User
+
 	err = u.db.
 		Where("username = ?", whomname).
 		First(&whom).Error
+	if err != nil {
+		return err
+	}
 	user.Follows = append(user.Follows, &whom)
 	u.db.Save(&user)
-	return err
+	return nil
 }
 
 func (u *User) Unfollow(username string, whomname string) error {
-	var user storage.User
-	err := u.db.Preload("Follows").
-		Where("username = ?", username).
-		First(&user).Error
-	var whom storage.User
-	err = u.db.
-		Where("username = ?", whomname).
-		First(&whom).Error
-	log.Print(user.Follows)
-	for i, f := range user.Follows {
-		if f.Username == whomname {
-			user.Follows = remove(user.Follows, i)
-			break
-		}
+	user, err := u.ReadUserByUsername(username)
+	if err != nil {
+		return err
 	}
-	log.Print(user.Follows)
+	whom, err := u.ReadUserByUsername(whomname)
+	if err != nil {
+		return err
+	}
 	u.db.Exec("DELETE FROM follows WHERE user_id = ? AND whom_id = ?", user.ID, whom.ID)
-	return err
+	return nil
 }
 
 func (u *User) IsPasswordCorrect(username string, password string) bool {
@@ -126,10 +124,3 @@ func (u *User) IsUsernameTaken(username string) bool {
 	return (user.Username == username)
 }
 
-func remove(s []*storage.User, i int) []*storage.User {
-	if len(s) == 1 {
-		return []*storage.User{}
-	}
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
-}
