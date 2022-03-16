@@ -5,18 +5,16 @@ go 1.17
 require (
 	github.com/go-test/deep v1.0.8
 	github.com/gorilla/mux v1.8.0
-	github.com/joho/godotenv v1.4.0
-	github.com/lib/pq v1.10.4
-	github.com/mattn/go-sqlite3 v1.14.0
+	github.com/gorilla/sessions v1.2.1
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/stretchr/testify v1.7.0
 )
 
 require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
-	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/lib/pq v1.10.4 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 )
 
