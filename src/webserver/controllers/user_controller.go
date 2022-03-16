@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
+	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -48,22 +49,17 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := u.users.ReadUserByUsername(data.Username); !errors.Is(err, gorm.ErrRecordNotFound) {
+	if u.users.IsUsernameTaken(data.Username) {
 		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	}
 
-	pwHash := u.users.Hash(data.Password)
-	err = u.users.CreateUser(data.Username, data.Email, pwHash)
-	if err != nil {
+	if err := u.users.CreateUser(data.Username, data.Email, data.Password); err != nil {
 		http.Error(w, "Could not create a new user", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	resp := RegisterResp{Error: ""}
-	jsonify, _ := json.Marshal(&resp)
-	w.Write(jsonify)
 }
 
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
@@ -88,22 +84,18 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.users.ReadUserByUsername(data.Username)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, "Cannot login to a user that does not exist", http.StatusNotFound)
-		return
-	}
-
-	if u.users.Hash(data.Password) != user.PwHash {
+	if !u.users.IsPasswordCorrect(data.Username, data.Password) {
 		http.Error(w, "Password is incorrect", http.StatusForbidden)
 		return
 	}
+
+	user, _ := u.users.ReadUserByUsername(data.Username)
 
 	session.Values["username"] = user.Username
 	session.Values["isAuthenticated"] = true
 	err = session.Save(r, w)
 	if err != nil {
-		http.Error(w, "There was an error while saving your request", http.StatusInternalServerError)
+		http.Error(w, "There was an error while saving session data", http.StatusInternalServerError)
 		return
 	}
 
@@ -112,11 +104,19 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		Username: user.Username,
 		Email:    user.Email,
 		Avatar:   "not yet implemented",
-		Follows:  []string{}, // FIXME: Need this as part of the user services interface
+		Follows:  followersToUsernames(u.users.ReadFollowsByUsername(user.Username)),
 	}
 	jsonify, _ := json.Marshal(&resp)
 	w.Write(jsonify)
 
+}
+
+func followersToUsernames(followers []*storage.User) []string {
+	usernames := make([]string, 0)
+	for _, f := range followers {
+		usernames = append(usernames, f.Username)
+	}
+	return usernames
 }
 
 func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
@@ -127,6 +127,7 @@ func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.Values["isAuthenticated"] = false
+	delete(session.Values, "username")
 	session.Save(r, w)
 
 	w.WriteHeader(http.StatusOK)
@@ -141,7 +142,7 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	username := session.Values["username"].(string)
 
-	msgs, err := u.messages.ReadAllMessagesForUsername(username)
+	msgs, err := u.messages.ReadAllMessagesOfFollowedUsers(username)
 	if err != nil {
 		http.Error(w, "There was an error while reading the messages", http.StatusInternalServerError)
 		return
@@ -159,26 +160,19 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := utils.ParseUsername(r)
+	username := session.Values["username"].(string)
+
+	whomname, err := utils.ParseUsername(r)
 	if err != nil {
 		http.Error(w, "There is no username to follow", http.StatusNotFound)
 		return
 	}
 
-	toFollowID, err := u.users.ReadUserIdByUsername(username)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, "The user being followed does not exist", http.StatusNotFound)
+	if err := u.users.Follow(username, whomname); errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "That user does not exist", http.StatusNotFound)
 		return
 	} else if err != nil {
-		http.Error(w, "There was an error while reading user information", http.StatusInternalServerError)
-		return
-	}
-
-	userID, _ := u.users.ReadUserIdByUsername(session.Values["username"].(string))
-
-	err = u.users.Follow(userID, toFollowID)
-	if err != nil {
-		http.Error(w, "There was an error while performing the follow operation", http.StatusInternalServerError)
+		http.Error(w, "There was an error while completing the follow operation", http.StatusInternalServerError)
 		return
 	}
 
@@ -192,26 +186,19 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := utils.ParseUsername(r)
+	username := session.Values["username"].(string)
+
+	whomname, err := utils.ParseUsername(r)
 	if err != nil {
-		http.Error(w, "There is no username to follow", http.StatusNotFound)
+		http.Error(w, "There is no username to unfollow", http.StatusNotFound)
 		return
 	}
 
-	toUnfollowID, err := u.users.ReadUserIdByUsername(username)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, "The user being followed does not exist", http.StatusNotFound)
+	if err := u.users.Unfollow(username, whomname); errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "That user does not exist", http.StatusNotFound)
 		return
 	} else if err != nil {
-		http.Error(w, "There was an error while reading user information", http.StatusInternalServerError)
-		return
-	}
-
-	userID, _ := u.users.ReadUserIdByUsername(session.Values["username"].(string))
-
-	err = u.users.Unfollow(userID, toUnfollowID)
-	if err != nil {
-		http.Error(w, "There was an error while performing the unfollow operation", http.StatusInternalServerError)
+		http.Error(w, "There was an error while completing the unfollow operation", http.StatusInternalServerError)
 		return
 	}
 
