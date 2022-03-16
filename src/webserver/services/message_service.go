@@ -1,23 +1,18 @@
 package services
 
 import (
-	"time"
+	"errors"
 
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
 )
 
 type IMessage interface {
-	CreateMessage(userID uint, text string, pubDate time.Time, flagged bool) error
-	CreateUnflaggedMessage(userID uint, text string, pubDate time.Time)
-	ReadAllMessages() ([]storage.MessageDTO, error)
-	ReadAllMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error)
-	ReadAllFlaggedMessages() ([]storage.MessageDTO, error)
-	ReadAllFlaggedMessagesByAuthorId(ID uint) ([]storage.MessageDTO, error)
-	ReadMessageById(ID uint) (storage.MessageDTO, error)
-	ReadAllMessagesForUsername(username string) (storage.MessageDTO, error)
-	UpdateMessage(ID uint, userID uint, text string, pubDate time.Time, flagged bool) error
-	DeleteMessage(ID uint) error
+	CreateMessage(username string, text string) error
+	ReadAllMessages(limit int, offset int) ([]storage.Message, error)
+	ReadAllMessagesByUsername(username string) ([]storage.Message, error)
+	ReadAllMessagesOfFollowedUsers(username string) ([]storage.Message, error)
+	FlagMessage(ID uint) error
 }
 
 type Message struct {
@@ -28,48 +23,36 @@ func NewMessageService(db *gorm.DB) *Message {
 	return &Message{db: db}
 }
 
-func (m *Message) CreateMessage(message storage.Message) error {
-	err := m.db.Create(message).Error
-	return err
+func (m *Message) CreateMessage(username string, text string) error {
+	// message := storage.Message{UserID: userID, Text: text, PubDate: time.Now(), Flagged: false}
+	// err := m.db.Create(message).Error
+	return errors.New("not implemented yet")
 }
 
-func (m *Message) ReadAllMessages() ([]storage.Message, error) {
+func (m *Message) ReadAllMessages(limit int, offset int) ([]storage.Message, error) {
 	var messages = make([]storage.Message, 0)
-	err := m.db.Where("flagged = 0").Find(&messages).Error
+	err := m.db.Select("user_id", "text", "pub_date", "flagged").
+		Where("flagged = 0").
+		Find(&messages).Error
 	return messages, err
 }
 
-func (m *Message) ReadAllMessagesByAuthorId(id uint) ([]storage.Message, error) {
-	var messages = make([]storage.Message, 0)
-	err := m.db.Where("author_id = ?", id).Find(&messages).Error
-	return messages, err
+func (m *Message) ReadAllMessagesByUsername(username string) ([]storage.Message, error) {
+	// var messages = make([]storage.Message, 0)
+	// err := m.db.Select("user_id", "text", "pub_date", "flagged").
+	// 	Where("user_id = ?", id).
+	// 	Find(&messages).Error
+	return make([]storage.Message, 0), errors.New("not implemented yet")
 }
 
-func (m *Message) ReadAllFlaggedMessages() ([]storage.Message, error) {
-	var messages = make([]storage.Message, 0)
-	err := m.db.Where("flagged = 1").Find(&messages).Error
-	return messages, err
+func (m *Message) ReadAllMessagesOfFollowedUsers(username string) ([]storage.Message, error) {
+	// var message storage.Message
+	// err := m.db.Select("user_id", "text", "pub_date", "flagged").
+	// 	Where("message_id = ?", id).
+	// 	Find(&message).Error
+	return make([]storage.Message, 0), errors.New("not implemented yet")
 }
 
-func (m *Message) ReadAllFlaggedMessagesByAuthorId(id uint) ([]storage.Message, error) {
-	var messages = make([]storage.Message, 0)
-	err := m.db.Where("author_id = ? AND flagged = 1", id).Find(&messages).Error
-	return messages, err
-}
-
-func (m *Message) ReadMessageById(id uint) (storage.Message, error) {
-	var message storage.Message
-	err := m.db.Where("message_id = ?", id).Find(&message).Error
-	return message, err
-}
-
-func (m *Message) UpdateMessage(message storage.Message, id uint) error {
-	err := m.db.Model(&message).Where("message_id = ?", id).Update(&message).Error
-	return err
-}
-
-func (m *Message) DeleteMessage(id uint) error {
-	var message storage.Message
-	err := m.db.Delete(&message, id).Error
-	return err
+func (m *Message) FlagMessage(ID uint) error {
+	return errors.New("not implemented yet")
 }
