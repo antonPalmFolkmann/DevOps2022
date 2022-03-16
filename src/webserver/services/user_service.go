@@ -74,14 +74,15 @@ func (u *User) Follow(username string, whomname string) error {
 	if err != nil {
 		return err
 	}
-	var whom storage.User
 
+	var whom storage.User
 	err = u.db.
 		Where("username = ?", whomname).
 		First(&whom).Error
 	if err != nil {
 		return err
 	}
+
 	user.Follows = append(user.Follows, &whom)
 	u.db.Save(&user)
 	return nil
@@ -92,10 +93,12 @@ func (u *User) Unfollow(username string, whomname string) error {
 	if err != nil {
 		return err
 	}
+
 	whom, err := u.ReadUserByUsername(whomname)
 	if err != nil {
 		return err
 	}
+
 	u.db.Exec("DELETE FROM follows WHERE user_id = ? AND whom_id = ?", user.ID, whom.ID)
 	return nil
 }
@@ -123,4 +126,3 @@ func (u *User) IsUsernameTaken(username string) bool {
 	}
 	return (user.Username == username)
 }
-
