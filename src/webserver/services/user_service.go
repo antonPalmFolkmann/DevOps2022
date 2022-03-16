@@ -66,6 +66,21 @@ func (u *User) hash(password string) string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
+
+func (u *User) Follow(userID uint, whomID uint) error {
+	var user storage.User
+	err := u.db.First(&user, userID).Error
+	var whom storage.User
+	err = u.db.First(&user, whomID).Error
+	user.Follows = append(user.Follows, &whom)
+	u.db.Save(&user)
+	return err
+}
+
+func (u *User) Unfollow(userID uint, whomID uint) error {
+	
+}
+
 func (u *User) IsPasswordCorrect(username string, password string) bool {
 	var user storage.User
 	passwordHashed := u.hash(password)
