@@ -32,6 +32,14 @@ type MessageDTO struct {
 	UserID   uint
 	Username string
 	Text     string
+	PubDate  int64
+	Flagged  bool
+}
+
+type MessageDTO struct {
+	UserID 	 uint
+	Username string
+	Text     string
 	PubDate  time.Time
 	Flagged  bool
 }
