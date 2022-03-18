@@ -179,18 +179,18 @@ func Test_IsPasswordCorrect_False(t *testing.T)  {
 	assert.False(t, actual)
 }
 
-func Test_IsUsernameTaken_True(t *testing.T)  {
+func Test_IsUsernameTaken_False(t *testing.T)  {
 	_, service := setUp()
 
 	actual := service.IsUsernameTaken("jaææææ")
 
-	assert.True(t, actual)
+	assert.False(t, actual)
 }
 
-func Test_IsUsernameTaken_False(t *testing.T)  {
+func Test_IsUsernameTaken_True(t *testing.T)  {
 	_, service := setUp()
 
 	actual := service.IsUsernameTaken("jalle")
 
-	assert.False(t, actual)
+	assert.True(t, actual)
 }

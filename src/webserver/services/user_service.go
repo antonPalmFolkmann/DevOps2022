@@ -113,5 +113,5 @@ func (u *User) IsPasswordCorrect(username string, password string) bool {
 
 func (u *User) IsUsernameTaken(username string) bool {
 	_, err := u.ReadUserByUsername(username)
-	return err != nil 
+	return err == nil 
 }
