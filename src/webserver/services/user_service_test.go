@@ -1,21 +1,194 @@
 package services_test
 
 import (
+	"database/sql"
+	"regexp"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/go-test/deep"
+
 	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-var UserService services.IUser = services.NewUserService(&gorm.DB{})
+type Suite struct {
+	suite.Suite
+	DB   *gorm.DB
+	mock sqlmock.Sqlmock
 
-func TestCreateUser(t *testing.T)  {
-	// Arrange
-
-	// Act
-	UserService.CreateUser("Username", "Email", "Password")
-
-	// Assert
+	UserService services.User
+	user        *storage.User
 }
 
+func (s *Suite) SetupSuite() {
+	var (
+		db  *sql.DB
+		err error
+	)
+
+	db, s.mock, err = sqlmock.New()
+	require.NoError(s.T(), err)
+
+	s.DB, err = gorm.Open("postgres", db)
+	require.NoError(s.T(), err)
+
+	s.DB.LogMode(true)
+
+	s.UserService = *services.NewUserService(s.DB)
+}
+
+func (s *Suite) AfterTest(_, _ string) {
+	require.NoError(s.T(), s.mock.ExpectationsWereMet())
+}
+
+func setUp() (*gorm.DB, services.IUser) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
+
+	return db, userService
+}
+
+// ------------------- TESTS -------------------------
+
+func TestInit(t *testing.T) {
+	suite.Run(t, new(Suite))
+}
+
+func (s *Suite) Test_CreateUser() {
+	// Arrange
+	var (
+		id               = uint(1)
+		username         = "Ronald Weasley"
+		email            = "ginger6@hp.com"
+		passwordUnhashed = "secrets"
+		passwordHashed   = "7de38f3c3d3baa7ca58a366f09577586"
+
+		sqlInsert = `INSERT INTO "users" ("created_at","updated_at","deleted_at","username","email","pw_hash") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "users"."id"`
+	)
+
+	// Act
+	s.mock.ExpectBegin() // begin transaction
+	s.mock.ExpectQuery(regexp.QuoteMeta(sqlInsert)).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), username, email, passwordHashed).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(id))
+	s.mock.ExpectCommit() // commit transaction
+
+	err := s.UserService.CreateUser(username, email, passwordUnhashed)
+
+	// Assert
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) Test_ReadAllUsers() {
+	// Arrange
+	rows := sqlmock.NewRows([]string{"id", "username", "email", "pw_hash"}).
+		AddRow(1, "user1", "email1", "password1").
+		AddRow(2, "user2", "email2", "password2").
+		AddRow(3, "user3", "email3", "password3").
+		AddRow(4, "user4", "email4", "password4").
+		AddRow(5, "user5", "email5", "password5")
+
+	// Act
+
+	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, username, email, pw_hash FROM "users"`)).
+		WillReturnRows(rows)
+
+	res, err := s.UserService.ReadAllUsers()
+
+	// Assert
+	require.NoError(s.T(), err)
+	require.Nil(s.T(), deep.Equal(5, len(res)))
+}
+
+func (s *Suite) Test_ReadUserIdByUsername() {
+	// Arrange
+	var (
+		id       = uint(5)
+		username = "Tom Riddle"
+		email    = "nonose@hp.com"
+		password = "secrets"
+	)
+
+	// Act
+	rows := sqlmock.NewRows([]string{"id", "username", "email", "pw_hash"}).
+		AddRow(id, username, email, password)
+
+	s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT id FROM "users" WHERE (username = $1)`)).
+		WithArgs(username).
+		WillReturnRows(rows)
+
+	res, err := s.UserService.ReadUserIdByUsername(username)
+
+	// Assert
+	require.NoError(s.T(), err)
+	require.Nil(s.T(), deep.Equal(id, res))
+}
+
+func Test_follow(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Equal(t, 1, len(user.Follows))
+}
+
+func Test_unfollow(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Unfollow("jalle", "yolo")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Equal(t, 0, len(user.Follows))
+}
+
+func Test_followFollowed(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Follow("jalle", "yolo")
+	var user storage.User
+
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_unfollowNotFollowed(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Unfollow("jalle", "chrisser")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_followNonExistentReturnsError(t *testing.T) {
+	_, service := setUp()
+	err := service.Follow("jalle", "RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RSNK RSNK RNSK RNSK RNSK")
+	assert.NotNil(t, err)
+}
+
+func Test_unfollowNonExistentReturnsError(t *testing.T) {
+	_, service := setUp()
+
+	service.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	err := service.Unfollow("jalle", "Benjamin, The Destroyer Of Worlds and Harbringer Of Death")
+	assert.NotNil(t, err)
+}

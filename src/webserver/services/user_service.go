@@ -11,16 +11,13 @@ import (
 
 type IUser interface {
 	CreateUser(username string, email string, password string) error
-	ReadAllUsers() ([]storage.UserDTO, error)
-	ReadUserById(ID uint) (storage.UserDTO, error)
-	ReadUserByUsername(username string) (storage.UserDTO, error)
+	ReadAllUsers() ([]storage.User, error)
+	ReadUserByUsername(username string) (storage.User, error)
 	ReadUserIdByUsername(username string) (uint, error)
-	UpdateUser(ID uint, username string, email string, pwHash string) error
-	DeleteUser(ID uint) error
-	Hash(password string) string
-	Follow(userID uint, whomID uint) error
-	Unfollow(userID uint, whomID uint) error
-	ReadFollowersForUsername(username string) ([]storage.UserDTO, error)
+	Follow(username string, whomname string) error
+	Unfollow(username string, whomname string) error
+	IsPasswordCorrect(username string, password string) bool
+	IsUsernameTaken(username string) bool
 }
 
 type User struct {
@@ -32,64 +29,100 @@ func NewUserService(db *gorm.DB) *User {
 }
 
 func (u *User) CreateUser(username string, email string, password string) error {
-	pwHash := u.Hash(password)
+	pwHash := u.hash(password)
 	user := storage.User{Username: username, Email: email, PwHash: pwHash}
 	err := u.db.Create(&user).Error
 	return err
 }
 
-func (u *User) ReadAllUsers() ([]storage.UserDTO, error) {
-	var users = make([]storage.UserDTO, 0)
-	err := u.db.Select("user_id", "username", "email", "pw_hash").Find(&users).Error
+func (u *User) ReadAllUsers() ([]storage.User, error) {
+	var users []storage.User
+	err := u.db.Select([]string{"id", "username", "email", "pw_hash"}).
+		Find(&users).Error
 	return users, err
 }
 
-func (u *User) ReadUserById(id uint) (storage.UserDTO, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
-		Where("user_id = ?", id).
-		Find(&user).Error
-	return user, err
-}
-
-func (u *User) ReadUserByUsername(username string) (storage.UserDTO, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
+func (u *User) ReadUserByUsername(username string) (storage.User, error) {
+	var user storage.User
+	err := u.db.Unscoped().
 		Where("username = ?", username).
+		Select([]string{"id", "username", "email", "pw_hash"}).
 		Find(&user).Error
 	return user, err
 }
 
 func (u *User) ReadUserIdByUsername(username string) (uint, error) {
-	var user storage.UserDTO
-	err := u.db.Select("user_id", "username", "email", "pw_hash", "messages", "follows").
+	var user storage.User
+	err := u.db.Unscoped().
 		Where("username = ?", username).
+		Select("id").
 		Find(&user).Error
 	return user.ID, err
 }
 
-func (u *User) UpdateUser(ID uint, username string, email string, pwHash string) error {
-	var user storage.User
-	err := u.db.Where("user_id = ?", ID).
-		Find(&user).Error
-	if err != nil {
-		return err
-	}
-	user.Username = username
-	user.Email = email
-	user.PwHash = pwHash
-	err = u.db.Save(&user).Error
-	return err
-}
-
-func (u *User) DeleteUser(ID uint) error {
-	var user storage.User
-	err := u.db.Delete(&user, ID).Error
-	return err
-}
-
-func (u *User) Hash(password string) string {
+func (u *User) hash(password string) string {
 	hash := md5.New()
 	io.WriteString(hash, password)
 	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+func (u *User) Follow(username string, whomname string) error {
+	var user storage.User
+	err := u.db.
+		Where("username = ?", username).
+		First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	var whom storage.User
+	err = u.db.
+		Where("username = ?", whomname).
+		First(&whom).Error
+	if err != nil {
+		return err
+	}
+
+	user.Follows = append(user.Follows, &whom)
+	u.db.Save(&user)
+	return nil
+}
+
+func (u *User) Unfollow(username string, whomname string) error {
+	user, err := u.ReadUserByUsername(username)
+	if err != nil {
+		return err
+	}
+
+	whom, err := u.ReadUserByUsername(whomname)
+	if err != nil {
+		return err
+	}
+
+	u.db.Exec("DELETE FROM follows WHERE user_id = ? AND whom_id = ?", user.ID, whom.ID)
+	return nil
+}
+
+func (u *User) IsPasswordCorrect(username string, password string) bool {
+	var user storage.User
+	passwordHashed := u.hash(password)
+	err := u.db.Unscoped().
+		Select("username", "pw_hash").
+		Where("username = ?", username).
+		Find(&user).Error
+	if err != nil {
+		return false
+	}
+	return (user.PwHash == passwordHashed)
+}
+
+func (u *User) IsUsernameTaken(username string) bool {
+	var user storage.User
+	err := u.db.Unscoped().
+		Where("username = ?", username).
+		Find(&user).Error
+	if err != nil {
+		return false
+	}
+	return (user.Username == username)
 }

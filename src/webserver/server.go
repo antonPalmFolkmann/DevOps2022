@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 )
 
@@ -14,9 +15,13 @@ func main() {
 
 	storage.Migrate(db)
 
+	UserService := *services.NewUserService(db)
+	user, err := UserService.ReadUserByUsername("frick")
 
-	var user storage.User
-	db.First(&user, 1)
+	if err != nil {
+		log.Panicf("Error: " + err.Error())
+	}
+
 	log.Println(user)
 
 	// go func() {
