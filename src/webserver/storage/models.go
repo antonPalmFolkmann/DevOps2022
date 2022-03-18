@@ -29,7 +29,7 @@ type Message struct {
 }
 
 type MessageDTO struct {
-	UserID   uint
+	UserID 	 uint
 	Username string
 	Text     string
 	PubDate  time.Time
