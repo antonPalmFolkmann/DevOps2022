@@ -11,6 +11,8 @@ import (
 	"github.com/go-test/deep"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -43,6 +45,18 @@ func (s *Suite) SetupSuite() {
 
 func (s *Suite) AfterTest(_, _ string) {
 	require.NoError(s.T(), s.mock.ExpectationsWereMet())
+}
+
+func setUp() (*gorm.DB, services.IUser) {
+	db, _ := gorm.Open("sqlite3", ":memory:")
+	storage.Migrate(db)
+
+	userService := services.NewUserService(db)
+	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
+
+	return db, userService
 }
 
 // ------------------- TESTS -------------------------
@@ -120,4 +134,61 @@ func (s *Suite) Test_ReadUserIdByUsername() {
 	// Assert
 	require.NoError(s.T(), err)
 	require.Nil(s.T(), deep.Equal(id, res))
+}
+
+func Test_follow(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Equal(t, 1, len(user.Follows))
+}
+
+func Test_unfollow(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Unfollow("jalle", "yolo")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Equal(t, 0, len(user.Follows))
+}
+
+func Test_followFollowed(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Follow("jalle", "yolo")
+	var user storage.User
+
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_unfollowNotFollowed(t *testing.T) {
+	db, service := setUp()
+
+	service.Follow("jalle", "yolo")
+	service.Unfollow("jalle", "chrisser")
+
+	var user storage.User
+	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
+	assert.Len(t, user.Follows, 1)
+}
+
+func Test_followNonExistentReturnsError(t *testing.T) {
+	_, service := setUp()
+	err := service.Follow("jalle", "RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RSNK RSNK RNSK RNSK RNSK")
+	assert.NotNil(t, err)
+}
+
+func Test_unfollowNonExistentReturnsError(t *testing.T) {
+	_, service := setUp()
+
+	service.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	err := service.Unfollow("jalle", "Benjamin, The Destroyer Of Worlds and Harbringer Of Death")
+	assert.NotNil(t, err)
 }

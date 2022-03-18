@@ -22,7 +22,15 @@ type Message struct {
 	// gorm.Model provides ID
 	gorm.Model
 	// Creates a "message belongs-to one user" relationship
-	UserID 	 uint
+	UserID  uint
+	Text    string
+	PubDate int64
+	Flagged bool
+}
+
+type MessageDTO struct {
+	UserID   uint
+	Username string
 	Text     string
 	PubDate  time.Time
 	Flagged  bool
