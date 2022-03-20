@@ -10,10 +10,6 @@ type RegisterReq struct {
 	Email string `json:"email"`
 }
 
-type RegisterResp struct {
-	Error string `json:"error"`
-}
-
 type LoginResp struct {
 	Username string   `json:"username"`
 	Email    string   `json:"email"`
