@@ -49,11 +49,8 @@ jobs:
         password: ${{ secrets.PROD_PWD }}
         script: |
           docker-compose down
-          mkdir -p monitoring
-          rm -f docker-compose.yaml monitoring/prometheus.yml
-          cd monitoring
+          rm -f docker-compose.yaml prometheus.yml
           wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/monitoring/prometheus.yml
-          cd ..
           wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/docker-compose.yaml
           docker-compose up --build -d
           
