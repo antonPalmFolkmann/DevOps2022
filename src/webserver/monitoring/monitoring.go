@@ -2,13 +2,13 @@ package monitoring
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/shirou/gopsutil/cpu"
 )
-
-// Helge's Example Monitors: A guage representing CPU load %,
 
 var (
 	cpuLoad = prometheus.NewGaugeFunc(prometheus.GaugeOpts{
@@ -42,12 +42,25 @@ func ResponseCounterMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func RequestDurationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+		duration := time.Since(start)
+
+		requestDurationSummary.Observe(float64(duration.Milliseconds()))
+	})
+}
+
 func SetupRoutes(r *mux.Router) {
 	r.Use(ResponseCounterMiddleware)
+	r.Use(RequestDurationMiddleware)
 
 	r.Handle("/metrics", promhttp.Handler())
 }
 
 func computeCpuLoad() float64 {
-	return 0
+	load, _ := cpu.Percent(0, false)
+	return load[0]
 }
