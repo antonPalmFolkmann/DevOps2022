@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
@@ -29,7 +30,7 @@ func NewMessage(store sessions.Store, messages services.IMessage, users services
 }
 
 func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
-	msgs, err := m.messages.ReadAllMessages()
+	msgs, err := m.messages.ReadAllMessages(0, 100)
 	if err != nil {
 		http.Error(w, "There was an error while reading messages", http.StatusInternalServerError)
 		return
@@ -47,36 +48,19 @@ func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := m.users.ReadUserIdByUsername(username)
+	user, err := m.users.ReadUserByUsername(username)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, "There are no messages for that user because they don't exist", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	} else if err != nil {
-		http.Error(w, "There was an error while trying to read the user id", http.StatusInternalServerError)
+		http.Error(w, "There was an error while reading user information", http.StatusInternalServerError)
 		return
 	}
 
-	msgs, err := m.messages.ReadAllMessagesByAuthorId(id)
+	msgs, err := m.messages.ReadAllMessagesByUsername(username)
 	if err != nil {
 		http.Error(w, "There was an error while trying to read the messages", http.StatusInternalServerError)
 		return
-	}
-
-	filteredMsgs := make([]MsgResp, 0)
-	for _, msg := range msgs {
-		author, _ := m.users.ReadUserById(msg.UserID)
-		filteredM := MsgResp{
-			AuthorName: author.Username,
-			Text:       msg.Text,
-			PubDate:    utils.FormatDatetime(int64(msg.PubDate)),
-			Flagged:    msg.Flagged,
-		}
-		filteredMsgs = append(filteredMsgs, filteredM)
-	}
-
-	user, err := m.users.ReadUserByUsername(username)
-	if err != nil {
-		http.Error(w, "There was an error while trying to read the user information", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -84,13 +68,40 @@ func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
 		Username: user.Username,
 		Email:    user.Email,
 		Avatar:   "not yet implemented...",
-		Msgs:     filteredMsgs,
+		Msgs:     msgs,
 	}
 	jsonify, _ := json.Marshal(resp)
 	w.Write(jsonify)
 }
 
+func (m *Message) AddMessage(w http.ResponseWriter, r *http.Request) {
+	session, _ := m.store.Get(r, "session-name")
+
+	if isAuthenticated, found := session.Values["isAuthenticated"].(bool); !isAuthenticated || !found {
+		http.Error(w, "You must be logged in to add a message", http.StatusForbidden)
+		return
+	}
+
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Could not parse the JSON body", http.StatusInternalServerError)
+		return
+	}
+
+	var data AddMsgsReq
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "The JSON body is malformed", http.StatusBadRequest)
+		return
+	}
+
+	m.messages.CreateMessage(data.AuthorName, data.Text)
+	w.WriteHeader(http.StatusCreated)
+}
+
 func (m *Message) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/msgs/{username}", m.UserMessages)
 	r.HandleFunc("/public", m.AllMessages)
+	r.HandleFunc("/add_message", m.AddMessage)
 }

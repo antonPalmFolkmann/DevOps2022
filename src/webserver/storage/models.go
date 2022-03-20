@@ -29,9 +29,9 @@ type Message struct {
 }
 
 type MessageDTO struct {
-	UserID 	 uint
-	Username string
-	Text     string
-	PubDate  time.Time
-	Flagged  bool
+	UserID   uint      `json:"userID"`
+	Username string    `json:"authorName"`
+	Text     string    `json:"text"`
+	PubDate  time.Time `json:"pubDate"`
+	Flagged  bool      `json:"flagged"`
 }
