@@ -1,9 +1,7 @@
 services:
 
   db:
-    build:
-      context: .
-      dockerfile: docker/db.Dockerfile
+    image: antonfolkmann/minitwitdb:latest
     container_name: database
     restart: always
     environment:
@@ -16,9 +14,7 @@ services:
       - minitwit
 
   web:
-    build:
-      context: .
-      dockerfile: docker/webserver.Dockerfile
+    image: antonfolkmann/minitwit:latest
     container_name: minitwit
     depends_on:
       - db
