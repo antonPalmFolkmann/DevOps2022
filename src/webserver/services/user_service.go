@@ -44,19 +44,17 @@ func (u *User) ReadAllUsers() ([]storage.User, error) {
 
 func (u *User) ReadUserByUsername(username string) (storage.User, error) {
 	var user storage.User
-	err := u.db.Unscoped().
-		Where("username = ?", username).
-		Select([]string{"id", "username", "email", "pw_hash"}).
-		Find(&user).Error
+	err := u.db.Where("username = ?", username).
+				Select([]string{"id", "username", "email", "pw_hash"}).
+				Find(&user).Error
 	return user, err
 }
 
 func (u *User) ReadUserIdByUsername(username string) (uint, error) {
 	var user storage.User
-	err := u.db.Unscoped().
-		Where("username = ?", username).
-		Select("id").
-		Find(&user).Error
+	err := u.db.Where("username = ?", username).
+				Select("id").
+				Find(&user).Error
 	return user.ID, err
 }
 
@@ -104,25 +102,16 @@ func (u *User) Unfollow(username string, whomname string) error {
 }
 
 func (u *User) IsPasswordCorrect(username string, password string) bool {
-	var user storage.User
 	passwordHashed := u.hash(password)
-	err := u.db.Unscoped().
-		Select("username", "pw_hash").
-		Where("username = ?", username).
-		Find(&user).Error
+	usr, err := u.ReadUserByUsername(username)
 	if err != nil {
 		return false
 	}
-	return (user.PwHash == passwordHashed)
+	
+	return (usr.PwHash == passwordHashed)
 }
 
 func (u *User) IsUsernameTaken(username string) bool {
-	var user storage.User
-	err := u.db.Unscoped().
-		Where("username = ?", username).
-		Find(&user).Error
-	if err != nil {
-		return false
-	}
-	return (user.Username == username)
+	_, err := u.ReadUserByUsername(username)
+	return err == nil 
 }

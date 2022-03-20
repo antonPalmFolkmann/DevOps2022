@@ -24,6 +24,14 @@ type Message struct {
 	// Creates a "message belongs-to one user" relationship
 	UserID  uint
 	Text    string
-	PubDate time.Time
+	PubDate int64
 	Flagged bool
+}
+
+type MessageDTO struct {
+	UserID   uint
+	Username string
+	Text     string
+	PubDate  time.Time
+	Flagged  bool
 }
