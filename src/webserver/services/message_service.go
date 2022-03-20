@@ -33,9 +33,7 @@ func (m *Message) CreateMessage(username string, text string) error {
 func (m *Message) ReadAllMessages(limit int, offset int) ([]storage.MessageDTO, error) {
 	var messages = make([]storage.Message, 0)
 	var messageDTOs = make([]storage.MessageDTO, 0)
-	err := m.db.Select("user_id", "text", "pub_date", "flagged").
-		Where("flagged = 0").
-		Find(&messages).Error
+	err := m.db.Where("flagged = 0").Find(&messages).Error
 
 	for _, v := range messages {
 		username := m.getUsernameFromUserID(v.UserID)
