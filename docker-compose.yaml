@@ -19,8 +19,11 @@ services:
     build:
       context: .
       dockerfile: docker/webserver.Dockerfile
+    container_name: minitwit
     depends_on:
       - db
+      - grafana
+      - prometheus
     restart: always
     environment:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
@@ -31,6 +34,23 @@ services:
       - 8081:8081
     networks:
       - minitwit
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - minitwit
+
+  grafana:
+    image: grafana/grafana:4.5.2
+    ports:
+      - "3000:3000"  
+    networks:
+      - minitwit 
       
 networks:
   minitwit: {}

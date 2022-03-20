@@ -25,12 +25,17 @@ func setUp() (r *mux.Router) {
 	userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
 	userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
 	messageService := services.NewMessageService(db)
+	messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
+	messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
+	messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
 	userController := controllers.NewUserController(userService, messageService, store)
+	messageController := controllers.NewMessage(store, messageService, userService)
 
 	r = mux.NewRouter()
 	userController.SetupRoutes(r)
+	messageController.SetupRoutes(r)
 	return r
 }
 

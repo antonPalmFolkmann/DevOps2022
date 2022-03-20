@@ -1,5 +1,7 @@
 package controllers
 
+import "github.com/antonPalmFolkmann/DevOps2022/storage"
+
 type UserReq struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -28,11 +30,10 @@ type MsgsPerUsernameResp struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
-	Msgs     []MsgResp
+	Msgs     []storage.MessageDTO
 }
 
 type AddMsgsReq struct {
 	AuthorName string `json:"authorName"`
 	Text       string `json:"text"`
-	PubDate    string `json:"pubDate"`
 }
