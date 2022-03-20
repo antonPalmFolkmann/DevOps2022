@@ -104,7 +104,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		Username: user.Username,
 		Email:    user.Email,
 		Avatar:   "not yet implemented",
-		Follows:  followersToUsernames(u.users.ReadFollowsByUsername(user.Username)),
+		Follows:  followersToUsernames(user.Follows),
 	}
 	jsonify, _ := json.Marshal(&resp)
 	w.Write(jsonify)
@@ -209,7 +209,7 @@ func (u *User) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/register", u.Register)
 	r.HandleFunc("/login", u.Login)
 	r.HandleFunc("/logout", u.Logout)
-	r.HandleFunc("/msgs/{username}", u.Timeline)
+	r.HandleFunc("/", u.Timeline)
 	r.HandleFunc("/fllw/{username}", u.Follow)
 	r.HandleFunc("/unfllw/{username}", u.Unfollow)
 }
