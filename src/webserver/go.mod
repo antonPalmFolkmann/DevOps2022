@@ -3,7 +3,6 @@ module github.com/antonPalmFolkmann/DevOps2022
 go 1.17
 
 require (
-	github.com/go-test/deep v1.0.8
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/mattn/go-sqlite3 v1.14.12
@@ -19,7 +18,6 @@ require (
 )
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.16
 	github.com/kr/pretty v0.1.0 // indirect

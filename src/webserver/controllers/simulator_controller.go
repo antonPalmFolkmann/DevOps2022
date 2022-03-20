@@ -13,19 +13,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ISimulatorService interface {
-	IsAuthorized(token string) bool
-	ReadLatest() int
-	UpdateLatest(latest int)
-}
-
 type Simulator struct {
 	messageService   services.IMessage
 	userService      services.IUser
-	simulatorService ISimulatorService
+	simulatorService services.ISimulatorService
 }
 
-func NewSimulator(messageService services.IMessage, userService services.IUser, simulatorService ISimulatorService) *Simulator {
+func NewSimulator(messageService services.IMessage, userService services.IUser, simulatorService services.ISimulatorService) *Simulator {
 	return &Simulator{messageService: messageService, userService: userService, simulatorService: simulatorService}
 }
 
@@ -44,7 +38,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsAuthorized(w, r) {
+	if !s.simulatorService.IsAuthorized(w, r) {
 		return
 	}
 
@@ -87,7 +81,7 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsAuthorized(w, r) {
+	if !s.simulatorService.IsAuthorized(w, r) {
 		return
 	}
 
@@ -116,7 +110,7 @@ func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if !IsAuthorized(w, r) {
+	if !s.simulatorService.IsAuthorized(w, r) {
 		return
 	}
 
@@ -176,7 +170,7 @@ func (s *Simulator) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsAuthorized(w, r) {
+	if !s.simulatorService.IsAuthorized(w, r) {
 		return
 	}
 
@@ -271,17 +265,6 @@ func parseLatest(r *http.Request) (*int, error) {
 	return &asInt, nil
 }
 
-func IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
-	authorizedReq := r.Header.Get("Authorization")
-	if authorizedReq != "Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh" {
-		error := "You are not authorized to use this resource!"
-		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 403, error)
-		w.Write([]byte(jsonify))
-		return false
-	}
-	return true
-}
-
 type registerRequestBody struct {
 	Latest   int    `json:"latest"`
 	PostType string `json:"post_type"`
@@ -309,4 +292,12 @@ type unfollowRequestBody struct {
 	PostType string `json:"post_type"`
 	Username string `json:"username"`
 	Unfollow string `json:"user_to_unfollow"`
+}
+
+func (s *Simulator) SetupRoutes(r *mux.Router) {
+	r.HandleFunc("/fllws/{username}", s.FollowUserHandler)
+	r.HandleFunc("/register", s.RegisterHandler)
+	r.HandleFunc("/msgs", s.MessagesHandler)
+	r.HandleFunc("/msgs/{username}", s.UserPerMessageHandler)
+	r.HandleFunc("/latest", s.LatestHandler)
 }
