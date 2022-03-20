@@ -56,7 +56,6 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	var regError string
 	if r.Method == http.MethodPost {
-		//TODO Implement service -> query db and store the user registering
 		if user, _ := s.userService.ReadUserByUsername(requestBody.Username); user.Username != "" {
 			regError = "The username is already taken"
 			w.WriteHeader(http.StatusBadRequest)
