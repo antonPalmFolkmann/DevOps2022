@@ -230,9 +230,9 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("service_simulator: Failed to read all followers from username")
 	}
-	filtered_followers := make([]string, 0)
+	filteredFollowers := make([]string, 0)
 	for _, entry := range user.Follows {
-		filtered_followers = append(filtered_followers, entry.Username)
+		filteredFollowers = append(filteredFollowers, entry.Username)
 	}
 	followers, err := json.Marshal(user)
 	if err != nil {
