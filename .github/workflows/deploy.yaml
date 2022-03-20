@@ -33,7 +33,7 @@ jobs:
         name: Build and push database
         uses: docker/build-push-action@v2
         with:
-          file: ./docker/webserver.Dockerfile
+          file: ./docker/db.Dockerfile
           push: true
           tags: antonfolkmann/minitwitdb:latest
   
