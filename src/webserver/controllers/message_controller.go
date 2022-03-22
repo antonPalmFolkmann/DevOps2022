@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
+	"log/syslog"
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
@@ -35,7 +37,12 @@ func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "There was an error while reading messages", http.StatusInternalServerError)
 		return
 	}
-
+	logger, err := syslog.New(syslog.LOG_INFO, "MESSAGE CONTROLLER: ")
+	if err != nil {
+		log.Println(err)
+	} else {
+		logger.Info("READ ALL MESSAGES")
+	}
 	jsonify, _ := json.Marshal(&msgs)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonify)
