@@ -211,4 +211,8 @@ fabric.properties
 
 # Support for Project snippet scope
 
+# Local files
+venv
+sample.json
+
 # End of https://www.toptal.com/developers/gitignore/api/goland,visualstudiocode,jetbrains,go
