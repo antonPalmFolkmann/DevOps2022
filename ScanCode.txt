@@ -1,6 +1,10 @@
 #!/bin/bash
 
-
+if ! command -v node &> /dev/null
+then
+    echo "node could not be found"
+    exit
+fi
 echo Setting up python virtual environment if needed...
 /usr/bin/python3 -m venv venv
 echo Done.
@@ -15,6 +19,3 @@ scancode -clpeui -n 2 --ignore "*.java" --json-pp sample.json src
 node scanCode.js
 echo Done.
 exit
-
-
-
