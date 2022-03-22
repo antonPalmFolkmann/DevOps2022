@@ -1,6 +1,8 @@
 .local
 .env
 
+src/endpoint_measure/*.txt
+
 # Created by https://www.toptal.com/developers/gitignore/api/goland,visualstudiocode,jetbrains,go
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland,visualstudiocode,jetbrains,go
 
