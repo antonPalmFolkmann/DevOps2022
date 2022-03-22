@@ -1,0 +1,20 @@
+#!/bin/bash
+
+
+echo Setting up python virtual environment if needed...
+/usr/bin/python3 -m venv venv
+echo Done.
+echo Entering environment.
+source venv/bin/activate
+echo Installing ScanCode if needed...
+pip install --upgrade pip setuptools wheel
+pip install scancode-toolkit
+echo Done.
+echo Scanning src...
+scancode -clpeui -n 2 --ignore "*.java" --json-pp sample.json src
+node scanCode.js
+echo Done.
+exit
+
+
+
