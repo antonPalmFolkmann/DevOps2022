@@ -56,7 +56,8 @@ func TestCreateMessage(t *testing.T) {
 	msgs, _ := service.ReadAllMessages(10, 10)
 	assert.Len(t, msgs, 3)
 
-	service.CreateMessage("jalle", "new message")
+	err := service.CreateMessage("jalle", "new message")
+	check_if_test_fail(err)
 	actual, _ := service.ReadAllMessages(10, 10)
 	assert.Len(t, actual, 4)
 }
