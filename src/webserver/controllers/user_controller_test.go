@@ -3,6 +3,7 @@ package controllers_test
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,12 +23,12 @@ func setUp() (r *mux.Router) {
 	storage.Migrate(db)
 
 	userService := services.NewUserService(db)
-	userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
-	userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
+	_ = userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
+	_ = userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
 	messageService := services.NewMessageService(db)
-	messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
-	messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
-	messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
+	_ = messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
+	_ = messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
+	_ = messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
 	userController := controllers.NewUserController(userService, messageService, store)
@@ -257,4 +258,10 @@ func TestTimelineWhenLoggedInReturnsMessages(t *testing.T) {
 	r.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Result().StatusCode)
+}
+
+func check_if_test_fail(err error) {
+	if err != nil {
+		log.Fatalf("An error occured during test: %s", err.Error())
+	}
 }

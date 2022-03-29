@@ -43,11 +43,13 @@ func Test_CreateUser(t *testing.T) {
 	)
 
 	hash := md5.New()
-	io.WriteString(hash, password)
+	_, err := io.WriteString(hash, password)
+	check_if_test_fail(err)
+
 	passwordHashed = fmt.Sprintf("%x", hash.Sum(nil))
 
 	// Act
-	err := service.CreateUser(username, email, password)
+	err = service.CreateUser(username, email, password)
 	check_if_test_fail(err)
 
 	db.Where("username = ?", username).First(&actual)

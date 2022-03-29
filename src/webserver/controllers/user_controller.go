@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
@@ -80,7 +79,6 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 
 	var data UserReq
 	err = json.Unmarshal(body, &data)
-	log.Printf("SKER DER BOIS")
 	if err != nil {
 		http.Error(w, "The JSON body is malformed", http.StatusBadRequest)
 		return
