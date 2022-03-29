@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if ! command -v node &> /dev/null
+then
+    echo "node.js could not be found"
+    exit 1
+fi
+echo Setting up python virtual environment if needed...
+/usr/bin/python3 -m venv venv
+echo Done.
+echo Entering environment.
+source venv/bin/activate
+echo Installing ScanCode if needed...
+pip install --upgrade pip setuptools wheel
+pip install scancode-toolkit
+echo Done.
+echo Scanning files...
+scancode --license --json-pp license.json LICENSE
+scancode --license --ignore "*.go" --json-pp src.json src
+node scanCode.js
+echo Done.
+exit
