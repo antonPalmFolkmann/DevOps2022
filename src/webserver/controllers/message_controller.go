@@ -32,6 +32,7 @@ func NewMessage(store sessions.Store, messages services.IMessage, users services
 }
 
 func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
+	log.Println("Hit AllMessages endpoint")
 	msgs, err := m.messages.ReadAllMessages(0, 100)
 	if err != nil {
 		http.Error(w, "There was an error while reading messages", http.StatusInternalServerError)
