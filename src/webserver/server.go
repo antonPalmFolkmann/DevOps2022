@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"log/syslog"
 	"net/http"
 	"time"
 
@@ -17,7 +19,21 @@ func init() {
 }
 
 func main() {
-	time.Sleep(2)
+	time.Sleep(2 * time.Second)
+
+	// Log to syslog
+    logWriter, err := syslog.New(syslog.LOG_SYSLOG, "My Awesome App")
+    if err != nil {
+        log.Fatalln("Unable to set logfile:", err.Error())
+    }
+
+    // + set log flag
+    log.SetFlags(log.Lshortfile)
+
+    // set the log output
+    log.SetOutput(logWriter)
+
+    log.Println("This is a log from GOLANG")
 
 	db := storage.ConnectPsql()
 	storage.Migrate(db)
