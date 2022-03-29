@@ -17,34 +17,34 @@ func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
 	userService := services.NewUserService(db)
 	err := userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
 	if err != nil {
-		log.Fatalln("Failed to create user during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
 	}
 	err = userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
 	if err != nil {
-		log.Fatalln("Failed to create user during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
 	}
 	err = userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
 	if err != nil {
-		log.Fatalln("Failed to create user during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
 	}
 
 	err = userService.Follow("chrisser", "jalle")
 	if err != nil {
-		log.Fatalln("Failed to follow user during DB setup for testing: %s", err)
+		log.Fatalf("Failed to follow user during DB setup for testing: %s", err)
 	}
 
 	messageService := services.NewMessageService(db)
 	err = messageService.CreateMessage("jalle", "en hel masse ting")
 	if err != nil {
-		log.Fatalln("Failed to create message during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
 	}
 	err = messageService.CreateMessage("yolo", "skriver også en hel masse ting")
 	if err != nil {
-		log.Fatalln("Failed to create message during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
 	}
 	err = messageService.CreateMessage("chrisser", "niet")
 	if err != nil {
-		log.Fatalln("Failed to create message during DB setup for testing: %s", err)
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
 	}
 
 	return db, messageService
