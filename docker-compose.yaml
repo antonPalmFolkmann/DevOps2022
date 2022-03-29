@@ -43,6 +43,8 @@ services:
 
   grafana:
     image: grafana/grafana:4.5.2
+    volumes:
+      - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"  
     networks:
@@ -53,3 +55,4 @@ networks:
 
 volumes:
   minitwit_db: {}
+  grafana_data: {}
