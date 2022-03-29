@@ -261,7 +261,7 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	for _, entry := range user.Follows {
 		filteredFollowers = append(filteredFollowers, entry.Username)
 	}
-	followers, err := json.Marshal(user)
+	followers, err := json.Marshal(filteredFollowers)
 	if err != nil {
 		log.Println("service_simulator: Failed to marshall followers")
 	}
@@ -269,7 +269,6 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to write response getting user followers", http.StatusInternalServerError)
 	}
-
 }
 
 func (s *Simulator) updateLatest(r *http.Request) error {
@@ -279,7 +278,7 @@ func (s *Simulator) updateLatest(r *http.Request) error {
 
 	latest, err := parseLatest(r)
 	if err != nil {
-		return errors.New("Latest was not an integer")
+		return errors.New("latest was not an integer")
 	}
 
 	s.simulatorService.UpdateLatest(*latest)

@@ -18,7 +18,7 @@ func init() {
 }
 
 func main() {
-	time.Sleep(2)
+	time.Sleep(2 * time.Second)
 
 	db := storage.ConnectPsql()
 	storage.Migrate(db)
