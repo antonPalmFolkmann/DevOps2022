@@ -3,7 +3,6 @@ package controllers_test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -258,10 +257,4 @@ func TestTimelineWhenLoggedInReturnsMessages(t *testing.T) {
 	r.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Result().StatusCode)
-}
-
-func check_if_test_fail(err error) {
-	if err != nil {
-		log.Fatalf("An error occured during test: %s", err.Error())
-	}
 }
