@@ -24,8 +24,11 @@ output.elasticsearch:
         - equals:
             container.image.name: docker.elastic.co/kibana/kibana:7.2.0
     - index: "filebeat-minitwit-%{[agent.version]}-%{+yyyy.MM.dd}"
-      when.equals:
-        container.image.name: antonfolkmann/minitwit
+      when.or:
+          - equals:
+              container.image.name: antonfolkmann/minitwit:latest 
+          - equals:
+              container.image.name: antonfolkmann/minitwitdb:latest
     - index: "filebeat-ngix-%{[agent.version]}-%{+yyyy.MM.dd}"
       when.equals:
         container.image.name: nginx
