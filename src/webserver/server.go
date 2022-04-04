@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -32,12 +33,14 @@ func main() {
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService)
 
 	go func() {
+		log.Println("Starting the simulator router...")
 		r := mux.NewRouter()
 		monitoring.SetupRoutes(r)
 		serviceController.SetupRoutes(r)
 		http.ListenAndServe(":8081", r)
 	}()
 
+	log.Println("Starting the minitwit router...")
 	r := mux.NewRouter()
 	userController.SetupRoutes(r)
 	monitoring.SetupRoutes(r)

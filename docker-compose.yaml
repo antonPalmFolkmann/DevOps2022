@@ -15,6 +15,9 @@ services:
 
   web:
     image: antonfolkmann/minitwit:latest
+    build:
+      context: .
+      dockerfile: docker/webserver.Dockerfile
     container_name: minitwit
     depends_on:
       - db
