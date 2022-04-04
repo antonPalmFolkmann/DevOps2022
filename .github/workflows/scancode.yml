@@ -1,5 +1,9 @@
 name: learn-github-actions
-on: [release]
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.0'
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
