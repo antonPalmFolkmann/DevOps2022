@@ -52,6 +52,6 @@ jobs:
           wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/docker-compose.yaml
           wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/setup_elk.sh
           chmod +x setup_elk.sh
-          ./setup_elk.sh
+          source setup_elk.sh
           docker-compose pull && docker-compose up -d
           
