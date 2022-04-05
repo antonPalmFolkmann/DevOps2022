@@ -2,9 +2,7 @@ name: Build and Deploy
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*.0'
+  [release]:
 
 jobs:
   build:
