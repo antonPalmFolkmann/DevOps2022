@@ -154,7 +154,6 @@ func Test_unfollowNotFollowed(t *testing.T) {
 func Test_followNonExistentReturnsError(t *testing.T) {
 	_, service := setUp()
 	err := service.Follow("jalle", "RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RSNK RSNK RNSK RNSK RNSK")
-	check_if_test_fail(err)
 	assert.NotNil(t, err)
 }
 
