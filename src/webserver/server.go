@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/antonPalmFolkmann/DevOps2022/controllers"
 	"github.com/antonPalmFolkmann/DevOps2022/monitoring"
@@ -26,6 +25,8 @@ func main() {
 	userController := controllers.NewUserController(userService, messageService, store)
 	messageController := controllers.NewMessage(store, messageService, userService)
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService)
+
+	log.Println("Pre go func")
 
 	go func() {
 		log.Trace("Starting the simulator router")

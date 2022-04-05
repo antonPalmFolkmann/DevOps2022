@@ -8,6 +8,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/prometheus/client_golang v1.12.1
 	github.com/shirou/gopsutil v3.21.11+incompatible
+	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.7.0
 )
 
@@ -19,6 +20,7 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
