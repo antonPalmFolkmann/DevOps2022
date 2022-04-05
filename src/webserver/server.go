@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -17,7 +18,7 @@ func init() {
 }
 
 func main() {
-	time.Sleep(2)
+	time.Sleep(2 * time.Second)
 
 	db := storage.ConnectPsql()
 	storage.Migrate(db)
@@ -35,14 +36,20 @@ func main() {
 		r := mux.NewRouter()
 		monitoring.SetupRoutes(r)
 		serviceController.SetupRoutes(r)
-		http.ListenAndServe(":8081", r)
+		err := http.ListenAndServe(":8081", r)
+		if err != nil {
+			log.Fatalf("Failed to listen and serve port: %s", err.Error())
+		}
 	}()
 
 	r := mux.NewRouter()
 	userController.SetupRoutes(r)
 	monitoring.SetupRoutes(r)
 	messageController.SetupRoutes(r)
-	http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		log.Fatalf("Failed to listen and serve port: %s", err.Error())
+	}
 }
 
 // func main() {

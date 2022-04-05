@@ -28,7 +28,10 @@ func (s *Simulator) LatestHandler(w http.ResponseWriter, r *http.Request) {
 	respMsg := fmt.Sprintf("{\"latest\": %d}", latest)
 
 	jsonData := []byte(respMsg)
-	w.Write(jsonData)
+	_, err := w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "Failed to read latest", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +53,10 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, err.Error())
-		w.Write([]byte(jsonify))
+		_, err = w.Write([]byte(jsonify))
+		if err != nil {
+			http.Error(w, "Failed to write error message response", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -60,7 +66,10 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			regError = "The username is already taken"
 			w.WriteHeader(http.StatusBadRequest)
 			jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, regError)
-			w.Write([]byte(jsonify))
+			_, err = w.Write([]byte(jsonify))
+			if err != nil {
+				http.Error(w, "Failed to write error message response", http.StatusInternalServerError)
+			}
 			return
 		}
 		err := s.userService.CreateUser(requestBody.Username, requestBody.Email, requestBody.Password)
@@ -69,7 +78,10 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("simulator_controller: An error occured during creation of a user")
 		}
 		w.WriteHeader(http.StatusNoContent)
-		w.Write([]byte(""))
+		_, err = w.Write([]byte(""))
+		if err != nil {
+			http.Error(w, "Failed to write response during registration of user", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -99,7 +111,10 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("simulator_controller: An error occured during marshalling of messages")
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(msgs)
+	_, err = w.Write(msgs)
+	if err != nil {
+		http.Error(w, "Failed to write messages to response", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +159,10 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 		log.Println("service_simulator: failed to create messages in db")
 	}
 	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte(""))
+	_, err = w.Write([]byte(""))
+	if err != nil {
+		http.Error(w, "Failed to write response posting a message", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, username string) {
@@ -158,7 +176,10 @@ func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, us
 		return
 	} else {
 		w.WriteHeader(http.StatusOK)
-		w.Write(msgs)
+		_, err = w.Write(msgs)
+		if err != nil {
+			http.Error(w, "Failed to write response during get user messages", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -199,7 +220,10 @@ func (s *Simulator) followUser(w http.ResponseWriter, r *http.Request, body foll
 		log.Println("service_simulator: Failed to follow user")
 	}
 	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte(""))
+	_, err = w.Write([]byte(""))
+	if err != nil {
+		http.Error(w, "Failed to write response following user", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
@@ -219,7 +243,10 @@ func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
 		log.Println("service_simulator: Failed to unfollow user")
 	}
 	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte(""))
+	_, err = w.Write([]byte(""))
+	if err != nil {
+		http.Error(w, "Failed to write response unfollowing user", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
@@ -234,11 +261,14 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	for _, entry := range user.Follows {
 		filteredFollowers = append(filteredFollowers, entry.Username)
 	}
-	followers, err := json.Marshal(user)
+	followers, err := json.Marshal(filteredFollowers)
 	if err != nil {
 		log.Println("service_simulator: Failed to marshall followers")
 	}
-	w.Write(followers)
+	_, err = w.Write(followers)
+	if err != nil {
+		http.Error(w, "Failed to write response getting user followers", http.StatusInternalServerError)
+	}
 }
 
 func (s *Simulator) updateLatest(r *http.Request) error {
@@ -248,7 +278,7 @@ func (s *Simulator) updateLatest(r *http.Request) error {
 
 	latest, err := parseLatest(r)
 	if err != nil {
-		return errors.New("Latest was not an integer")
+		return errors.New("latest was not an integer")
 	}
 
 	s.simulatorService.UpdateLatest(*latest)

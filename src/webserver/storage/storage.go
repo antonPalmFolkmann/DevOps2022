@@ -22,8 +22,10 @@ func ConnectPsql() *gorm.DB {
 		log.Fatalf("psql.go/ConnectPsql(): Failed to connect to PSQL: %s", err)
 	}
 
-	db.DB().Ping()
-
+	err = db.DB().Ping()
+	if err != nil {
+		log.Fatalf("Failed to ping DB: %s", err)
+	}
 	return db
 }
 

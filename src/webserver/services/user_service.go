@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
@@ -45,22 +46,25 @@ func (u *User) ReadAllUsers() ([]storage.User, error) {
 func (u *User) ReadUserByUsername(username string) (storage.User, error) {
 	var user storage.User
 	err := u.db.Where("username = ?", username).
-				Select([]string{"id", "username", "email", "pw_hash"}).
-				Find(&user).Error
+		Select([]string{"id", "username", "email", "pw_hash"}).
+		Find(&user).Error
 	return user, err
 }
 
 func (u *User) ReadUserIdByUsername(username string) (uint, error) {
 	var user storage.User
 	err := u.db.Where("username = ?", username).
-				Select("id").
-				Find(&user).Error
+		Select("id").
+		Find(&user).Error
 	return user.ID, err
 }
 
 func (u *User) hash(password string) string {
 	hash := md5.New()
-	io.WriteString(hash, password)
+	_, err := io.WriteString(hash, password)
+	if err != nil {
+		log.Fatalf("Failed to hash password: %s", err)
+	}
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
@@ -107,11 +111,11 @@ func (u *User) IsPasswordCorrect(username string, password string) bool {
 	if err != nil {
 		return false
 	}
-	
+
 	return (usr.PwHash == passwordHashed)
 }
 
 func (u *User) IsUsernameTaken(username string) bool {
 	_, err := u.ReadUserByUsername(username)
-	return err == nil 
+	return err == nil
 }

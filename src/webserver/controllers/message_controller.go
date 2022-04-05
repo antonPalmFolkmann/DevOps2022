@@ -38,7 +38,11 @@ func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
 
 	jsonify, _ := json.Marshal(&msgs)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonify)
+	_, err = w.Write(jsonify)
+	if err != nil {
+		http.Error(w, "An error occured during writing all messages", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +75,11 @@ func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
 		Msgs:     msgs,
 	}
 	jsonify, _ := json.Marshal(resp)
-	w.Write(jsonify)
+	_, err = w.Write(jsonify)
+	if err != nil {
+		http.Error(w, "An error occured during writing all messages by username", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (m *Message) AddMessage(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +104,10 @@ func (m *Message) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m.messages.CreateMessage(data.AuthorName, data.Text)
+	err = m.messages.CreateMessage(data.AuthorName, data.Text)
+	if err != nil {
+		http.Error(w, "Failed to add message", http.StatusInternalServerError)
+	}
 	w.WriteHeader(http.StatusCreated)
 }
 

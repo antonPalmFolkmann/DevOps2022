@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -24,7 +25,10 @@ func (s *SimulatorService) IsAuthorized(w http.ResponseWriter, r *http.Request) 
 	if authorizedReq != "Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh" {
 		error := "You are not authorized to use this resource!"
 		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 403, error)
-		w.Write([]byte(jsonify))
+		_, err := w.Write([]byte(jsonify))
+		if err != nil {
+			log.Fatalf("Failed to ")
+		}
 		return false
 	}
 	return true

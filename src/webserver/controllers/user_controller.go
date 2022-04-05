@@ -107,7 +107,10 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		Follows:  followersToUsernames(user.Follows),
 	}
 	jsonify, _ := json.Marshal(&resp)
-	w.Write(jsonify)
+	_, err = w.Write(jsonify)
+	if err != nil {
+		http.Error(w, "There was an error while writing the response", http.StatusInternalServerError)
+	}
 
 }
 
@@ -128,7 +131,10 @@ func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
 
 	session.Values["isAuthenticated"] = false
 	delete(session.Values, "username")
-	session.Save(r, w)
+	err := session.Save(r, w)
+	if err != nil {
+		http.Error(w, "Failed to save session", http.StatusInternalServerError)
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -150,7 +156,10 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	jsonify, _ := json.Marshal(msgs)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonify)
+	_, err = w.Write(jsonify)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	}
 }
 
 func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
