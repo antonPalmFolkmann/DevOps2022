@@ -86,6 +86,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Damn that's big")
 	err := s.updateLatest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
