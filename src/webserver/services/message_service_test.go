@@ -6,21 +6,23 @@ import (
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
+	log := logrus.New()
 	db, _ := gorm.Open("sqlite3", ":memory:")
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
+	userService := services.NewUserService(db, log)
 	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
 	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
 	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
 
 	userService.Follow("chrisser", "jalle")
 
-	messageService := services.NewMessageService(db)
+	messageService := services.NewMessageService(db, log)
 	messageService.CreateMessage("jalle", "en hel masse ting")
 	messageService.CreateMessage("yolo", "skriver også en hel masse ting")
 	messageService.CreateMessage("chrisser", "niet")

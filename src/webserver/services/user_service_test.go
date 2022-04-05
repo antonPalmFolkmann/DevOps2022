@@ -8,6 +8,7 @@ import (
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
@@ -15,10 +16,11 @@ import (
 )
 
 func setUp() (*gorm.DB, services.IUser) {
+	log := logrus.New()
 	db, _ := gorm.Open("sqlite3", ":memory:")
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
+	userService := services.NewUserService(db, log)
 	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
 	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
 	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
@@ -28,15 +30,14 @@ func setUp() (*gorm.DB, services.IUser) {
 
 // ------------------- TESTS -------------------------
 
-
 func Test_CreateUser(t *testing.T) {
 	// Arrange
 	db, service := setUp()
 	var (
-		actual storage.User
-		username = "user"
-		email = "user@itu.dk"
-		password = "******"
+		actual         storage.User
+		username       = "user"
+		email          = "user@itu.dk"
+		password       = "******"
 		passwordHashed string
 	)
 
@@ -54,7 +55,6 @@ func Test_CreateUser(t *testing.T) {
 	assert.Equal(t, email, actual.Email)
 	assert.Equal(t, passwordHashed, actual.PwHash)
 }
-
 
 func Test_ReadAllUsers(t *testing.T) {
 	// Arrange
@@ -78,7 +78,6 @@ func Test_ReadUserIdByUsername_Found(t *testing.T) {
 
 	// Act
 	actual, _ := service.ReadUserIdByUsername(username)
-	
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -153,7 +152,7 @@ func Test_unfollowNonExistentReturnsError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func Test_IsPasswordCorrect_True(t *testing.T)  {
+func Test_IsPasswordCorrect_True(t *testing.T) {
 	// Arrange
 	_, service := setUp()
 	var username = "jalle"
@@ -166,7 +165,7 @@ func Test_IsPasswordCorrect_True(t *testing.T)  {
 	assert.True(t, actual)
 }
 
-func Test_IsPasswordCorrect_False(t *testing.T)  {
+func Test_IsPasswordCorrect_False(t *testing.T) {
 	// Arrange
 	_, service := setUp()
 	var username = "jalle"
@@ -179,7 +178,7 @@ func Test_IsPasswordCorrect_False(t *testing.T)  {
 	assert.False(t, actual)
 }
 
-func Test_IsUsernameTaken_False(t *testing.T)  {
+func Test_IsUsernameTaken_False(t *testing.T) {
 	_, service := setUp()
 
 	actual := service.IsUsernameTaken("jaææææ")
@@ -187,7 +186,7 @@ func Test_IsUsernameTaken_False(t *testing.T)  {
 	assert.False(t, actual)
 }
 
-func Test_IsUsernameTaken_True(t *testing.T)  {
+func Test_IsUsernameTaken_True(t *testing.T) {
 	_, service := setUp()
 
 	actual := service.IsUsernameTaken("jalle")

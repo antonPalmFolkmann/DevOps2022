@@ -14,17 +14,19 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func setUp() (r *mux.Router) {
+	log := logrus.New()
 	db, _ := gorm.Open("sqlite3", ":memory:")
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
+	userService := services.NewUserService(db, log)
 	userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
 	userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
-	messageService := services.NewMessageService(db)
+	messageService := services.NewMessageService(db, log)
 	messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
 	messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
 	messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
