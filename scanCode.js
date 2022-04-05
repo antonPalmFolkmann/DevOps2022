@@ -1,26 +1,35 @@
 const scanLicenseResults = require('./license.json')
 const scanSourceResults  = require('./src.json')
 let nrOfLicensesFound = 0
+let licensesFound = new Array()
 
 console.log('Checking ScanCode result for licenses')
 
-for (var i = 0; i < scanLicenseResults.files.length; i++) {
-    if (scanLicenseResults.files[i].licenses.length > 0) {
-        console.log('License(s) found in file: ' + JSON.stringify(scanLicenseResults.files[i].path))
-        for (var j = 0; j < scanLicenseResults.files[i].licenses.length; j++) {
+for (let index of scanLicenseResults.files.keys()) {
+    if (scanLicenseResults.files[index].licenses.length > 0) {
+        console.log('License(s) found in file: ' + JSON.stringify(scanLicenseResults.files[index].path))
+        for (let jndex of scanLicenseResults.files[index].licenses.keys()) {
             nrOfLicensesFound++
-            console.log(scanLicenseResults.files[i].licenses[j].name)
+            console.log(scanLicenseResults.files[index].licenses[jndex].name)
+            licensesFound.push(scanLicenseResults.files[index].licenses[jndex].name)
         }
     }
 }
 
-for (var i = 0; i < scanSourceResults.files.length; i++) {
-    if (scanSourceResults.files[i].licenses.length > 0) {
-        console.log('License(s) found in file: ' + JSON.stringify(scanSourceResults.files[i].path))
-        for (var j = 0; j < scanSourceResults.files[i].licenses.length; j++) {
+for (let index of scanSourceResults.files.keys()) {
+    if (scanSourceResults.files[index].licenses.length > 0) {
+        console.log('License(s) found in file: ' + JSON.stringify(scanSourceResults.files[index].path))
+        for (let jndex of scanSourceResults.files[index].licenses.keys()) {
             nrOfLicensesFound++
-            console.log(scanSourceResults.files[i].licenses[j].name)
+            console.log(scanSourceResults.files[index].licenses[jndex].name)
+            licensesFound.push(scanSourceResults.files[index].licenses[jndex].name)
         }
+    }
+}
+
+for (let index of licensesFound.keys()) {
+    if (licensesFound[index] != 'MIT License') {
+        throw new Error('License other than MIT found. Please review terminal output.')
     }
 }
 

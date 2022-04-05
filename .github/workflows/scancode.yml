@@ -1,4 +1,4 @@
-name: learn-github-actions
+name: scancode
 on: [release]
 jobs:
   check-bats-version:

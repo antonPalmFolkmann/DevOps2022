@@ -211,8 +211,10 @@ fabric.properties
 
 # Support for Project snippet scope
 
-# Local files
+# Scancode artifacts
 venv
+license.json
 sample.json
+src.json
 
 # End of https://www.toptal.com/developers/gitignore/api/goland,visualstudiocode,jetbrains,go
