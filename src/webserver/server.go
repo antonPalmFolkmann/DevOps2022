@@ -1,9 +1,7 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/antonPalmFolkmann/DevOps2022/controllers"
 	"github.com/antonPalmFolkmann/DevOps2022/monitoring"
@@ -11,28 +9,28 @@ import (
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 )
 
-func init() {
-
-}
-
 func main() {
-	time.Sleep(2 * time.Second)
-
+	log := logrus.New()
+	log.SetLevel(logrus.TraceLevel)
 	db := storage.ConnectPsql()
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
-	messageService := services.NewMessageService(db)
-	simulatorService := services.NewSimulatorService()
+	userService := services.NewUserService(db, log)
+	messageService := services.NewMessageService(db, log)
+	simulatorService := services.NewSimulatorService(log)
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
 	userController := controllers.NewUserController(userService, messageService, store)
 	messageController := controllers.NewMessage(store, messageService, userService)
-	serviceController := controllers.NewSimulator(messageService, userService, simulatorService)
+	serviceController := controllers.NewSimulator(messageService, userService, simulatorService, log)
+
+	log.Println("Pre go func")
 
 	go func() {
+		log.Trace("Starting the simulator router")
 		r := mux.NewRouter()
 		monitoring.SetupRoutes(r)
 		serviceController.SetupRoutes(r)
@@ -42,6 +40,7 @@ func main() {
 		}
 	}()
 
+	log.Trace("Starting the minitwit router")
 	r := mux.NewRouter()
 	userController.SetupRoutes(r)
 	monitoring.SetupRoutes(r)
@@ -51,8 +50,3 @@ func main() {
 		log.Fatalf("Failed to listen and serve port: %s", err.Error())
 	}
 }
-
-// func main() {
-// 	r := mux.NewRouter()
-// 	log.Fatalln(http.ListenAndServe(":8080", r))
-// }

@@ -1,20 +1,21 @@
 package services_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
+	log := logrus.New()
 	db, _ := gorm.Open("sqlite3", ":memory:")
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
+	userService := services.NewUserService(db, log)
 	err := userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
 	if err != nil {
 		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
@@ -33,7 +34,7 @@ func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
 		log.Fatalf("Failed to follow user during DB setup for testing: %s", err)
 	}
 
-	messageService := services.NewMessageService(db)
+	messageService := services.NewMessageService(db, log)
 	err = messageService.CreateMessage("jalle", "en hel masse ting")
 	if err != nil {
 		log.Fatalf("Failed to create message during DB setup for testing: %s", err)

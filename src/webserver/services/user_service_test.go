@@ -9,6 +9,7 @@ import (
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
@@ -16,10 +17,11 @@ import (
 )
 
 func setUp() (*gorm.DB, services.IUser) {
+	log := logrus.New()
 	db, _ := gorm.Open("sqlite3", ":memory:")
 	storage.Migrate(db)
 
-	userService := services.NewUserService(db)
+	userService := services.NewUserService(db, log)
 	err := userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
 	check_if_test_fail(err)
 	err = userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
@@ -152,7 +154,6 @@ func Test_unfollowNotFollowed(t *testing.T) {
 func Test_followNonExistentReturnsError(t *testing.T) {
 	_, service := setUp()
 	err := service.Follow("jalle", "RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RNSK RSNK RSNK RNSK RNSK RNSK")
-	check_if_test_fail(err)
 	assert.NotNil(t, err)
 }
 

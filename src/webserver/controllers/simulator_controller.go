@@ -5,25 +5,28 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
 	services "github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 type Simulator struct {
 	messageService   services.IMessage
 	userService      services.IUser
 	simulatorService services.ISimulatorService
+	log              *logrus.Logger
 }
 
-func NewSimulator(messageService services.IMessage, userService services.IUser, simulatorService services.ISimulatorService) *Simulator {
-	return &Simulator{messageService: messageService, userService: userService, simulatorService: simulatorService}
+func NewSimulator(messageService services.IMessage, userService services.IUser, simulatorService services.ISimulatorService, log *logrus.Logger) *Simulator {
+	return &Simulator{messageService: messageService, userService: userService, simulatorService: simulatorService, log: log}
 }
 
 func (s *Simulator) LatestHandler(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Hit latest endpoint")
+
 	latest := s.simulatorService.ReadLatest()
 	respMsg := fmt.Sprintf("{\"latest\": %d}", latest)
 
@@ -35,13 +38,17 @@ func (s *Simulator) LatestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Hit simulator register endpoint")
+
 	err := s.updateLatest(r)
 	if err != nil {
+		s.log.Warnf("Failed to update latest with errror: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
 		return
 	}
 
@@ -51,6 +58,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &requestBody)
 	//Error handling if the struct doesn't get the necessary paramters for initialization
 	if err != nil {
+		s.log.Warnf("Failed to unmarshal request body into data object with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 400, err.Error())
 		_, err = w.Write([]byte(jsonify))
@@ -74,8 +82,7 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		err := s.userService.CreateUser(requestBody.Username, requestBody.Email, requestBody.Password)
 		if err != nil {
-			// w.WriteHeader(http.StatusInternalServerError)
-			log.Println("simulator_controller: An error occured during creation of a user")
+			s.log.Warnf("An error occured during creation of a user with error: %s", err.Error())
 		}
 		w.WriteHeader(http.StatusNoContent)
 		_, err = w.Write([]byte(""))
@@ -86,29 +93,32 @@ func (s *Simulator) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Messages endpoint hit")
+
 	err := s.updateLatest(r)
 	if err != nil {
+		s.log.Warnf("Failed to update latest with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
 		return
 	}
 
 	if r.Method != http.MethodGet {
+		s.log.Warnf("The messages endpoint received a non-GET request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	filtered_msgs, err := s.messageService.ReadAllMessages(0, 100)
 	if err != nil {
-		// w.WriteHeader(http.StatusInternalServerError)
-		log.Println("simulator_controller: An error occured during reading all messages")
+		s.log.Warnf("Failed reading all messages with error: %s", err.Error())
 	}
 	msgs, err := json.Marshal(filtered_msgs)
 	if err != nil {
-		// w.WriteHeader(http.StatusInternalServerError)
-		log.Println("simulator_controller: An error occured during marshalling of messages")
+		s.log.Warnf("Failed marshalling messages to JSON with error: %s", err.Error())
 	}
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(msgs)
@@ -118,13 +128,17 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Hit the messages per user endpoint")
+
 	err := s.updateLatest(r)
 	if err != nil {
+		s.log.Warnf("Failed to update latest with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
 		return
 	}
 
@@ -132,10 +146,13 @@ func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request
 	username := vars["username"]
 
 	if r.Method == http.MethodGet {
+		s.log.Trace("Handling a GET request for messages per user endpoint")
 		s.postUserPerMessage(w, r, username)
 	} else if r.Method == http.MethodPost {
+		s.log.Trace("Handling a POST request for messages per user endpoint")
 		s.getUserPerMessage(w, r, username)
 	} else {
+		s.log.Warn("Received a non-GET/POST request for message per user endpoint")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -147,6 +164,7 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 	var requestBody tweetRequestBody
 	err := json.Unmarshal(body, &requestBody)
 	if err != nil {
+		s.log.Warnf("Failed to unmarshal request body into data object with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -154,9 +172,7 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 	err = s.messageService.CreateMessage(requestBody.Username, requestBody.Content)
 
 	if err != nil {
-		// w.WriteHeader(http.StatusBadRequest)
-		// return
-		log.Println("service_simulator: failed to create messages in db")
+		s.log.Warnf("Failed to create messages in db with error: %s", err.Error())
 	}
 	w.WriteHeader(http.StatusNoContent)
 	_, err = w.Write([]byte(""))
@@ -168,10 +184,12 @@ func (s *Simulator) postUserPerMessage(w http.ResponseWriter, r *http.Request, u
 func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, username string) {
 	filtered_msgs, err := s.messageService.ReadAllMessagesByUsername(username)
 	if err != nil {
-		log.Println("service_simulator: Failed to read messages by author -> Author doesn't exist")
+		s.log.Warnf("Failed to read messages by author with error: %s", err.Error())
 	}
+
 	msgs, err := json.Marshal(filtered_msgs)
 	if err != nil {
+		s.log.Warnf("Failed to marshall messages to JSON object with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else {
@@ -184,40 +202,48 @@ func (s *Simulator) getUserPerMessage(w http.ResponseWriter, r *http.Request, us
 }
 
 func (s *Simulator) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Hit simulator follows endpoint")
 	err := s.updateLatest(r)
 	if err != nil {
+		s.log.Warnf("Failed to update latest with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
 		return
 	}
 
 	if r.Method == http.MethodPost {
+		s.log.Trace("Received a POST request to the simulator follows endpoint")
 		defer r.Body.Close()
 		body, _ := ioutil.ReadAll(r.Body)
 		var requestBody followRequestBody
 		err := json.Unmarshal(body, &requestBody)
 		if err != nil {
+			s.log.Info("No follows JSON key was found, assuming unfollows exist")
 			s.unfollowUser(w, r)
 		} else {
+			s.log.Trace("A follows JSON key was found")
 			s.followUser(w, r, requestBody)
 		}
 	}
 
 	if r.Method == http.MethodGet {
+		s.log.Trace("Received a GET request to the simulator follows endpoint")
 		s.getFollowers(w, r)
 	}
 }
 
 func (s *Simulator) followUser(w http.ResponseWriter, r *http.Request, body followRequestBody) {
+	s.log.Trace("Simulator is following a user")
 	vars := mux.Vars(r)
 	username := vars["username"]
 
 	err := s.userService.Follow(username, body.Follow)
 	if err != nil {
-		log.Println("service_simulator: Failed to follow user")
+		s.log.Warnf("Failed to follow user with error: %s", err.Error())
 	}
 	w.WriteHeader(http.StatusNoContent)
 	_, err = w.Write([]byte(""))
@@ -227,6 +253,7 @@ func (s *Simulator) followUser(w http.ResponseWriter, r *http.Request, body foll
 }
 
 func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Simulator is unfollowing a user")
 	vars := mux.Vars(r)
 	username := vars["username"]
 
@@ -235,12 +262,12 @@ func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
 	var requestBody unfollowRequestBody
 	err := json.Unmarshal(body, &requestBody)
 	if err != nil {
-		log.Println("Service_simulator: Request body is invalid")
+		s.log.Warnf("Requese body is invalid with error: %s", err.Error())
 	}
 
 	err = s.userService.Unfollow(username, requestBody.Unfollow)
 	if err != nil {
-		log.Println("service_simulator: Failed to unfollow user")
+		s.log.Warnf("Failed to unfollow user with error: %s", err.Error())
 	}
 	w.WriteHeader(http.StatusNoContent)
 	_, err = w.Write([]byte(""))
@@ -250,12 +277,13 @@ func (s *Simulator) unfollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
+	s.log.Trace("Simulator is reading followers for a user")
 	vars := mux.Vars(r)
 	username := vars["username"]
 
 	user, err := s.userService.ReadUserByUsername(username)
 	if err != nil {
-		log.Println("service_simulator: Failed to read all followers from username")
+		s.log.Warnf("Failed to read all followers from username with error: %s", err.Error())
 	}
 	filteredFollowers := make([]string, 0)
 	for _, entry := range user.Follows {
@@ -263,7 +291,7 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 	}
 	followers, err := json.Marshal(filteredFollowers)
 	if err != nil {
-		log.Println("service_simulator: Failed to marshall followers")
+		s.log.Warnf("Failed to marshall followers into JSON object with error: %s", err.Error())
 	}
 	_, err = w.Write(followers)
 	if err != nil {
@@ -273,11 +301,13 @@ func (s *Simulator) getFollowers(w http.ResponseWriter, r *http.Request) {
 
 func (s *Simulator) updateLatest(r *http.Request) error {
 	if !r.URL.Query().Has("latest") {
+		s.log.Warnf("Trying to update latest but there is no latest query parameter in the URL")
 		return nil
 	}
 
 	latest, err := parseLatest(r)
 	if err != nil {
+		s.log.Warnf("Tried to update latest but the new value is not an integer")
 		return errors.New("latest was not an integer")
 	}
 
