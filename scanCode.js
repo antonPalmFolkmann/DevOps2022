@@ -1,6 +1,7 @@
 const scanLicenseResults = require('./license.json')
 const scanSourceResults  = require('./src.json')
 let nrOfLicensesFound = 0
+let licensesFound = new Array()
 
 console.log('Checking ScanCode result for licenses')
 
@@ -10,6 +11,7 @@ for (let index of scanLicenseResults.files.keys()) {
         for (let jndex of scanLicenseResults.files[index].licenses.keys()) {
             nrOfLicensesFound++
             console.log(scanLicenseResults.files[index].licenses[jndex].name)
+            licensesFound.push(scanLicenseResults.files[index].licenses[jndex].name)
         }
     }
 }
@@ -20,7 +22,14 @@ for (let index of scanSourceResults.files.keys()) {
         for (let jndex of scanSourceResults.files[index].licenses.keys()) {
             nrOfLicensesFound++
             console.log(scanSourceResults.files[index].licenses[jndex].name)
+            licensesFound.push(scanSourceResults.files[index].licenses[jndex].name)
         }
+    }
+}
+
+for (let index of licensesFound.keys()) {
+    if (licensesFound[index] != 'MIT License') {
+        throw new Error('License other than MIT found. Please review terminal output.')
     }
 }
 
