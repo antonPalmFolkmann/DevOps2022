@@ -16,16 +16,37 @@ func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
 	storage.Migrate(db)
 
 	userService := services.NewUserService(db, log)
-	userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
-	userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
-	userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
+	err := userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
+	if err != nil {
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
+	}
+	err = userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
+	if err != nil {
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
+	}
+	err = userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
+	if err != nil {
+		log.Fatalf("Failed to create user during DB setup for testing: %s", err)
+	}
 
-	userService.Follow("chrisser", "jalle")
+	err = userService.Follow("chrisser", "jalle")
+	if err != nil {
+		log.Fatalf("Failed to follow user during DB setup for testing: %s", err)
+	}
 
 	messageService := services.NewMessageService(db, log)
-	messageService.CreateMessage("jalle", "en hel masse ting")
-	messageService.CreateMessage("yolo", "skriver også en hel masse ting")
-	messageService.CreateMessage("chrisser", "niet")
+	err = messageService.CreateMessage("jalle", "en hel masse ting")
+	if err != nil {
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
+	}
+	err = messageService.CreateMessage("yolo", "skriver også en hel masse ting")
+	if err != nil {
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
+	}
+	err = messageService.CreateMessage("chrisser", "niet")
+	if err != nil {
+		log.Fatalf("Failed to create message during DB setup for testing: %s", err)
+	}
 
 	return db, messageService
 }
@@ -36,7 +57,8 @@ func TestCreateMessage(t *testing.T) {
 	msgs, _ := service.ReadAllMessages(10, 10)
 	assert.Len(t, msgs, 3)
 
-	service.CreateMessage("jalle", "new message")
+	err := service.CreateMessage("jalle", "new message")
+	check_if_test_fail(err)
 	actual, _ := service.ReadAllMessages(10, 10)
 	assert.Len(t, actual, 4)
 }

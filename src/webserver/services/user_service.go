@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/jinzhu/gorm"
@@ -76,7 +77,10 @@ func (u *User) hash(password string) string {
 	u.log.Trace("Hashing a password")
 
 	hash := md5.New()
-	io.WriteString(hash, password)
+	_, err := io.WriteString(hash, password)
+	if err != nil {
+		log.Fatalf("Failed to hash password: %s", err)
+	}
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 

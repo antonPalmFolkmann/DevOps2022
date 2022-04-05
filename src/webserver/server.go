@@ -34,7 +34,10 @@ func main() {
 		r := mux.NewRouter()
 		monitoring.SetupRoutes(r)
 		serviceController.SetupRoutes(r)
-		http.ListenAndServe(":8081", r)
+		err := http.ListenAndServe(":8081", r)
+		if err != nil {
+			log.Fatalf("Failed to listen and serve port: %s", err.Error())
+		}
 	}()
 
 	log.Trace("Starting the minitwit router")
@@ -42,5 +45,8 @@ func main() {
 	userController.SetupRoutes(r)
 	monitoring.SetupRoutes(r)
 	messageController.SetupRoutes(r)
-	http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		log.Fatalf("Failed to listen and serve port: %s", err.Error())
+	}
 }

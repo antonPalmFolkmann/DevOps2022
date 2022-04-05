@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -30,7 +31,10 @@ func (s *SimulatorService) IsAuthorized(w http.ResponseWriter, r *http.Request) 
 		s.log.Info("Simulator request is not authorized")
 		error := "You are not authorized to use this resource!"
 		jsonify := fmt.Sprintf("\"status\": %d, \"error_msg\": %s", 403, error)
-		w.Write([]byte(jsonify))
+		_, err := w.Write([]byte(jsonify))
+		if err != nil {
+			log.Fatalf("Failed to ")
+		}
 		return false
 	}
 	s.log.Info("Simulator request is authorized")

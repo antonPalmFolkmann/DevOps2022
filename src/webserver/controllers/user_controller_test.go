@@ -24,12 +24,12 @@ func setUp() (r *mux.Router) {
 	storage.Migrate(db)
 
 	userService := services.NewUserService(db, log)
-	userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
-	userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
+	_ = userService.CreateUser("rnsk", "rnsk@rnsk.com", "rnsk")
+	_ = userService.CreateUser("siu", "uwu@uwu.mail", "o_o")
 	messageService := services.NewMessageService(db, log)
-	messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
-	messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
-	messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
+	_ = messageService.CreateMessage("rnsk", "ITS A RNSK EAT RNSK WORLD!")
+	_ = messageService.CreateMessage("siu", "SIIIIIIIIIIIIIIIIIIIIIIIIUUUUUUUUUUUU")
+	_ = messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
 	userController := controllers.NewUserController(userService, messageService, store)
