@@ -14,6 +14,7 @@ import (
 
 func main() {
 	log := logrus.New()
+	log.SetLevel(logrus.TraceLevel)
 	db := storage.ConnectPsql()
 	storage.Migrate(db)
 
