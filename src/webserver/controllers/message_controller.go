@@ -37,7 +37,9 @@ func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonify, _ := json.Marshal(&msgs)
+
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	_, err = w.Write(jsonify)
 	if err != nil {
 		http.Error(w, "An error occured during writing all messages", http.StatusInternalServerError)
@@ -68,6 +70,7 @@ func (m *Message) UserMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	resp := MsgsPerUsernameResp{
 		Username: user.Username,
 		Email:    user.Email,
@@ -109,6 +112,7 @@ func (m *Message) AddMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to add message", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (m *Message) SetupRoutes(r *mux.Router) {
