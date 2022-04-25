@@ -147,10 +147,10 @@ func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request
 
 	if r.Method == http.MethodGet {
 		s.log.Trace("Handling a GET request for messages per user endpoint")
-		s.postUserPerMessage(w, r, username)
+		s.getUserPerMessage(w, r, username)
 	} else if r.Method == http.MethodPost {
 		s.log.Trace("Handling a POST request for messages per user endpoint")
-		s.getUserPerMessage(w, r, username)
+		s.postUserPerMessage(w, r, username)
 	} else {
 		s.log.Warn("Received a non-GET/POST request for message per user endpoint")
 		w.WriteHeader(http.StatusBadRequest)

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,5 +20,11 @@ func ParseUsername(r *http.Request) (string, error) {
 		return "", errors.New("there is no username")
 	} else {
 		return username, nil
+	}
+}
+
+func Check_if_test_fail(err error) {
+	if err != nil {
+		log.Fatalf("An error occured during test: %s", err.Error())
 	}
 }

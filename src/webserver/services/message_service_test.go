@@ -5,6 +5,7 @@ import (
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
+	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +59,7 @@ func TestCreateMessage(t *testing.T) {
 	assert.Len(t, msgs, 3)
 
 	err := service.CreateMessage("jalle", "new message")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	actual, _ := service.ReadAllMessages(10, 10)
 	assert.Len(t, actual, 4)
 }

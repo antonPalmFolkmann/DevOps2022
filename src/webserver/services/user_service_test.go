@@ -4,12 +4,12 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"log"
 	"testing"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/storage"
 	"github.com/sirupsen/logrus"
+	"github.com/antonPalmFolkmann/DevOps2022/utils"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
@@ -23,11 +23,12 @@ func setUp() (*gorm.DB, services.IUser) {
 
 	userService := services.NewUserService(db, log)
 	err := userService.CreateUser("jalle", "jalle@jalle.jalle", "allej")
-	check_if_test_fail(err)
+
+	utils.Check_if_test_fail(err)
 	err = userService.CreateUser("yolo", "yolo@yolo.yolo", "oloy")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	err = userService.CreateUser("chrisser", "chrisser@chrisser.chrisser", "swak420")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	return db, userService
 }
 
@@ -46,13 +47,13 @@ func Test_CreateUser(t *testing.T) {
 
 	hash := md5.New()
 	_, err := io.WriteString(hash, password)
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 
 	passwordHashed = fmt.Sprintf("%x", hash.Sum(nil))
 
 	// Act
 	err = service.CreateUser(username, email, password)
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 
 	db.Where("username = ?", username).First(&actual)
 
@@ -105,7 +106,7 @@ func Test_follow(t *testing.T) {
 	db, service := setUp()
 
 	err := service.Follow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 
 	var user storage.User
 	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
@@ -116,9 +117,9 @@ func Test_unfollow(t *testing.T) {
 	db, service := setUp()
 
 	err := service.Follow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	err = service.Unfollow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 
 	var user storage.User
 	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
@@ -129,9 +130,9 @@ func Test_followFollowed(t *testing.T) {
 	db, service := setUp()
 
 	err := service.Follow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	err = service.Follow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	var user storage.User
 
 	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
@@ -142,9 +143,9 @@ func Test_unfollowNotFollowed(t *testing.T) {
 	db, service := setUp()
 
 	err := service.Follow("jalle", "yolo")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	err = service.Unfollow("jalle", "chrisser")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 
 	var user storage.User
 	db.Preload("Follows").Where("username = ?", "jalle").First(&user)
@@ -161,7 +162,7 @@ func Test_unfollowNonExistentReturnsError(t *testing.T) {
 	_, service := setUp()
 
 	err := service.CreateUser("jalle", "jalle@jalle.jalle", "allej")
-	check_if_test_fail(err)
+	utils.Check_if_test_fail(err)
 	err = service.Unfollow("jalle", "Benjamin, The Destroyer Of Worlds and Harbringer Of Death")
 	assert.NotNil(t, err)
 }
@@ -206,10 +207,4 @@ func Test_IsUsernameTaken_True(t *testing.T) {
 	actual := service.IsUsernameTaken("jalle")
 
 	assert.True(t, actual)
-}
-
-func check_if_test_fail(err error) {
-	if err != nil {
-		log.Fatalf("An error occured during test: %s", err.Error())
-	}
 }
