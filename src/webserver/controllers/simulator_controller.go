@@ -129,16 +129,16 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
 	s.log.Trace("Hit the messages per user endpoint")
+	
+	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
+		return
+	}
 
 	err := s.updateLatest(r)
 	if err != nil {
 		s.log.Warnf("Failed to update latest with error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if !s.simulatorService.IsAuthorized(w, r) {
-		s.log.Warnf("A request to the simulator is not authorized")
 		return
 	}
 

@@ -25,7 +25,7 @@ type Message struct {
 	UserID  uint
 	Text    string
 	PubDate int64
-	Flagged bool
+	Flagged uint
 }
 
 type MessageDTO struct {
