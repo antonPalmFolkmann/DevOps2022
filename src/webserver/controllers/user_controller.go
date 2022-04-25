@@ -60,6 +60,7 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +101,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	resp := LoginResp{
 		Username: user.Username,
 		Email:    user.Email,
@@ -137,6 +139,7 @@ func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +159,7 @@ func (u *User) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	jsonify, _ := json.Marshal(msgs)
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	_, err = w.Write(jsonify)
 	if err != nil {
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -186,6 +190,7 @@ func (u *User) Follow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
@@ -212,6 +217,7 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func (u *User) SetupRoutes(r *mux.Router) {
