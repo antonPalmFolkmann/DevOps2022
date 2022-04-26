@@ -40,7 +40,7 @@ func (m *Message) ReadAllMessages(limit int, offset int) ([]storage.MessageDTO, 
 
 	var messages = make([]storage.Message, 0)
 	var messageDTOs = make([]storage.MessageDTO, 0)
-	err := m.db.Where("flagged = 0").Find(&messages).Error
+	err := m.db.Offset(offset).Limit(limit).Where("flagged = 0").Find(&messages).Error
 	m.log.Debug("Read messages from database")
 
 	for _, v := range messages {

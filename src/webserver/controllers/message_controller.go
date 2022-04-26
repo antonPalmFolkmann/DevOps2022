@@ -5,12 +5,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/antonPalmFolkmann/DevOps2022/services"
 	"github.com/antonPalmFolkmann/DevOps2022/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 )
 
 type IMessage interface {
@@ -23,14 +25,27 @@ type Message struct {
 	store    sessions.Store
 	messages services.IMessage
 	users    services.IUser
+	log      *logrus.Logger
 }
 
-func NewMessage(store sessions.Store, messages services.IMessage, users services.IUser) *Message {
-	return &Message{store: store, messages: messages, users: users}
+func NewMessage(store sessions.Store, messages services.IMessage, users services.IUser, log *logrus.Logger) *Message {
+	return &Message{store: store, messages: messages, users: users, log: log}
 }
 
 func (m *Message) AllMessages(w http.ResponseWriter, r *http.Request) {
-	msgs, err := m.messages.ReadAllMessages(0, 100)
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+	m.log.Debugf("Read offset to be %d", offset)
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+	m.log.Debugf("Read limit to be %d", limit)
+
+	msgs, err := m.messages.ReadAllMessages(limit, offset)
 	if err != nil {
 		http.Error(w, "There was an error while reading messages", http.StatusInternalServerError)
 		return
