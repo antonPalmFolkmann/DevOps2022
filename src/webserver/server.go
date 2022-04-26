@@ -24,7 +24,7 @@ func main() {
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
 	userController := controllers.NewUserController(userService, messageService, store)
-	messageController := controllers.NewMessage(store, messageService, userService)
+	messageController := controllers.NewMessage(store, messageService, userService, log)
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService, log)
 
 	log.Println("Pre go func")
