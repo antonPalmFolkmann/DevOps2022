@@ -24,8 +24,8 @@ resource "digitalocean_droplet" "minitwit-swarm-leader" {
   }
 
   provisioner "file" {
-    source = "stack/minitwit_stack.yml"
-    destination = "/root/minitwit_stack.yml"
+    source = "docker-stack.yml"
+    destination = "/root/docker-stack.yml"
   }
 
   provisioner "remote-exec" {
