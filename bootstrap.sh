@@ -38,7 +38,8 @@ terraform apply -auto-approve -parallelism=1
 
 # scp loadbalancer config to all nodes
 # echo -e "\n--> Copying loadbalancer configuration to nodes\n"
-# bash scripts/scp_load_balancer_config.sh
+bash scripts/scp_load_balancer_config.sh
+
 
 # deploy the stack to the cluster
 echo -e "\n--> Deploying the Minitwit stack to the cluster\n"

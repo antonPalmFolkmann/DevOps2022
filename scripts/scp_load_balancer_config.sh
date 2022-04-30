@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # load balancer config file
-config_file='temp/load_balancer.conf'
+filebeat_config='filebeat.yml'
+prom_config='prometheus.yml'
 
 # ssh key
 key_file='ssh_key/terraform'
@@ -15,6 +16,6 @@ rows+=$(terraform output -json minitwit-swarm-worker-ip-address | jq -r .[])
 
 # scp the file
 for ip in $rows; do
-    ssh -o 'StrictHostKeyChecking no' root@$ip -i $key_file "mkdir /loadbalancer"
-    scp -i $key_file $config_file root@$ip:/loadbalancer/default.conf
+    scp -o "StrictHostKeyChecking no" -i $key_file $filebeat_config root@$ip:/root/filebeat.yml
+    scp -o "StrictHostKeyChecking no" -i $key_file $prom_config root@$ip:/root/prometheus.yml
 done
