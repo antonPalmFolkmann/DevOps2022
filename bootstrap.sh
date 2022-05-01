@@ -15,11 +15,11 @@ echo -e "\n--> Checking that environment variables are set\n"
 
 echo -e "\n--> Checking that all the necessary files exist\n"
 # Check that all files exist
-[ -f "ssh_key/terraform" ] && echo "ssh_key/terraform does not exist. Please generate a ssh_key" && exit
-[ -f ".env" ] && echo ".env file does not exist" && exit
-[ -f "docker-stack.yml" ] && echo "docker-stack.yml file does not exist" && exit
-[ -f "filebeat.yml"] && echo "filebeat.yml does not exist" && exit
-[ -f "prometheus.yml"] && echo "prometheus.yml" && exit
+[ ! -f "ssh_key/terraform" ] && echo "ssh_key/terraform does not exist. Please generate a ssh_key" && exit
+[ ! -f ".env" ] && echo ".env file does not exist" && exit
+[ ! -f "docker-stack.yml" ] && echo "docker-stack.yml file does not exist" && exit
+[ ! -f "filebeat.yml" ] && echo "filebeat.yml does not exist" && exit
+[ ! -f "prometheus.yml" ] && echo "prometheus.yml" && exit
 
 echo -e "\n--> Initializing terraform\n"
 # initialize terraform
@@ -44,8 +44,8 @@ sleep 5
 echo -e "\n--> Copying the config files to the necessary nodes\n"
 
 echo -e "\n--> Copying the config files to the swarm leader"
-scp .env $(terraform output -raw minitwit-swarm-leader-ip-address):/root/.env
-scp docker-stack.yml $(terraform output -raw minitwit-swarm-leader-ip-address):/root/docker-stack.yml
+scp -o "StrictHostKeyChecking no" -i "ssh_key/terraform" .env $(terraform output -raw minitwit-swarm-leader-ip-address):/root/.env
+scp -o "StrictHostKeyChecking no" -i "ssh_key/terraform" .env docker-stack.yml $(terraform output -raw minitwit-swarm-leader-ip-address):/root/docker-stack.yml
 
 # sleep to reduce the number of failed connections
 sleep 5
@@ -65,8 +65,8 @@ ssh \
     'docker stack deploy minitwit -c docker-stack.yml'
 
 echo -e "\n--> Done bootstrapping Minitwit"
-echo -e "--> The dbs will need a moment to initialize, this can take up to a couple of minutes..."
-echo -e "--> Site will be avilable @ http://$(terraform output -raw public_ip)"
+ech0 -e "--> The system needs to initialize, this can take up to a couple of minutes..."
+echo -e "--> Site will be avilable @ http://$(terraform output -raw public_ip):8080"
 echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):8888"
 echo -e "--> ssh to swarm leader with 'ssh root@\$(terraform output -raw minitwit-swarm-leader-ip-address) -i ssh_key/terraform'"
-echo -e "--> To remove the infrastructure run: terraform destroy -auto-approve"
+echo -e "--> To remove the infrastructure run: make destroy-prod"
