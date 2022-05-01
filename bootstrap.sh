@@ -43,10 +43,6 @@ sleep 5
 
 echo -e "\n--> Copying the config files to the necessary nodes\n"
 
-echo -e "\n--> Copying the config files to the swarm leader"
-scp -o "StrictHostKeyChecking no" -i "ssh_key/terraform" .env $(terraform output -raw minitwit-swarm-leader-ip-address):/root/.env
-scp -o "StrictHostKeyChecking no" -i "ssh_key/terraform" .env docker-stack.yml $(terraform output -raw minitwit-swarm-leader-ip-address):/root/docker-stack.yml
-
 # sleep to reduce the number of failed connections
 sleep 5
 
@@ -65,7 +61,7 @@ ssh \
     'docker stack deploy minitwit -c docker-stack.yml'
 
 echo -e "\n--> Done bootstrapping Minitwit"
-ech0 -e "--> The system needs to initialize, this can take up to a couple of minutes..."
+echo -e "--> The system needs to initialize, this can take up to a couple of minutes..."
 echo -e "--> Site will be avilable @ http://$(terraform output -raw public_ip):8080"
 echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):8888"
 echo -e "--> ssh to swarm leader with 'ssh root@\$(terraform output -raw minitwit-swarm-leader-ip-address) -i ssh_key/terraform'"
