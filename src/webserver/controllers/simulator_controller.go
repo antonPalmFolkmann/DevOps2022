@@ -129,6 +129,11 @@ func (s *Simulator) MessagesHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request) {
 	s.log.Trace("Hit the messages per user endpoint")
+	
+	if !s.simulatorService.IsAuthorized(w, r) {
+		s.log.Warnf("A request to the simulator is not authorized")
+		return
+	}
 
 	err := s.updateLatest(r)
 	if err != nil {
@@ -137,20 +142,15 @@ func (s *Simulator) UserPerMessageHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if !s.simulatorService.IsAuthorized(w, r) {
-		s.log.Warnf("A request to the simulator is not authorized")
-		return
-	}
-
 	vars := mux.Vars(r)
 	username := vars["username"]
 
 	if r.Method == http.MethodGet {
 		s.log.Trace("Handling a GET request for messages per user endpoint")
-		s.postUserPerMessage(w, r, username)
+		s.getUserPerMessage(w, r, username)
 	} else if r.Method == http.MethodPost {
 		s.log.Trace("Handling a POST request for messages per user endpoint")
-		s.getUserPerMessage(w, r, username)
+		s.postUserPerMessage(w, r, username)
 	} else {
 		s.log.Warn("Received a non-GET/POST request for message per user endpoint")
 		w.WriteHeader(http.StatusBadRequest)

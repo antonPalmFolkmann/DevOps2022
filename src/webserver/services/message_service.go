@@ -29,7 +29,7 @@ func (m *Message) CreateMessage(username string, text string) error {
 	m.log.Trace("Creating a message")
 
 	userID := m.getUserIDFromUsername(username)
-	message := storage.Message{UserID: userID, Text: text, PubDate: time.Now().Unix(), Flagged: false}
+	message := storage.Message{UserID: userID, Text: text, PubDate: time.Now().Unix(), Flagged: 0}
 	err := m.db.Create(&message).Error
 	m.log.Debug("Created a message on the database")
 	return err
@@ -45,10 +45,14 @@ func (m *Message) ReadAllMessages(limit int, offset int) ([]storage.MessageDTO, 
 
 	for _, v := range messages {
 		username := m.getUsernameFromUserID(v.UserID)
-		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: username, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: v.Flagged}
+		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: username, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: intToBool(v.Flagged)}
 		messageDTOs = append(messageDTOs, messageDTO)
 	}
 	return messageDTOs, err
+}
+
+func intToBool(n uint) bool {
+	return n == 1
 }
 
 func (m *Message) ReadAllMessagesByUsername(username string) ([]storage.MessageDTO, error) {
@@ -61,7 +65,7 @@ func (m *Message) ReadAllMessagesByUsername(username string) ([]storage.MessageD
 
 	var messageDTOs = make([]storage.MessageDTO, 0)
 	for _, v := range messages {
-		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: username, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: v.Flagged}
+		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: username, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: intToBool(v.Flagged)}
 		messageDTOs = append(messageDTOs, messageDTO)
 	}
 	return messageDTOs, err
@@ -87,7 +91,7 @@ func (m *Message) ReadAllMessagesOfFollowedUsers(username string) ([]storage.Mes
 	var messageDTOs = make([]storage.MessageDTO, 0)
 	for _, v := range messages {
 		author := m.getUsernameFromUserID(v.UserID)
-		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: author, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: v.Flagged}
+		messageDTO := storage.MessageDTO{UserID: v.UserID, Username: author, Text: v.Text, PubDate: time.Unix(v.PubDate, 0), Flagged: intToBool(v.Flagged)}
 		messageDTOs = append(messageDTOs, messageDTO)
 	}
 	return messageDTOs, err
