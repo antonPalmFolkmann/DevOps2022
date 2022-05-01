@@ -55,19 +55,19 @@ func setUpMessageTestDB() (*gorm.DB, services.IMessage) {
 func TestCreateMessage(t *testing.T) {
 	_, service := setUpMessageTestDB()
 
-	msgs, _ := service.ReadAllMessages(10, 10)
+	msgs, _ := service.ReadAllMessages(10, 0)
 	assert.Len(t, msgs, 3)
 
 	err := service.CreateMessage("jalle", "new message")
 	utils.Check_if_test_fail(err)
-	actual, _ := service.ReadAllMessages(10, 10)
+	actual, _ := service.ReadAllMessages(10, 0)
 	assert.Len(t, actual, 4)
 }
 
 func TestReadAllMessagesReturns3(t *testing.T) {
 	_, service := setUpMessageTestDB()
 
-	actual, _ := service.ReadAllMessages(10, 10)
+	actual, _ := service.ReadAllMessages(10, 0)
 	assert.Len(t, actual, 3)
 }
 
