@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Check that all the necessary config files exist
+
 # load balancer config file
 filebeat_config='filebeat.yml'
 prom_config='prometheus.yml'
@@ -17,5 +19,7 @@ rows+=$(terraform output -json minitwit-swarm-worker-ip-address | jq -r .[])
 # scp the file
 for ip in $rows; do
     scp -o "StrictHostKeyChecking no" -i $key_file $filebeat_config root@$ip:/root/filebeat.yml
+    # sleep to reduce the number of failed connections
+    sleep 5
     scp -o "StrictHostKeyChecking no" -i $key_file $prom_config root@$ip:/root/prometheus.yml
 done

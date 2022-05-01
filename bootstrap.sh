@@ -13,6 +13,14 @@ echo -e "\n--> Checking that environment variables are set\n"
 [ -z "$AWS_ACCESS_KEY_ID" ] && echo "AWS_ACCESS_KEY_ID is not set" && exit
 [ -z "$AWS_SECRET_ACCESS_KEY" ] && echo "AWS_SECRET_ACCESS_KEY is not set" && exit
 
+echo -e "\n--> Checking that all the necessary files exist\n"
+# Check that all files exist
+[ -f "ssh_key/terraform" ] && echo "ssh_key/terraform does not exist. Please generate a ssh_key" && exit
+[ -f ".env" ] && echo ".env file does not exist" && exit
+[ -f "docker-stack.yml" ] && echo "docker-stack.yml file does not exist" && exit
+[ -f "filebeat.yml"] && echo "filebeat.yml does not exist" && exit
+[ -f "prometheus.yml"] && echo "prometheus.yml" && exit
+
 echo -e "\n--> Initializing terraform\n"
 # initialize terraform
 terraform init \
@@ -29,17 +37,24 @@ terraform validate
 echo -e "\n--> Creating Infrastructure\n"
 terraform apply -auto-approve -parallelism=1
 
+# ensure all nodes have the necessary config files
+# sleep to reduce the number of failed connections
+sleep 5
 
-# TODO: Figure out how we want to handle bootstrapping the ELK configuration
-# Don't do since our nginx only controls access to kibana and elastic search
-# generate loadbalancer configuration
-# echo -e "\n--> Generating loadbalancer configuration\n"
-# bash scripts/gen_load_balancer_config.sh
+echo -e "\n--> Copying the config files to the necessary nodes\n"
 
-# scp loadbalancer config to all nodes
-# echo -e "\n--> Copying loadbalancer configuration to nodes\n"
-bash scripts/scp_load_balancer_config.sh
+echo -e "\n--> Copying the config files to the swarm leader"
+scp .env $(terraform output -raw minitwit-swarm-leader-ip-address):/root/.env
+scp docker-stack.yml $(terraform output -raw minitwit-swarm-leader-ip-address):/root/docker-stack.yml
 
+# sleep to reduce the number of failed connections
+sleep 5
+
+echo -e "\n--> Copying the config files to all the nodes"
+bash src/scripts/terraform/scp_config_to_all_nodes.sh
+
+# sleep to reduce the number of failed connections
+sleep 5
 
 # deploy the stack to the cluster
 echo -e "\n--> Deploying the Minitwit stack to the cluster\n"
