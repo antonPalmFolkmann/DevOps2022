@@ -37,3 +37,14 @@ COPY users
 FROM '/restore/dumps/users.csv'
 DELIMITER ','
 CSV HEADER;
+
+BEGIN;
+LOCK TABLE users IN EXCLUSIVE MODE;
+SELECT setval('users_id_seq', COALESCE((SELECT MAX(id)+1 FROM users), 1), false);
+COMMIT;
+
+BEGIN;
+LOCK TABLE messages IN EXCLUSIVE MODE;
+SELECT setval('messages_id_seq', COALESCE((SELECT MAX(id)+1 FROM messages), 1), false);
+COMMIT;
+
