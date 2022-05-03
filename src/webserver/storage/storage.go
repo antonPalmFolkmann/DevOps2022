@@ -13,7 +13,7 @@ func ConnectPsql() *gorm.DB {
 	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
-		"database",
+		"minitwit_db",
 		5432,
 		os.Getenv("POSTGRES_DB"))
 	db, err := gorm.Open("postgres", connStr)

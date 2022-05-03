@@ -1,0 +1,104 @@
+version: '3.3'
+
+volumes:
+  minitwit_db: {}
+  grafana_data: {}
+  elk_elasticsearch_data:
+
+services:
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8888:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  db:
+    image: antonfolkmann/minitwitdb:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_USER: postgres
+      POSTGRES_DB: minitwit
+    volumes:
+      - minitwit_db:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+
+  web:
+    image: toffernator/minitwit:latest
+    depends_on:
+      - db
+      - grafana
+      - prometheus
+    environment:
+      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_USER: postgres
+      POSTGRES_DB: minitwit 
+    ports:
+      - 8080:8080
+      - 8081:8081
+    deploy:
+      replicas: 10
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  grafana:
+    image: grafana/grafana:4.5.2
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"  
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  elasticsearch:
+   image: "docker.elastic.co/elasticsearch/elasticsearch:7.2.0"
+   environment:
+     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+     - "discovery.type=single-node"
+   volumes:
+     - elk_elasticsearch_data:/usr/share/elasticsearch/data
+   ports:
+     - 9200:9200
+   deploy:
+     placement:
+       constraints: [node.role == manager]
+     resources:
+       reservations:
+         memory: 1g
+     replicas: 1
+
+  kibana:
+    image: "docker.elastic.co/kibana/kibana:7.2.0"
+    environment:
+      elasticsearch.hosts: '["http://minitwit_elasticsearch:9200"]'
+    ports:
+      - "5601:5601"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      replicas: 1
+
+  filebeat:
+    image: "docker.elastic.co/beats/filebeat:7.2.0"
+    user: root
+    volumes:
+      - /root/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: global
