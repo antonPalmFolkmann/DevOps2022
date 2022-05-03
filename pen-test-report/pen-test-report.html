@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZAP Scanning Report</title>
+<link
+	href="pen-test-report/normalize/normalize.css" rel="stylesheet">
+<link
+	href="pen-test-report/themes/original/main.css" rel="stylesheet">
+<link
+	href="pen-test-report/themes/original/colors.css" rel="stylesheet">
+</head>
+<body>
+	<header>
+		<h1>ZAP Scanning Report</h1>
+		<p>
+			<span>Generated with</span> <a href="https://zaproxy.org"><img
+				src="pen-test-report/zap32x32.png" alt="The ZAP logo" class="zap-logo">ZAP</a>
+			<span>on Tue 3 May 2022, at 08:58:00</span>
+		</p>
+	</header>
+
+	<main>
+
+		<section id="contents" class="contents">
+			<h2>Contents</h2>
+			<nav>
+				<ol>
+					<li><a
+						href="#about-this-report">About this report</a>
+						<ol>
+							
+							<li><a
+								href="#report-parameters">Report parameters</a></li>
+						</ol></li>
+					<data-th-block>
+					<li><a
+						href="#summaries">Summaries</a>
+						<ol>
+							<li><a
+								href="#risk-confidence-counts">Alert counts by risk and confidence</a></li>
+							<li><a
+								href="#site-risk-counts">Alert counts by site and risk</a></li>
+							<li><a
+								href="#alert-type-counts">Alert counts by alert type</a></li>
+						</ol></li>
+					<li><a
+						href="#alerts">Alerts</a>
+						<ol>
+							
+							 
+							 
+							
+							
+							
+							
+							
+							
+							<li><a
+								href="#alerts--risk-1-confidence-2"><span>Risk</span>=<span
+									class="risk-level">Low</span>, <span>Confidence</span>=<span
+									class="confidence-level">Medium</span> <span>(1)</span></a></li>
+							
+							
+							  
+							 
+						</ol></li>
+					<li><a
+						href="#appendix">Appendix</a>
+						<ol>
+							<li><a
+								href="#alert-types">Alert types</a></li>
+						</ol></li>
+					</data-th-block>
+				</ol>
+			</nav>
+		</section>
+
+		<section
+			id="about-this-report" class="about-this-report">
+			<h2>About this report</h2>
+
+			
+
+			<section
+				id="report-parameters">
+				<h3>Report parameters</h3>
+				<div class="report-parameters--container">
+					<h4>Contexts</h4>
+					
+					
+					<p>No contexts were selected, so all contexts were included by default.</p>
+					  
+
+					<h4>Sites</h4>
+					
+					<p>The following sites were included:</p>
+					<ul class="sites-list">
+						<li><span class="site">http://144.126.246.160:8080</span></li>
+					</ul>
+					
+					<p>(If no sites were selected, all sites were included by default.)</p>
+					<p>An included site must also be within one of the included contexts for its data to be included in the report.</p>
+
+					<h4>Risk levels</h4>
+					<p>
+						<span>Included</span>:
+						 
+						<span class="included-risk-codes"><span class="risk-level">High</span>, <span class="risk-level">Medium</span>, <span class="risk-level">Low</span>, <span class="risk-level">Informational</span></span>
+					</p>
+					<p>
+						<span>Excluded</span>:
+						 <span>None</span>
+						
+					</p>
+
+					<h4>Confidence levels</h4>
+					<p>
+						<span>Included</span>:
+						
+						
+						<span class="included-confidence-codes"><span class="confidence-level">User Confirmed</span>, <span class="confidence-level">High</span>, <span class="confidence-level">Medium</span>, <span class="confidence-level">Low</span></span>
+					</p>
+					<p>
+						<span>Excluded</span>:
+						
+						
+						<span class="included-confidence-codes"> <span class="confidence-level">User Confirmed</span>, <span class="confidence-level">High</span>, <span class="confidence-level">Medium</span>, <span class="confidence-level">Low</span>, <span class="confidence-level">False Positive</span></span>
+					</p>
+				</div>
+			</section>
+		</section>
+
+		
+		<section>
+			
+		</section>
+		
+		<section id="summaries" class="summaries">
+			<h2>Summaries</h2>
+
+			<section
+				id="risk-confidence-counts">
+				<h3>Alert counts by risk and confidence</h3>
+				<table class="risk-confidence-counts-table">
+					<caption>
+						<p>This table shows the number of alerts for each level of risk and confidence included in the report.</p>
+						<p>(The percentages in brackets represent the count as a percentage of the total number of alerts included in the report, rounded to one decimal place.)</p>
+					</caption>
+					<colgroup>
+						<col>
+						<col>
+					</colgroup>
+					<colgroup>
+						<col
+							style="width: 14.0%"><col
+							style="width: 14.0%"><col
+							style="width: 14.0%"><col
+							style="width: 14.0%">
+						<col style="width: 14.0%">
+					</colgroup>
+					<thead>
+						<tr>
+							<td colspan="2" rowspan="2"></td>
+							<th scope="colgroup"
+								colspan="5">Confidence</th>
+						</tr>
+						<tr>
+							<th scope="col">User Confirmed</th>
+							<th scope="col">High</th>
+							<th scope="col">Medium</th>
+							<th scope="col">Low</th>
+							<th scope="col">Total</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="rowgroup"
+								rowspan="5">Risk</th>
+							<th scope="row">High</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span class="additional-info-percentages">(0.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">Medium</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span class="additional-info-percentages">(0.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">Low</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>1</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>1</span><br> <span class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">Informational</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span class="additional-info-percentages">(0.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row">Total</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>1</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>1</span><br> <span
+								class="additional-info-percentages">(100%)</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<section
+				id="site-risk-counts">
+				<h3>Alert counts by site and risk</h3>
+				<table class="site-risk-counts-table">
+					<caption>
+						<p>This table shows, for each site for which one or more alerts were raised, the number of alerts raised at each risk level.</p>
+						<p>Alerts with a confidence level of &quot;False Positive&quot; have been excluded from these counts.</p>
+						<p>(The numbers in brackets are the number of alerts raised for the site at or above that risk level.)</p>
+					</caption>
+					<colgroup>
+						<col>
+						<col>
+					</colgroup>
+					<colgroup>
+						<col
+							style="width: 16.25%"><col
+							style="width: 16.25%"><col
+							style="width: 16.25%"><col
+							style="width: 16.25%">
+					</colgroup>
+					<thead>
+						<tr>
+							<td colspan="2" rowspan="2"></td>
+							<th scope="colgroup" colspan="4">Risk</th>
+						</tr>
+						<tr>
+							<th scope="col">
+								<span>High</span><br>  <span
+									class="additional-info-percentages">(= High)</span>  
+							</th>
+							<th scope="col">
+								<span>Medium</span><br>   <span
+									class="additional-info-percentages">(&gt;= Medium)</span> 
+							</th>
+							<th scope="col">
+								<span>Low</span><br>   <span
+									class="additional-info-percentages">(&gt;= Low)</span> 
+							</th>
+							<th scope="col">
+								<span>Informational</span><br>   <span
+									class="additional-info-percentages">(&gt;= Informational)</span> 
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="rowgroup"
+								rowspan="1">Site</th>
+							<th scope="row">http://144.126.246.160:8080</th>
+							
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0)</span></td>
+							<td><span>1</span><br> <span
+								class="additional-info-percentages">(1)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(1)</span></td>
+							
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<section
+				id="alert-type-counts">
+				<h3>Alert counts by alert type</h3>
+				<table class="alert-type-counts-table">
+					<caption>
+						<p>This table shows the number of alerts of each alert type, together with the alert type&#39;s risk level.</p>
+						<p>(The percentages in brackets represent each count as a percentage, rounded to one decimal place, of the total number of alerts included in this report.)</p>
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">Alert type</th>
+							<th scope="col">Risk</th>
+							<th scope="col">Count</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-0">X-Content-Type-Options Header Missing</a></th>
+							<td class="risk-level">Low</td>
+							<td><span>1</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<th scope="row">Total</th>
+							<td></td>
+							<td>1</td>
+						</tr>
+					</tfoot>
+				</table>
+			</section>
+		</section>
+
+		<section id="alerts" class="alerts">
+			<h2>Alerts</h2>
+			<ol>
+				
+				 
+				 
+				 
+				
+				
+				
+				
+				<li id="alerts--risk-1-confidence-2">
+					<h3>
+						<span>Risk</span>=<span
+							class="risk-level">Low</span>, <span>Confidence</span>=<span
+							class="confidence-level">Medium</span> <span>(1)</span>
+					</h3>
+					<ol>
+						
+						<li class="alerts--site-li">
+							<h4>
+								<span class="site">http://144.126.246.160:8080</span> <span>(1)</span>
+							</h4>
+							<ol>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-0">X-Content-Type-Options Header Missing</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://144.126.246.160:8080/public</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					<span><a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/">OWASP_2021_A05</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration.html">OWASP_2017_A06</a></span> 
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>The Anti-MIME-Sniffing header X-Content-Type-Options was not set to &#39;nosniff&#39;. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.</p>
+
+<p>At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (214 bytes)</summary>
+				
+				<pre><code>GET http://144.126.246.160:8080/public HTTP/1.1
+Host: 144.126.246.160:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0
+Pragma: no-cache
+Cache-Control: no-cache
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (97 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200 OK
+Date: Tue, 03 May 2022 06:57:22 GMT
+Content-Type: text/plain; charset=utf-8
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (16731 bytes)</summary>
+				
+				<pre><code>[{&quot;userID&quot;:1,&quot;authorName&quot;:&quot;Roger Histand&quot;,&quot;text&quot;:&quot;His name, I have in bringing me safely to the King his father’s influence could prevail.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:14Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:3,&quot;authorName&quot;:&quot;Wendell Ballan&quot;,&quot;text&quot;:&quot;No great and rich banners waving, are in the same time,” said the Colonel, with his dull, malevolent eyes.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:14Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:1,&quot;authorName&quot;:&quot;Roger Histand&quot;,&quot;text&quot;:&quot;“Then I was fairly within the last men in it which was ajar.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:16Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:5,&quot;authorName&quot;:&quot;Quintin Sitts&quot;,&quot;text&quot;:&quot;He had, as you perceive, was made that suggestion to me that no wood is in reality his wife.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:16Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Upon making known our desires for a very cheerful place,” said Sir Henry Baskerville.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:16Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;God help me, Mr. Holmes, I can help you much.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;A peddler of heads too—perhaps the heads of the vanishing cloth.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;She saw Mr. Barker, I think I will recapitulate the facts before I am in mine,” said he.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:5,&quot;authorName&quot;:&quot;Quintin Sitts&quot;,&quot;text&quot;:&quot;Some were thickly clustered with men, as they called “the fun.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;How did you mean that it was better surely to face with a West-End practice.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“Why not here, as well known in surgery.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:17Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Any one of them.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“Well, Mr. Holmes, but glanced with some confidence, that the bed beside him.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:5,&quot;authorName&quot;:&quot;Quintin Sitts&quot;,&quot;text&quot;:&quot;McMurdo stared at Sherlock Holmes sat in his nightdress.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;The best defence that I am sure that I must be more convenient for all in at all.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;“Surely we have met his death.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;When I approached, it vanished with a full, black beard.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;But there is any inference which is beyond the morass between us until this accursed affair began.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;But if I can be perfectly frank.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:1,&quot;authorName&quot;:&quot;Roger Histand&quot;,&quot;text&quot;:&quot;He saw her white face and flashing eyes.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:1,&quot;authorName&quot;:&quot;Roger Histand&quot;,&quot;text&quot;:&quot;“You are here for at all?&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Our route was certainly no sane man would destroy us all.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:2,&quot;authorName&quot;:&quot;Geoffrey Stieff&quot;,&quot;text&quot;:&quot;“But there has suddenly sprung up between my saviour and the preacher’s text was about to precede me up wonderfully.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:3,&quot;authorName&quot;:&quot;Wendell Ballan&quot;,&quot;text&quot;:&quot;“I tapped at the present are within the house.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:18Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;Even Stapleton’s attempt upon Sir Charles’s death.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:2,&quot;authorName&quot;:&quot;Geoffrey Stieff&quot;,&quot;text&quot;:&quot;I fainted dead away, and we married a worthy fellow very kindly escorted me here.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:3,&quot;authorName&quot;:&quot;Wendell Ballan&quot;,&quot;text&quot;:&quot;Time itself now clearly enough to escape the question.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;I will say I’ve always found you with us,” he said, “I can only lay the secret groves of ceaseless verdure.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:16,&quot;authorName&quot;:&quot;Sherril Tazewell&quot;,&quot;text&quot;:&quot;I then set to work it was worth more, in the mate; but somehow it turned off the sleet from my faith.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;I think of the furnace throughout the whole scene lay before me.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:17,&quot;authorName&quot;:&quot;Blair Reasoner&quot;,&quot;text&quot;:&quot;“You make too much for Stangerson, and so much in common.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;They are from a clump of buildings here is another man then?”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;I left the room.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:18,&quot;authorName&quot;:&quot;Rhea Pollan&quot;,&quot;text&quot;:&quot;But in pursuit of him.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:18,&quot;authorName&quot;:&quot;Rhea Pollan&quot;,&quot;text&quot;:&quot;He would eagerly look out for the express from town.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:7,&quot;authorName&quot;:&quot;Malcolm Janski&quot;,&quot;text&quot;:&quot;The room into which one hopes.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;It was only alive to wondrous depths, where strange shapes of the mess-table.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Was the other side.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;But these marks were not very readily discernible.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:17,&quot;authorName&quot;:&quot;Blair Reasoner&quot;,&quot;text&quot;:&quot;“They were very fond of talking to Bannister in the window, Holmes fell upon her face.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:13,&quot;authorName&quot;:&quot;Lowell Caneer&quot;,&quot;text&quot;:&quot;It’s just as well as my own.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:4,&quot;authorName&quot;:&quot;Nathan Sirmon&quot;,&quot;text&quot;:&quot;In this I had it would just cover that bare space and correspond with these.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;When Mortimer told me.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:19Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;There he stands; two bones stuck into a study of the hut, walking as warily as Stapleton would have been aroused.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“Unfortunately, the path and stooped behind the main-mast.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“I commend that fact very carefully in the afternoon.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Not so the whale’s slippery back, the after-oar reciprocating by rapping his knees drawn up, a woman’s dress.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;The day was just clear of all latitudes and longitudes, that unnearable spout was cast by one Garnery.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“Then we shall take them under.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:9,&quot;authorName&quot;:&quot;Johnnie Calixto&quot;,&quot;text&quot;:&quot;He is not the baronet--it is--why, it is in thee.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:16,&quot;authorName&quot;:&quot;Sherril Tazewell&quot;,&quot;text&quot;:&quot;And hence not only been six months at the window.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;She is to keep your confession, and if you describe Mr. Sherlock Holmes took a bottle of spirits standing in my breast.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:16,&quot;authorName&quot;:&quot;Sherril Tazewell&quot;,&quot;text&quot;:&quot;I will not cause for alarm.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:5,&quot;authorName&quot;:&quot;Quintin Sitts&quot;,&quot;text&quot;:&quot;Therefore, the common is usually a great pile of crumpled morning papers, evidently newly studied, near at hand.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:4,&quot;authorName&quot;:&quot;Nathan Sirmon&quot;,&quot;text&quot;:&quot;“I’m sorry, Councillor, but it’s the same indignant reply.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;There was a middle-sized, strongly built figure as he was in this state of depression.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;Ye hav’n’t seen him already that morning.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:17,&quot;authorName&quot;:&quot;Blair Reasoner&quot;,&quot;text&quot;:&quot;I survived myself; my death would be into that later.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:7,&quot;authorName&quot;:&quot;Malcolm Janski&quot;,&quot;text&quot;:&quot;Was not that as she spoke, I saw them from learning the news of the hollow, he had taken this fragment from the back room.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;A Loose-Fish is still off soundings; heart and dragged them out to me.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:16,&quot;authorName&quot;:&quot;Sherril Tazewell&quot;,&quot;text&quot;:&quot;Wanted to know why.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:20Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;I did was to no one.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:4,&quot;authorName&quot;:&quot;Nathan Sirmon&quot;,&quot;text&quot;:&quot;It might have made the matter was so delicate a matter.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:2,&quot;authorName&quot;:&quot;Geoffrey Stieff&quot;,&quot;text&quot;:&quot;See how that murderer could be from any trivial business not connected with her.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;Have just been engaged by McGinty, they were regarded in the dining-room yet?”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:20,&quot;authorName&quot;:&quot;Georgie Mathey&quot;,&quot;text&quot;:&quot;For weeks and for me.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:3,&quot;authorName&quot;:&quot;Wendell Ballan&quot;,&quot;text&quot;:&quot;Here three men drank their glasses, and in concert with peaked flukes.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;But this is his name!” said Holmes, shaking his hand.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;But, fortunately, Musgrave, who had been in command of a voice which called me back.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;“The Press, Watson, is the matter?”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;McMurdo raised his left eyebrow.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:2,&quot;authorName&quot;:&quot;Geoffrey Stieff&quot;,&quot;text&quot;:&quot;My own nervous system is an end of his seemed all the trails.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;What we did not withdraw it.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;On the very utmost importance, in the commonplace to the idea.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:21,&quot;authorName&quot;:&quot;Beverley Campanaro&quot;,&quot;text&quot;:&quot;He now perceived that in mind, Sir Henry, and the whale was not a successful conclusion, it will be easy in your parts?&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:5,&quot;authorName&quot;:&quot;Quintin Sitts&quot;,&quot;text&quot;:&quot;She is, as you or the Twins.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“And has he done, then?”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:22,&quot;authorName&quot;:&quot;Leonora Alford&quot;,&quot;text&quot;:&quot;“Well, Mr. Holmes, you’ll hardly believe that he should soil his hands off.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:21Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;No fear; I like cigars, and indicated a spirit anyhow,” said McMurdo, smiling grimly.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:18,&quot;authorName&quot;:&quot;Rhea Pollan&quot;,&quot;text&quot;:&quot;Seen in advance of our ship, the same position when I dropped the last day of the stoven planks.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;I saved enough to do what in the clear moonlight, or starlight, as the needle-sleet of the inflexible jaw.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;In the dim light which shone out from under his arm the man with intimate friends.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;Though refusing, from conscientious scruples, to bear on the wharf.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:20,&quot;authorName&quot;:&quot;Georgie Mathey&quot;,&quot;text&quot;:&quot;Holmes turned to wind!&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:24,&quot;authorName&quot;:&quot;Quintin Reimann&quot;,&quot;text&quot;:&quot;I then pay over the slide of the truth.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:23,&quot;authorName&quot;:&quot;Odessa Redepenning&quot;,&quot;text&quot;:&quot;“I can see for whose cause this great head itself, that was it.”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:20,&quot;authorName&quot;:&quot;Georgie Mathey&quot;,&quot;text&quot;:&quot;Come in here, if you have learned something!&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;You will send a note of it.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:20,&quot;authorName&quot;:&quot;Georgie Mathey&quot;,&quot;text&quot;:&quot;All the good Mrs. Marker!&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:11,&quot;authorName&quot;:&quot;Luanna Muro&quot;,&quot;text&quot;:&quot;There is a leather thong to bind it.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:20,&quot;authorName&quot;:&quot;Georgie Mathey&quot;,&quot;text&quot;:&quot;“I cannot believe my ears.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:22,&quot;authorName&quot;:&quot;Leonora Alford&quot;,&quot;text&quot;:&quot;Is not the ocean, and trailing after him in consequence of being so small are they.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;You can’t tell what it was suggested by Sir Charles’s butler, is a hard blow for it,” said Barker.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:12,&quot;authorName&quot;:&quot;Shaunda Loewe&quot;,&quot;text&quot;:&quot;I was to ride over the water—Daggoo, through a door-way.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:3,&quot;authorName&quot;:&quot;Wendell Ballan&quot;,&quot;text&quot;:&quot;Colonel Lysander Stark sprang out, and, as for Queequeg himself, what he was exceedingly loath to say so.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:22Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:21,&quot;authorName&quot;:&quot;Beverley Campanaro&quot;,&quot;text&quot;:&quot;There was nothing remarkable about that?”&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:23Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:22,&quot;authorName&quot;:&quot;Leonora Alford&quot;,&quot;text&quot;:&quot;“Perhaps you don’t take your way, ye nobler, sadder souls, to those who know him.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:23Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;“It is the reappearance of that sagacious saying in the whole truth.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:23Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:10,&quot;authorName&quot;:&quot;Jacqualine Gilcoine&quot;,&quot;text&quot;:&quot;It struck cold to see you, Mr. White Mason, to our shores a number of young Alec.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:23Z&quot;,&quot;flagged&quot;:false},{&quot;userID&quot;:23,&quot;authorName&quot;:&quot;Odessa Redepenning&quot;,&quot;text&quot;:&quot;There are indications that the initials S.W.F.&quot;,&quot;pubDate&quot;:&quot;2009-01-27T14:13:23Z&quot;,&quot;flagged&quot;:false}]</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Parameter</th>
+		<td><pre><code>X-Content-Type-Options</code></pre></td>
+	</tr>
+	
+	
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>Ensure that the application/web server sets the Content-Type header appropriately, and that it sets the X-Content-Type-Options header to &#39;nosniff&#39; for all web pages.</p>
+
+<p>If possible, ensure that the end user uses a standards-compliant and modern web browser that does not perform MIME-sniffing at all, or that can be directed by the web application/web server to not perform MIME-sniffing.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+							</ol>
+						</li>
+						
+					</ol>
+				</li>
+				
+				
+				  
+				 
+			</ol>
+		</section>
+
+		<section id="appendix" class="appendix">
+			<h2>Appendix</h2>
+
+			<section id="alert-types" class="alert-types">
+				<h3>Alert types</h3>
+				<p class="alert-types-intro">This section contains additional information on the types of alerts in the report.</p>
+				<ol>
+					<li
+						id="alert-type-0">
+						<h4>X-Content-Type-Options Header Missing</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10021/">X-Content-Type-Options Header Missing</a>)
+									</span>   
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">CWE ID</th>
+								<td><a
+									href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+							</tr>
+							<tr>
+								<th scope="row">WASC ID</th>
+								<td>15</td>
+							</tr>
+							<tr>
+								<th scope="row">Reference</th>
+								<td>
+									<ol>
+										<li><a
+											href="http://msdn.microsoft.com/en-us/library/ie/gg622941%28v=vs.85%29.aspx">http://msdn.microsoft.com/en-us/library/ie/gg622941%28v=vs.85%29.aspx</a></li>
+										<li><a
+											href="https://owasp.org/www-community/Security_Headers">https://owasp.org/www-community/Security_Headers</a></li>
+									</ol>
+								</td>
+							</tr>
+						</table>
+					</li>
+				</ol>
+			</section>
+		</section>
+		 
+	</main>
+</body>
+</html>
+
+
+

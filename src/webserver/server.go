@@ -24,7 +24,7 @@ func main() {
 	simulatorService := services.NewSimulatorService(log)
 
 	store := sessions.NewCookieStore([]byte(os.Getenv("COOKIE_PASSWORD")))
-	userController := controllers.NewUserController(userService, messageService, store)
+	userController := controllers.NewUserController(userService, messageService, store, log)
 	messageController := controllers.NewMessage(store, messageService, userService, log)
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService, log)
 

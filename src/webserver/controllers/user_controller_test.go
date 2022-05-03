@@ -32,7 +32,7 @@ func setUp() (r *mux.Router) {
 	_ = messageService.CreateMessage("rnsk", "rnsking is the newing sagging")
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
-	userController := controllers.NewUserController(userService, messageService, store)
+	userController := controllers.NewUserController(userService, messageService, store, log)
 	messageController := controllers.NewMessage(store, messageService, userService, log)
 
 	r = mux.NewRouter()

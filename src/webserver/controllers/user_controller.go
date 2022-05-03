@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 )
 
 type IUser interface {
@@ -28,16 +29,18 @@ type User struct {
 	store    sessions.Store
 	users    services.IUser
 	messages services.IMessage
+	log      *logrus.Logger
 }
 
-func NewUserController(users services.IUser, messages services.IMessage, store sessions.Store) *User {
-	return &User{users: users, messages: messages, store: store}
+func NewUserController(users services.IUser, messages services.IMessage, store sessions.Store, log *logrus.Logger) *User {
+	return &User{users: users, messages: messages, store: store, log: log}
 }
 
 func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		u.log.Warnf("Failed to parse JSON body with error %s", err.Error())
 		http.Error(w, "Could not parse the JSON body", http.StatusInternalServerError)
 		return
 	}
@@ -45,16 +48,19 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	var data RegisterReq
 	err = json.Unmarshal(body, &data)
 	if err != nil {
+		u.log.Warnf("JSON body malformed with error %s", err.Error())
 		http.Error(w, "The JSON body is malformed", http.StatusBadRequest)
 		return
 	}
 
 	if u.users.IsUsernameTaken(data.Username) {
+		u.log.Warnf("Username already taken, error %s", err.Error())
 		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	}
 
 	if err := u.users.CreateUser(data.Username, data.Email, data.Password); err != nil {
+		u.log.Warnf("Failed to create user with error %s", err.Error())
 		http.Error(w, "Could not create a new user", http.StatusInternalServerError)
 		return
 	}
