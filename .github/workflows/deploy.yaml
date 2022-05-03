@@ -46,13 +46,7 @@ jobs:
         username: ${{ secrets.PROD_USER }}
         password: ${{ secrets.PROD_PWD }}
         script: |
-          docker-compose down
-          rm -f docker-compose.yaml prometheus.yml setup_elk.sh filebeat.yml nginx.conf
-          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/prometheus.yml
-          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/docker-compose.yaml
-          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/setup_elk.sh
-          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/nginx.conf
-          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/filebeat.yml
-          chmod +x setup_elk.sh
-          source setup_elk.sh
-          docker-compose pull && docker-compose up -d
+          rm -f update-services.sh
+          wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/src/scripts/digital_ocean/update-services.sh
+          chmod +x update-services.sh
+          bash update-services.sh
