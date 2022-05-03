@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/antonPalmFolkmann/DevOps2022/controllers"
 	"github.com/antonPalmFolkmann/DevOps2022/monitoring"
@@ -22,7 +23,7 @@ func main() {
 	messageService := services.NewMessageService(db, log)
 	simulatorService := services.NewSimulatorService(log)
 
-	store := sessions.NewCookieStore([]byte("supersecret1234"))
+	store := sessions.NewCookieStore([]byte(os.Getenv("COOKIE_PASSWORD")))
 	userController := controllers.NewUserController(userService, messageService, store, log)
 	messageController := controllers.NewMessage(store, messageService, userService, log)
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService, log)
