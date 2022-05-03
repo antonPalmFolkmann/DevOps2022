@@ -16,7 +16,6 @@ echo -e "\n--> Checking that environment variables are set\n"
 echo -e "\n--> Checking that all the necessary files exist\n"
 # Check that all files exist
 [ ! -f "ssh_key/terraform" ] && echo "ssh_key/terraform does not exist. Please generate a ssh_key" && exit
-[ ! -f ".env" ] && echo ".env file does not exist" && exit
 [ ! -f "docker-stack.yml" ] && echo "docker-stack.yml file does not exist" && exit
 [ ! -f "filebeat.yml" ] && echo "filebeat.yml does not exist" && exit
 [ ! -f "prometheus.yml" ] && echo "prometheus.yml" && exit
@@ -64,5 +63,7 @@ echo -e "\n--> Done bootstrapping Minitwit"
 echo -e "--> The system needs to initialize, this can take up to a couple of minutes..."
 echo -e "--> Site will be avilable @ http://$(terraform output -raw public_ip):8080"
 echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):8888"
+echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):5601"
+echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):3000"
 echo -e "--> ssh to swarm leader with 'ssh root@\$(terraform output -raw minitwit-swarm-leader-ip-address) -i ssh_key/terraform'"
 echo -e "--> To remove the infrastructure run: make destroy-prod"
