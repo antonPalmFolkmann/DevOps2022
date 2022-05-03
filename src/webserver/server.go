@@ -23,7 +23,7 @@ func main() {
 	simulatorService := services.NewSimulatorService(log)
 
 	store := sessions.NewCookieStore([]byte("supersecret1234"))
-	userController := controllers.NewUserController(userService, messageService, store)
+	userController := controllers.NewUserController(userService, messageService, store, log)
 	messageController := controllers.NewMessage(store, messageService, userService, log)
 	serviceController := controllers.NewSimulator(messageService, userService, simulatorService, log)
 
