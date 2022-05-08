@@ -56,7 +56,7 @@ export default function Profile() {
                                 <Button variant="outlined" sx={{ borderColor: '#a3c9fe' }} 
                                 onClick={() => { 
                                     login(username, password)
-                                    .then((response) => {
+                                    .then((_response) => {
                                         if (loggedInUser.username !== '') {
                                             user.setUser(loggedInUser)
                                         } else {
@@ -158,7 +158,7 @@ export default function Profile() {
                                     />
                                     <Button variant="outlined" value={{message}} sx={{ minWidth: 200, borderColor: '#a3c9fe' }} onClick={() => {
                                         postMessage(user.username, message)
-                                        .then((response) => {
+                                        .then((_response) => {
                                             setMessage('')
                                         })
                                     }}>

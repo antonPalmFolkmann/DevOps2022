@@ -5,6 +5,5 @@ export function getTimestamp(timestamp) {
     const day = date.getDate();
     const monthIndex = date.getMonth();
     const year = date.getFullYear();
-    const myFormattedDate = hour + ':' + minutes + ' ' + day + '/' + (monthIndex + 1) + ' ' + year;
-    return myFormattedDate;
+    return (hour + ':' + minutes + ' ' + day + '/' + (monthIndex + 1) + ' ' + year);
 }

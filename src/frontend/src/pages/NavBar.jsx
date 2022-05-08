@@ -8,7 +8,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import userContext from '../utils/userContext';
 import PublicIcon from '@mui/icons-material/Public';
 import { logout } from '../api/logout'
-import { getMessages, exportMessages, exportProfile, getMessagesByUser } from '../api/messages'
+import { getMessages, exportMessages, getMessagesByUser } from '../api/messages'
 
 let emptyProfile = {
     username: '',
@@ -30,14 +30,14 @@ export default function NavBar() {
             >
             <BottomNavigationAction  label='My Profile' icon={<AccountCircleIcon />} onClick={() => { 
                 getMessagesByUser(user.username)
-                .then((response) => {
+                .then((_response) => {
                     user.setCurrentProfile(user.getUser());
                     user.setCurrentMessages(exportMessages);
                 })
             }}/>
             <BottomNavigationAction  label='My Timeline' icon={<FormatListBulletedIcon />} onClick={() => { 
                 getMessages()
-                .then((response) => {
+                .then((_response) => {
                     user.setCurrentProfile(user.getUser());
                     user.setCurrentMessages(exportMessages.filter(
                             (message) => message.authorName == 'Roger Histand'
@@ -48,7 +48,7 @@ export default function NavBar() {
             <BottomNavigationAction label='Public Timeline' icon={<PublicIcon />} onClick={() => { 
                 user.setCurrentProfile(emptyProfile);
                 getMessages()
-                    .then((response) => {
+                    .then((_response) => {
                         user.setCurrentMessages(exportMessages)
                     })
             }}/>
@@ -57,7 +57,7 @@ export default function NavBar() {
                 user.setUser(emptyProfile)
                 user.setCurrentProfile(emptyProfile)
                 getMessages()
-                    .then((response) => {
+                    .then((_response) => {
                         user.setCurrentMessages(exportMessages)
                     })
             }}/>

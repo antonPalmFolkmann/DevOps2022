@@ -1,4 +1,4 @@
-import React, { useContext, useEffect} from 'react';
+import React, { useContext, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Card from '@mui/material/Card';
@@ -7,7 +7,6 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { Container } from '@mui/material';
 import Profile from './Profile';
-import Button from '@mui/material/Button';
 import NavBar from './NavBar';
 import userContext from '../utils/userContext';
 import { getMessages, exportMessages, exportProfile, getMessagesByUser } from '../api/messages'
@@ -18,13 +17,12 @@ export default function Timeline() {
   const user = useContext(userContext)
   useEffect(() => {
     getMessages()
-    .then((response) => {
+    .then((_response) => {
       user.setCurrentMessages(exportMessages)
     })
   }, [])
   useEffect(() => {
     logout()
-    .then((response) => {})
   }, [])
   let screenHeight = window.innerHeight;
 

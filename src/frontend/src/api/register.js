@@ -1,6 +1,3 @@
-import { LoginTwoTone } from "@mui/icons-material";
-import {login} from "./login"
-
 export function register(username, email, password) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");

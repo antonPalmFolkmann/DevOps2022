@@ -1,7 +1,6 @@
-import React, { createContext, useState } from 'react'
+import React, { useState } from 'react'
 import Timeline from './pages/Timeline'
 import userContext from './utils/userContext';
-import { getMessages, exportMessages } from './api/messages'
 
 export default function App() {
     const [username, setUsername] = useState('')
