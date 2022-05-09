@@ -58,7 +58,7 @@ export default function Timeline() {
                   <Card variant="outlined" sx={{ minWidth: 600, borderColor: '#a3c9fe'}} onClick={() => { 
                       if (user.username !== '') {
                         getMessagesByUser(msg.authorName)
-                        .then((response) => {
+                        .then((_response) => {
                           console.log('Parsed messages in Timeline');
                           user.setCurrentProfile(exportProfile);
                           user.setCurrentMessages(exportMessages);
