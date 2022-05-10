@@ -54,7 +54,7 @@ func (u *User) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if u.users.IsUsernameTaken(data.Username) {
-		u.log.Warnf("Username already taken, error %s", err.Error())
+		u.log.Warnf("Username already taken, error")
 		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	}
