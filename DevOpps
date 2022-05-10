@@ -1,0 +1,13 @@
+/var/log/DevOpps/*.log {
+	size 1M
+	daily
+	missingok
+	rotate 0
+	compress
+	notifempty
+	create 0640 www-data www-data
+	sharedscripts
+	postrotate
+		systemctl reload DevOpps
+	endscript
+}
