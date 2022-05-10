@@ -15,7 +15,7 @@ export function login(username, password) {
         redirect: 'follow'
     };
 
-    return fetch("/login", requestOptions)
+    return fetch("/api/login", requestOptions)
         .then((response) => response.text())
         .then(result => {
             if (result[0] === '{') {

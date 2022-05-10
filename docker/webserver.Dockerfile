@@ -4,8 +4,6 @@ FROM golang:bullseye as base
 WORKDIR /client
 COPY ./client ./
 
-RUN ls build
-
 WORKDIR /src
 COPY ./src ./
 

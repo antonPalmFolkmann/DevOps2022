@@ -21,7 +21,7 @@ export function register(username, email, password) {
         redirect: 'follow'
     };
 
-    fetch("/register", requestOptions)
+    fetch("/api/register", requestOptions)
         .then(response => JSON.stringify(response))
         .then(result => console.log(result))
         .catch(error => console.log('error', error));
