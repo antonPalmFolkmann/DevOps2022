@@ -61,6 +61,7 @@ ssh \
 
 echo -e "\n--> Done bootstrapping Minitwit"
 echo -e "--> The system needs to initialize, this can take up to a couple of minutes..."
+echo -e "--> Make sure to update GitHub secrets's PROD_HOST with $(terraform output -raw public_ip)"
 echo -e "--> Site will be avilable @ http://$(terraform output -raw public_ip):8080"
 echo -e "--> You can check the status of swarm cluster @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):8888"
 echo -e "--> You can view logs at @ http://$(terraform output -raw minitwit-swarm-leader-ip-address):5601"

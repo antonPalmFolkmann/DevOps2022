@@ -13,7 +13,7 @@ export function follow(username) {
         redirect: 'follow'
     };
 
-    return fetch("/fllw/" + username, requestOptions)
+    return fetch("/api/fllw/" + username, requestOptions)
         .then(response => response.text())
         .then(result => console.log(result))
         .catch(error => console.log('error', error));
@@ -34,7 +34,7 @@ export function unfollow(username) {
         redirect: 'follow'
     };
 
-    fetch("/unfllw/" + username, requestOptions)
+    fetch("/api/unfllw/" + username, requestOptions)
         .then(response => response.text())
         .then(result => console.log(result))
         .catch(error => console.log('error', error));

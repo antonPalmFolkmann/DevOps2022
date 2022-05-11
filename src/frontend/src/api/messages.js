@@ -8,7 +8,7 @@ export function getMessages() {
         redirect: 'follow'
     };
 
-    return fetch("/public?offset=0&limit=200", requestOptions)
+    return fetch("/api/public?offset=0&limit=200", requestOptions)
     .then(response => response.text())
     .then(result => JSON.parse(result))
     .then(result => exportMessages = result)
@@ -26,7 +26,7 @@ export function getMessagesByUser(user) {
         redirect: 'follow'
     };
 
-    return fetch("/msgs/" + user, requestOptions)
+    return fetch("/api/msgs/" + user, requestOptions)
     .then(response => response.text())
     .then(result => JSON.parse(result))
     .then(result => {
@@ -58,7 +58,7 @@ export function postMessage(authorName, text) {
         redirect: 'follow'
     };
 
-    return fetch("/add_message", requestOptions)
+    return fetch("/api/add_message", requestOptions)
         .then((response) => response.text())
         .then(result => {
             console.log('Result ' + result)

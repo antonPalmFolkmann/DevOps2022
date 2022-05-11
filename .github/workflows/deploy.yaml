@@ -5,8 +5,27 @@ on:
   release:
 
 jobs:
-  build:
+  build-npm:
     runs-on: ubuntu-latest
+    name: Build and test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bahmutov/npm-install@v1
+
+      - name: Build source files
+        run: npm run build
+        working-directory: ./src/frontend
+
+      - name: Make client directory
+        run: mkdir -p client
+
+      - name: Move to client/build
+        run: mv build ../../client/build
+        working-directory: ./src/frontend
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: build-npm
     steps:
       -
         name: Set up QEMU
@@ -37,7 +56,7 @@ jobs:
   
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-docker
     steps:
     - name: Executing deploy script
       uses: appleboy/ssh-action@master

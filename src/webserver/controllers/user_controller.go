@@ -227,10 +227,10 @@ func (u *User) Unfollow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *User) SetupRoutes(r *mux.Router) {
-	r.HandleFunc("/register", u.Register)
-	r.HandleFunc("/login", u.Login)
-	r.HandleFunc("/logout", u.Logout)
-	r.HandleFunc("/", u.Timeline)
-	r.HandleFunc("/fllw/{username}", u.Follow)
-	r.HandleFunc("/unfllw/{username}", u.Unfollow)
+	r.HandleFunc("/api/register", u.Register)
+	r.HandleFunc("/api/login", u.Login)
+	r.HandleFunc("/api/logout", u.Logout)
+	r.HandleFunc("/api/", u.Timeline)
+	r.HandleFunc("/api/fllw/{username}", u.Follow)
+	r.HandleFunc("/api/unfllw/{username}", u.Unfollow)
 }
