@@ -1,5 +1,5 @@
 # Bullseye is the latest, stable version as of 09/02/2022
-FROM golang:bullseye as base
+FROM golang:1.18-bullseye as base
 WORKDIR /src
 COPY ./src ./
 
