@@ -40,7 +40,7 @@ export default function NavBar() {
                 .then((_response) => {
                     user.setCurrentProfile(user.getUser());
                     user.setCurrentMessages(exportMessages.filter(
-                            (message) => message.authorName == 'Roger Histand'
+                            (message) => message.authorName === 'Roger Histand'
                         )
                     )
                 })
