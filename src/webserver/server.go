@@ -46,6 +46,12 @@ func main() {
 	userController.SetupRoutes(r)
 	monitoring.SetupRoutes(r)
 	messageController.SetupRoutes(r)
+
+	buildHandler := http.FileServer(http.Dir("/client/build"))
+	r.PathPrefix("/").Handler(buildHandler)
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("/client/build/static")))
+	r.PathPrefix("/static/").Handler(staticHandler)
+
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatalf("Failed to listen and serve port: %s", err.Error())

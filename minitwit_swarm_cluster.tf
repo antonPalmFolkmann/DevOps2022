@@ -33,6 +33,11 @@ resource "digitalocean_droplet" "minitwit-swarm-leader" {
     destination = "/root/.env"
   }
 
+  provisioner "file" {
+    source = "DevOpps"
+    destination = "/etc/logrotate.d/DevOpps"
+  }
+
   provisioner "remote-exec" {
     inline = [
       # allow ports for docker swarm

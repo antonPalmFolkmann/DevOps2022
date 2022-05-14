@@ -131,7 +131,7 @@ func (m *Message) AddMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Message) SetupRoutes(r *mux.Router) {
-	r.HandleFunc("/msgs/{username}", m.UserMessages)
-	r.HandleFunc("/public", m.AllMessages)
-	r.HandleFunc("/add_message", m.AddMessage)
+	r.HandleFunc("/api/msgs/{username}", m.UserMessages)
+	r.HandleFunc("/api/public", m.AllMessages)
+	r.HandleFunc("/api/add_message", m.AddMessage)
 }
