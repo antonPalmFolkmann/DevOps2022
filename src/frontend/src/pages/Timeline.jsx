@@ -20,7 +20,7 @@ export default function Timeline() {
     .then((_response) => {
       user.setCurrentMessages(exportMessages)
     })
-  }, [])
+  }, [user])
   useEffect(() => {
     logout()
   }, [])
