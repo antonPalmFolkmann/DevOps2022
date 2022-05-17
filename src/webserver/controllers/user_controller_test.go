@@ -48,7 +48,7 @@ func login(r *mux.Router) *http.Cookie {
 	}
 	jsonUser, _ := json.Marshal(user)
 
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonUser))
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
@@ -68,7 +68,7 @@ func TestRegisterGivenValidUserReturnsStatusCreated(t *testing.T) {
 	}
 
 	jsonUser, _ := json.Marshal(user)
-	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonUser))
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -88,7 +88,7 @@ func TestRegisterGivenTakenUsernameReturnsStatusConflict(t *testing.T) {
 	}
 
 	jsonUser, _ := json.Marshal(user)
-	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonUser))
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -105,7 +105,7 @@ func TestLoginGivenExistingUserReturnsStatusOK(t *testing.T) {
 	}
 
 	jsonLogin, _ := json.Marshal(login)
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonLogin))
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonLogin))
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -125,7 +125,7 @@ func TestLoginWhileLoggedInReturnsStatusBadRequest(t *testing.T) {
 	}
 	jsonUser, _ := json.Marshal(user)
 
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonUser))
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -142,7 +142,7 @@ func TestLoginGivenWrongPasswordReturnsStatusForbidden(t *testing.T) {
 	}
 
 	jsonLogin, _ := json.Marshal(login)
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonLogin))
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonLogin))
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -159,7 +159,7 @@ func TestLoginGivenNonexistentUserReturnsStatusForbidden(t *testing.T) {
 	}
 
 	jsonLogin, _ := json.Marshal(login)
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonLogin))
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonLogin))
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -177,7 +177,7 @@ func TestLogoutWhileLoggedinReturnsStatusOk(t *testing.T) {
 	}
 	jsonUser, _ := json.Marshal(user)
 
-	req, _ := http.NewRequest("POST", "/logout", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/logout", bytes.NewBuffer(jsonUser))
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -194,7 +194,7 @@ func TestLogoutWhileNotLoggedinReturnsStatusBadrequest(t *testing.T) {
 	}
 	jsonUser, _ := json.Marshal(user)
 
-	req, _ := http.NewRequest("POST", "/logout", bytes.NewBuffer(jsonUser))
+	req, _ := http.NewRequest("POST", "/api/logout", bytes.NewBuffer(jsonUser))
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
@@ -205,7 +205,7 @@ func TestFollowsGivenExistentUserReturnsStatusOK(t *testing.T) {
 	r := setUp()
 	session := login(r)
 
-	req, _ := http.NewRequest("GET", "/fllw/siu", nil)
+	req, _ := http.NewRequest("GET", "/api/fllw/siu", nil)
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -217,7 +217,7 @@ func TestFollowsGivenNonExistentUserReturnsStatusNotFound(t *testing.T) {
 	r := setUp()
 	session := login(r)
 
-	req, _ := http.NewRequest("GET", "/fllw/whywouldilivealie", nil)
+	req, _ := http.NewRequest("GET", "/api/fllw/whywouldilivealie", nil)
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -229,7 +229,7 @@ func TestUnfollowsGivenExistentUserReturnsStatusOK(t *testing.T) {
 	r := setUp()
 	session := login(r)
 
-	req, _ := http.NewRequest("GET", "/unfllw/siu", nil)
+	req, _ := http.NewRequest("GET", "/api/unfllw/siu", nil)
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -241,7 +241,7 @@ func TestUnfollowsGivenNonExistentUserReturnsStatusNotFound(t *testing.T) {
 	r := setUp()
 	session := login(r)
 
-	req, _ := http.NewRequest("GET", "/unfllw/whatupinthislife", nil)
+	req, _ := http.NewRequest("GET", "/api/unfllw/whatupinthislife", nil)
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -253,7 +253,7 @@ func TestTimelineWhenLoggedInReturnsMessages(t *testing.T) {
 	r := setUp()
 	session := login(r)
 
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequest("GET", "/api/", nil)
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
