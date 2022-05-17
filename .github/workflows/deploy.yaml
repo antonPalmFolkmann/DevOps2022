@@ -78,7 +78,7 @@ jobs:
       with:
         host: ${{ secrets.PROD_HOST }}
         username: ${{ secrets.PROD_USER }}
-        password: ${{ secrets.PROD_PWD }}
+        key: ${{ secrets.PROD_KEY }}
         script: |
           rm -f update-services.sh
           wget https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/src/scripts/digital_ocean/update-services.sh
