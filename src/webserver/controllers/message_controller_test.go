@@ -21,7 +21,7 @@ func TestAddMessageReturnsStatusCreated(t *testing.T) {
 	}
 
 	jsonMsg, _ := json.Marshal(msg)
-	req, _ := http.NewRequest("POST", "/add_message", bytes.NewBuffer(jsonMsg))
+	req, _ := http.NewRequest("POST", "/api/add_message", bytes.NewBuffer(jsonMsg))
 	req.AddCookie(session)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -38,7 +38,7 @@ func TestAddMessageReturnsStatusForbidden(t *testing.T) {
 	}
 
 	jsonMsg, _ := json.Marshal(msg)
-	req, _ := http.NewRequest("POST", "/add_message", bytes.NewBuffer(jsonMsg))
+	req, _ := http.NewRequest("POST", "/api/add_message", bytes.NewBuffer(jsonMsg))
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
@@ -48,7 +48,7 @@ func TestAddMessageReturnsStatusForbidden(t *testing.T) {
 func TestAllMessagesReturnsStatusOk(t *testing.T) {
 	r := setUp()
 
-	req, _ := http.NewRequest("GET", "/public", nil)
+	req, _ := http.NewRequest("GET", "/api/public", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
@@ -58,7 +58,7 @@ func TestAllMessagesReturnsStatusOk(t *testing.T) {
 func TestUserMessageGivenExistingUserReturnsStatusOK(t *testing.T) {
 	r := setUp()
 
-	req, _ := http.NewRequest("GET", "/msgs/rnsk", nil)
+	req, _ := http.NewRequest("GET", "/api/msgs/rnsk", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
@@ -68,7 +68,7 @@ func TestUserMessageGivenExistingUserReturnsStatusOK(t *testing.T) {
 func TestUserMessageGivenNotExistingUserReturnsStatusOK(t *testing.T) {
 	r := setUp()
 
-	req, _ := http.NewRequest("GET", "/msgs/ibaby", nil)
+	req, _ := http.NewRequest("GET", "/api/msgs/ibaby", nil)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
