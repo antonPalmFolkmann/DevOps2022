@@ -1,6 +1,7 @@
 .local
 .env
 .htpasswd
+client
 
 src/endpoint_measure/*.txt
 
