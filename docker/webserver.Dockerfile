@@ -5,7 +5,7 @@ WORKDIR /src
 COPY ./src ./
 
 WORKDIR /client
-COPY . ./
+COPY ./client ./
 
 WORKDIR /src/webserver
 RUN go mod tidy
