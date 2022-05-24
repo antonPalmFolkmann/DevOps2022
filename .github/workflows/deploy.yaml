@@ -23,11 +23,6 @@ jobs:
         run: mv build ../../client/build
         working-directory: ./src/frontend
       -
-        uses: actions/download-artifact@master
-        with:
-          name: react-build
-          path: client/build
-      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       -
