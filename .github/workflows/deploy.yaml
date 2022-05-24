@@ -40,6 +40,10 @@ jobs:
           name: react-build
           path: client/build
       -
+        name: Extract React Build
+        run: unzip react-build.zip
+        working-directory: client/build
+      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       -
