@@ -5,7 +5,7 @@ WORKDIR /src
 COPY ./src ./
 
 WORKDIR /client
-COPY . ./
+COPY ./client ./
 
 WORKDIR /src/webserver
 RUN go mod tidy
@@ -14,4 +14,4 @@ RUN go build -o /minitwit
 
 EXPOSE 8080
 EXPOSE 8081
-# ENTRYPOINT [ "/minitwit" ]
+ENTRYPOINT [ "/minitwit" ]
