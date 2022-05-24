@@ -257,5 +257,6 @@ venv
 license.json
 sample.json
 src.json
+urls.json
 
 # End of https://www.toptal.com/developers/gitignore/api/goland,visualstudiocode,jetbrains,go

@@ -17,6 +17,7 @@ echo Done.
 echo Scanning files...
 scancode --license --json-pp license.json LICENSE
 scancode --license --ignore "*.go" --json-pp src.json src
+scancode --url --json-pp urls.json src
 node scanCode.js
 echo Done.
 exit
