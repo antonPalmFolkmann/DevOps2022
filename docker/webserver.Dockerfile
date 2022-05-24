@@ -4,8 +4,11 @@ FROM golang:bullseye as base
 WORKDIR /src
 COPY ./src ./
 
+RUN ls
+
 WORKDIR /client
-COPY /client ./
+COPY client ./
+
 
 WORKDIR /src/webserver
 RUN go mod tidy
