@@ -56,13 +56,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push webserver
-        uses: docker/build-push-action@v2
-        with:
-          file: ./docker/webserver.Dockerfile
-          push: true
-          tags: antonfolkmann/minitwit:latest
-          load: false
+        name: Build webserver
+        run: docker build -f docker/webserver.Dockerfile -t antonfolkmann/minitwit:latest .
       -
         name: Build and push database
         uses: docker/build-push-action@v2
@@ -70,11 +65,9 @@ jobs:
           file: ./docker/db.Dockerfile
           push: true
           tags: antonfolkmann/minitwitdb:latest
-          load: false
-      - name: push
+      - name: Push webserver
         run: |
           docker push antonfolkmann/minitwit:latest
-          docker push antonfolkmann/minitwitdb:latest
   
   deploy:
     runs-on: ubuntu-latest
