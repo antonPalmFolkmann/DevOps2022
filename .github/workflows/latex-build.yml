@@ -13,7 +13,7 @@ jobs:
       - name: Compile LaTeX document
         uses: dante-ev/latex-action@latest
         with:
-          root_file: report/_main.tex
+          root_file: _main.tex
           working_directory: report
           
       - uses: actions/upload-artifact@v3
