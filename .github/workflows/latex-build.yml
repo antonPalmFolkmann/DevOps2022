@@ -14,6 +14,7 @@ jobs:
         uses: dante-ev/latex-action@latest
         with:
           root_file: report/_main.tex
+          working_directory: report
           
       - uses: actions/upload-artifact@v3
         with:
