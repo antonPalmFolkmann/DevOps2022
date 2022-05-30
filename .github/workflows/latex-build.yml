@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir build
           mv _main.pdf build/_main.pdf
-        working-directory: build
+        working-directory: report
 
       - name: Commit files
         run: |
