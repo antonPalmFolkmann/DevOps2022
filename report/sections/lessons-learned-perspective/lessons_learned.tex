@@ -1,0 +1,70 @@
+\section{Lessons Learned Perspective}
+
+\subsection{Evolution and Refactoring}
+
+\subsubsection{Testing}
+Testing during the refactorization of an existing system is highly valuable. When refactoring you may inadvertently change the functionality of a system. If not discovered early this could lead to bugs and hours of work trying to fix them. For example, during the refactorization of the simulator-API from Python to Golang, we introduced a tweet bug. The bug could have been avoided if we had tested more thoroughly before merging the refactored simulator-API. Each sub-component was unit tested, as such we naively thought everything was working as intended. However, unit tests do not necessarily tell if the system as a whole is working as intended. In reality, the tweet endpoint did not give the expected responses. What we should have done differently, was run the simulator against the API or have done more manual tests locally, checking for inconsistencies. The process as a whole mimics well what could happen in real-world situations and has been a very valuable lesson learned. Going forward, we know that integration testing is not only important but necessary to deliver safe services.
+
+\subsection{Operations}
+
+\subsubsection{Weekly Operations}
+Developers follow a weekly schedule, with an average of 1 workday/week/person being allocated to new tasks, management, and upkeep of the system. This effort includes making sure the simulator is able to use our system, making sure our logging implementation is producing the desired result and monitoring processing/storage load. The operations aspect of DevOps takes a backseat in our workflow as the team consists of inexperienced developers primarily focused on producing code but not operating it. Most of our energy is spent on maintenance and refactoring of the system. However, the group anticipates that the operational tools and practices taught in the course will be invaluable to our eventual work in the industry, where software is rarely greenfield and almost always live. 
+
+\subsubsection{Limiting Work in Progress (WIP) and Batch Size with the GitHub Ecosystem}
+
+We use GitHub issues and GitHub project boards to successfully track our work.
+A key aspect of Lean, and by extension DevOps, is reducing batch sizes and the amount of WIP.
+We adopt these philosophises as they are presented in the The DevOps Handbook \cite{devopshandbook} wholesale.
+Tasks are decomposed to reduce batch size and a maximum of 10 issues are allowed in the "In Progress" column (see \autoref{app:kanbamps}).
+To clearly communicate what work is part of resolving an issue, we link pull requests to issues.
+The consensus is that this lightweight, transparent approach to distribute work enables flexibility.
+We believe that the efficacy of this will only increase as work schedules increase from sporadic to daily.
+
+
+\subsubsection{The importance of update strategies}
+We have learned that update strategies are an important factor in reliable services in real-world applications. During the first half of the course we had neither update strategy nor a horizontally scaled service. In order to update our service, we had to take down the service, deploy the changes and reboot the server. By implementing Docker Swarm we have started scaling the service horizontally. It allows us to deploy a rolling update strategy to our service, deploying updates without shutting it down. Before adopting an update strategy, we acknowledged that shutting down the service to update is far from optimal, but after implementing the Rolling update strategy, we realize how beneficial it is to deploy and how much easier maintaining the program is.
+We note from this that employing an update strategy, even in the early stages of a service's development, is important. It keeps the service running with minimal downtime and reduces risk of outages. It helps to apply Lean and DevOps practices by automating processes and reducing batch size for updates. Furthermore, it simplifies and codifies the team's approach to updates.
+
+\subsection{Maintenance}
+
+\subsubsection{Live Software's impact on Software Maintenance}
+Developing and extending a running system is a unique challenge. Minor changes in the code can lead to client requests failing. As mentioned in section 3.2.1, a bug was introduced halfway through the project. Issues like this highlight the difference between working in a static environment versus a live one, and how fragile the system can be. 
+Additionally, the task of incorporating new technologies, like Terraform, became bloated. Tasks like these were further complicated by the lack of proper integration testing in our pipeline.
+A few weeks from the simulator's start, we realized that our database was not compatible with our CI/CD pipeline. This meant shutting down the server and containerizing a new database based on the initial database given at the start of the project. This issue is most likely not one to occur in a static (non-live) environment, but was is an experience that exposed the need of having a database management strategy early.
+These issues mimic real-world challenges of live software development, and give us valuable lessons we can learn from.
+
+
+\subsubsection{The Immediate Benefit of Logging}
+Logging turned out to be a bigger challenge than anticipated.
+With little to no experience before the project, an advanced tool like Kibana in junction with Elasticsearch was overwhelming but also insightful.
+We faced a couple of hurdles before successfully implementing logging.
+We found it difficult to locate the logs in a docker container as well as produce usable logs from our code.
+Once implemented, it was obvious how powerful logging is.
+Maintenance and error handling became easier.
+For example, the frontend was easier to implement, even with a live backend.
+The logs helped sort out eventual issues with REST-requests or database queries.
+From this, we noted logging should be implemented as early as possible, be it in a Greenfield project or an overtaken one like this.
+It brings insight into the system's functionality and is especially valuable when refactoring the code-base and writing new functionality.
+Though logging also poses the problem of producing large amounts of data.
+To ensure our container didn't flood with unnecessary data, we implemented log rotation and pruning.
+We learned that logging is a powerful tool that eases many processes, but it also requires attention to the level of detail to be useful.
+
+
+\subsection{Server storage \& Database management}
+
+A non-trivial challenge of a live system is managing its persistent state such that data is not lost.
+Initially, volumes were not properly mounted to our database container.
+As a result, the next time the system was restarted data about messages and users was lost.
+From this experience, it is clear that it is important to gain a deep understanding of a technology before employing it in production.
+Moreover, we host all three layers - frontend, backend, and persistency - on the same infrastructure.
+Thus, to tear down production infrastructure we must tear down the system in its entirety.
+This means that any data not on a back-up is lost.
+The issue stems from not separating concerns properly, meaning that there is no fine grain control of the system.
+We believe there are two possible solutions to this: 
+
+\begin{itemize}
+    \item Accept that we do not have this granularity and employ a back-up strategy to mitigate the damages of data loss.
+    \item Design the infrastructure such that this granularity exists
+\end{itemize}
+
+Ultimately, this is our first experience with a "live" state where the knock-on effects of data loss is observable, and it opens our eyes to the importance of mitigating data loss from the beginning.

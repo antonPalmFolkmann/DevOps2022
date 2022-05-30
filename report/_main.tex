@@ -1,0 +1,66 @@
+\documentclass{article}
+\input{_preamble}
+
+\title{Group C - DevOpps \\ DevOps BSDSESM1KU}
+
+\author{
+  Alexander Hjelmgaard\\
+  \texttt{hjel@itu.dk}
+  \and
+  Oskar Breindahl\\
+  \texttt{osbr@itu.dk}
+  \and
+  Christoffer Gram\\
+  \texttt{chkg@itu.dk}
+  \and
+  Jakob Hjalgrim\\
+  \texttt{jlhj@itu.dk}
+  \and
+  Anton Folkmann\\
+  \texttt{anpf@itu.dk}
+}
+\date{\today}
+
+
+
+\begin{document} 
+
+% -----------------------------------------------------------------
+
+\maketitle
+\bigskip
+\thispagestyle{empty}
+
+
+\begin{tikzpicture}[remember picture,overlay] 
+    \node[xshift=150mm,yshift=-220mm,anchor=north west] at (current page.north west){%
+    \includegraphics{images/Billede2.png}};
+\end{tikzpicture}
+\newpage
+\tableofcontents
+\thispagestyle{empty}
+\bigskip
+\setcounter{page}{0}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Overview of the report's contents:
+% https://github.com/itu-devops/lecture_notes/blob/master/REPORT.md
+%
+% Mircea's writing guidelines:
+% https://github.com/mircealungu/student-projects/blob/master/writing_guidelines/README.md
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\input{sections/system-perspective/system_perspective}
+\newpage
+\input{sections/process-perspective/process_perspective}
+\newpage
+\input{sections/lessons-learned-perspective/lessons_learned}
+\newpage
+\input{sections/references}
+\newpage
+\input{sections/appendix}
+
+\end{document}

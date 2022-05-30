@@ -1,0 +1,9 @@
+\section{\textit{Minitwit's} Go Package Dependencies}
+\label{app:go-pkg-deps}
+
+Below is the result of executing \texttt{go list -deps all} for the \textit{Websever's} Go module.
+This produces a list of all the dependencies of the program in a depth-first, post-order ordering.
+This means that a given Go package is only listed after all of its dependencies have been listed.
+The exact versions are encoded in the \textit{go.mod}\footnote{\textit{go.mod} can be found at: \url{https://github.com/antonPalmFolkmann/DevOps2022/blob/main/src/webserver/go.mod}} and \textit{go.sum}\footnote{\textit{go.sum} can be found at: \url{https://github.com/antonPalmFolkmann/DevOps2022/blob/main/src/webserver/go.sum}} files of the \textit{Webserver} Go module.
+
+\input{sections/appendices/go-pkg-deps/go_pkg_deps_list}
