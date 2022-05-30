@@ -17,5 +17,5 @@ jobs:
           
       - uses: actions/upload-artifact@v3
         with:
-        name: FinalReport
-        path: report/_main.pdf # or path/to/artifact
+          name: FinalReport
+          path: report/_main.pdf # or path/to/artifact
