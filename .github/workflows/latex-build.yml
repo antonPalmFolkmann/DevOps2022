@@ -16,7 +16,21 @@ jobs:
           root_file: _main.tex
           working_directory: report
           
-      - uses: actions/upload-artifact@v3
+      - name: move pdf
+        run: |
+          mkdir build
+          mv _main.pdf build/_main.pdf
+        working-directory: build
+
+      - name: Commit files
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add report/build/_main.pdf
+          git commit -m "Added report"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
         with:
-          name: FinalReport
-          path: report/_main.pdf # or path/to/artifact
+          github_token: ${{ secrets.TOKEN_GITHUB }}
+          branch: main
+          force: true
