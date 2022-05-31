@@ -25,16 +25,17 @@ The non-functional requirements are:
 To boost developer productivity the \textit{Minitwit} system uses Go's own dependency management system to import third-party packages.
 A noteworthy package we depend on is the \textit{Gorilla} package.
 It provides functionality to implement the HTTP APIs required by the functional requirements, such as a multiplexer and session management. 
-\autoref{deps:fig:depth1} below is a visualization of the Go package dependencies of \textit{Minitwit} with a depth of one.
-A complete list can be found in appendix \ref{app:go-pkg-deps}.
+\autoref{deps:fig:depth1} overleaf is a visualization of the Go package dependencies of \textit{Minitwit} with a depth of one.
+We have also generated a complete list and complete visualization (see \autoref{app:go-pkg-deps}).
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{images/depth-1-deps.jpg}
-    \caption{A high-level overview of \textit{Minitwit's} three-tier architecture}
-    \label{deps:fig:depth1}
-\end{figure}
+\begin{sidewaysfigure}
+        \centering
+        \includegraphics[width=\textwidth]{images/depth-1-deps.jpg}
+        \caption{An graph of Minitwit's immediate dependencies. A full resolution can be found here \href{https://raw.githubusercontent.com/antonPalmFolkmann/DevOps2022/main/report/images/depth-1-deps.jpg}{here}.}
+        \label{deps:fig:depth1}
+\end{sidewaysfigure}
 
+\newpage
 To package the application we depend on Docker. To provision environments we use DigitalOcean's CLI tool \textit{doctl}.
 By using Docker we can encode dependencies in the form of layers for the image.
 Notably, the base layer of the \textit{Minitwit} system is the Golang 1.17 image.
