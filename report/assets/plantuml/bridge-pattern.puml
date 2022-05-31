@@ -1,0 +1,22 @@
+@startuml
+
+database PostgreSQL
+database SQLite3
+component Services {
+  component SimulatorService
+  component MessageService
+  component UserService
+}
+component GORM
+() "PostgreSQL Driver" as PostgreSQLDriver
+() "SQLite3 Driver" as SQLite3Driver
+
+PostgreSQL -up- PostgreSQLDriver
+SQLite3 -up- SQLite3Driver
+GORM -down-( PostgreSQLDriver
+GORM -down-( SQLite3Driver
+
+MessageService ..> GORM
+UserService ..> GORM
+
+@enduml
