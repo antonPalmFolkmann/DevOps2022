@@ -1,4 +1,4 @@
-FROM postgres:latest AS base
+FROM postgres:15.1 AS base
 ENV POSTGRES_PASSWORD=password
 ENV POSTGRES_USER=postgres
 ENV POSTGRES_DB=minitwit
